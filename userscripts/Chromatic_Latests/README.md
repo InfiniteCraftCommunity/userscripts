@@ -1,4 +1,4 @@
-# Chromatic Latests
+# Chromatic Latests | [Install](index.js?raw=1)
 
 Chromatic Themes Changing Colors and Sparkles v300+
 

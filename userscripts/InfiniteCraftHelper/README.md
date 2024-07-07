@@ -1,4 +1,4 @@
-# [Infinite Craft Helper](https://github.com/Mikarific/InfiniteCraftHelper)
+# Infinite Craft Helper | [Install](index.js?raw=1)
 
 A script that adds various useful features to Infinite Craft.
 

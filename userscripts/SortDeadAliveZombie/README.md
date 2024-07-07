@@ -1,3 +1,3 @@
-# Sorting for Dead Elements4
+# Sorting for Dead Elements4 | [Install](index.js?raw=1)
 
 ### by [Alexander_Andercou](https://github.com/24sanduAlexandru)

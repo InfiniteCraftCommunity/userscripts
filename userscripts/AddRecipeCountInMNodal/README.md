@@ -1,3 +1,3 @@
-# Add recipe count to recipe modal
+# Add recipe count to recipe modal | [Install](index.js?raw=1)
 
 ### by [Alexander_Andercou](https://github.com/24sanduAlexandru)

@@ -6,7 +6,7 @@
 // @grant	GM.setValue
 // @grant	unsafeWindow
 // @run-at	document-end
-// @version	1.0
+// @version	1.0.1
 // @author	Natasquare
 // @description	Store elements in GM storage instead of localStorage, allowing bigger save files to be used. Optional encoding functions can be supplied.
 // ==/UserScript==
@@ -46,6 +46,7 @@ function decodeElements(raw) {
 	unsafeWindow._setItem = unsafeWindow.Storage.prototype.setItem;
 	unsafeWindow._removeItem = unsafeWindow.Storage.prototype.removeItem;
 
+	let initialized = false;
 	async function init() {
 		const rawElements = await GM.getValue("elements");
 		let newElements = JSON.parse((await GM.getValue("newElements")) ?? "[]"),
@@ -88,12 +89,12 @@ function decodeElements(raw) {
 			if (args[0] !== "infinite-craft-data") return item;
 			return JSON.stringify({
 				...JSON.parse(item),
-				elements
+				elements: elements.concat(newElements)
 			});
 		}, unsafeWindow);
 
 		unsafeWindow.Storage.prototype.setItem = exportFunction(function(...args) {
-			if (args[0] !== "infinite-craft-data") return unsafeWindow._setItem.apply(this, args);
+			if (!initialized || args[0] !== "infinite-craft-data") return unsafeWindow._setItem.apply(this, args);
 
 			const newSave = JSON.parse(args[1]);
 			let hasRemoved = false;
@@ -111,6 +112,7 @@ function decodeElements(raw) {
 			}
 
 			if (hasRemoved || newElementSet.size - elementSet.size > 1e3) {
+				if (!confirm(`You're about to ${hasRemoved ? "remove some elements from" : `add ${newElementSet.size - elementSet.size} elements to`} your save. Do you wish to continue?`)) return;
 				elements = newSave.elements;
 				newElements = [];
 				elementSet = newElementSet;
@@ -141,7 +143,10 @@ function decodeElements(raw) {
 			unsafeWindow._removeItem.apply(this, args);
 		}, unsafeWindow);
 
-		setTimeout(() => unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements = JSON.parse(JSON.stringify(elements)), 200);
+		setTimeout(() => {
+			unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements = JSON.parse(JSON.stringify(elements));
+			initialized = true;
+		}, 200);
 		await GM.setValue("elements", encodeElements(elements));
 	}
 

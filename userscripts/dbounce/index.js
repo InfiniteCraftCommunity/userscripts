@@ -4,9 +4,11 @@
 // @match	https://neal.fun/infinite-craft/*
 // @grant	unsafeWindow
 // @run-at	document-end
-// @version	1.0
+// @version	1.0.1
 // @author	Natasquare
 // @description	Adds input debouncing to the search bar and implements some other optimizations.
+// @downloadURL	https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/dbounce/index.js
+// @updateURL	https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/dbounce/index.js
 // ==/UserScript==
 
 /**
@@ -38,7 +40,7 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 	const resultLimit = 300,                     // maximum number of results to show when searching. on normal IC it's 200
 		delay = 250,                             // delay (in ms) after the last keystroke until it is decided that you've stopped typing
 		hideItemsWhenNoQuery = true,             // performance boost, significantly more effective if you use the More Elements script
-		sortAfterFilter = false,                 // normally, your elements will get sorted before the searching, this setting will sort them after filtering out results instead
+		sortAfterFilter = true,                  // normally, your elements will get sorted before the searching, this setting will sort them after filtering out results instead
 		                                         // this is indeed faster than the default implementation, but custom sort types implemented in other userscripts will break
 		lengthSortThreshold = resultLimit * 100; // switch to sorting by length when the result count is over this threshold
 
@@ -61,7 +63,7 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 		const _filteredElements = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.filteredElements.getter;
 		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.filteredElements.getter = exportFunction(function(a = true) {
 			const filtered = _filteredElements.call(this);
-			if (hideItemsWhenNoQuery && (!this.searchQuery || (this.searchQuery && a))) {
+			if ((hideItemsWhenNoQuery && !this.searchQuery) || (this.searchQuery && a)) {
 				if (!this.searchQuery) unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$refs.search.placeholder = `Search (${filtered.length}) items...`;
 				return [];
 			}
@@ -95,7 +97,7 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 				return t;
 			}
 			let sorted = t;
-			if (t.length < resultLimit * 100) {
+			if (t.length < lengthSortThreshold) {
 				sorted = matchSorter(t, this.searchQuery, { keys: ["text"] });
 			} else {
 				sorted = t.sort((a, b) => a.text.length - b.text.length);

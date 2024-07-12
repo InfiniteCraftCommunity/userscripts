@@ -20,6 +20,7 @@
     let colorIndex = GM_getValue('colorIndex') || 0;
     let dragStartX, dragStartY;
 
+    const customColor = GM_getValue('customColor') || '#000000';
     // Array of colors for selection box and selected Instances
     const colors = [
         { border: '1px solid #e74c3c', background: 'rgba(231, 76, 60, 0.3)', emoji: '🔴' },
@@ -31,10 +32,9 @@
         { border: '1px solid #000000', background: 'rgba(0, 0, 0, 0.3)', emoji: '⚫' },
         { border: '1px solid #ecf0f1', background: 'rgba(236, 240, 241, 0.3)', emoji: '⚪' },
         { border: '1px solid #795548', background: 'rgba(121, 85, 72, 0.3)', emoji: '🟤' },
-        { border: '1px solid #000000', background: 'rgba(0, 0, 0, 0.3)', emoji: '🌈' } // Custom Color
+        { border: '1px solid ' + customColor, background: hexToRGBA(customColor, 0.3), emoji: '🌈' } // Custom Color
     ];
 
-    // Style the selection box
     selectionBox.style.position = 'absolute';
     selectionBox.style.display = 'none';
     selectionBox.style.zIndex = '0';
@@ -45,13 +45,15 @@
     // Call the function to add the button when the DOM is fully loaded
     window.addEventListener('load', init);
 
-    // Add the Cycle Color button to the settings menu
+
     function init() {
+        // Add the Cycle Color button to the settings menu
         const settingsContent = document.querySelector(".settings-content");
         if (settingsContent == null) {
             console.log("This script requires Infinite Craft Helper to function!");
             return;
         }
+        console.log(colors[colorIndex])
 
         const sidebarDiv = document.querySelector('.sidebar');
 
@@ -67,7 +69,11 @@
         cycleSelectionContainer.addEventListener('mousedown', function(e) {
             if (e.button === 0) cycleColor(1); // Left click
             else if (e.button === 2) cycleColor(-1); // Right Click
-            else if (e.button === 1) colorMenu(); // Middle Click
+            else if (e.button === 1) { // Middle Click
+                colorPicker.style.left = `${mouseX}px`;
+                colorPicker.style.top = `${mouseY}px`;
+                colorPicker.click();
+            }
             cycleSelectionEmoji.textContent = colors[colorIndex].emoji;
         });
 
@@ -77,14 +83,16 @@
         colorPicker.style.position = 'absolute';
         colorPicker.style.display = 'none';
         colorPicker.style.zIndex = '1000';
+        colorPicker.value = customColor; // Set the initial color
         document.body.appendChild(colorPicker);
 
         colorPicker.addEventListener('input', () => {
             const color = colorPicker.value;
+            GM_setValue('customColor', color);
             colors[colors.length - 1] = {
                 border: `1px solid ${color}`,
                 background: `${hexToRGBA(color, 0.3)}`,
-                emoji: '🌈' // Custom Emoji
+                emoji: colors[colors.length - 1].emoji
             };
             cycleColor(0); // Update to custom color
         });
@@ -227,10 +235,7 @@
         if (colorIndex === colors.length - 1) {
             colorPicker.style.left = `${mouseX}px`;
             colorPicker.style.top = `${mouseY}px`;
-            colorPicker.style.display = 'block';
             colorPicker.click();
-        } else {
-            colorPicker.style.display = 'none';
         }
         getSelectedInstances().forEach(instance => {
             selectInstance(instance);

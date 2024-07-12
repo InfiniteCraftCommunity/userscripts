@@ -4,10 +4,12 @@
 // @match       https://neal.fun/infinite-craft/
 // @grant			  GM_getValue
 // @grant			  GM_setValue
-// @version     1.1
+// @version     1.2
 // @author      Catstone
 // @license     MIT
 // @description Adds multiselect utilities for deleting, duplicating and moving!
+// @downloadURL	https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/Selection%20Utils/index.js
+// @updateURL	  https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/Selection%20Utils/index.js
 // ==/UserScript==
 
 (function() {
@@ -35,12 +37,6 @@
         { border: '1px solid ' + customColor, background: hexToRGBA(customColor, 0.3), emoji: '🌈' } // Custom Color
     ];
 
-    selectionBox.style.position = 'absolute';
-    selectionBox.style.display = 'none';
-    selectionBox.style.zIndex = '0';
-    cycleColor(0);
-    document.body.appendChild(selectionBox);
-
 
     // Call the function to add the button when the DOM is fully loaded
     window.addEventListener('load', init);
@@ -53,7 +49,6 @@
             console.log("This script requires Infinite Craft Helper to function!");
             return;
         }
-        console.log(colors[colorIndex])
 
         const sidebarDiv = document.querySelector('.sidebar');
 
@@ -77,8 +72,14 @@
             cycleSelectionEmoji.textContent = colors[colorIndex].emoji;
         });
 
+        // Create the Selection Box
+        selectionBox.style.position = 'absolute';
+        selectionBox.style.display = 'none';
+        selectionBox.style.zIndex = '0';
+        cycleColor(0);
+        document.body.appendChild(selectionBox);
 
-        // Create the color picker
+        // Create the Color Picker
         colorPicker.type = 'color';
         colorPicker.style.position = 'absolute';
         colorPicker.style.display = 'none';
@@ -188,12 +189,14 @@
 
 
             // Move all selected instances
-            getSelectedInstances().forEach(instance => {
-                unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setInstancePosition(
-                    instance,
-                    instance.left + deltaX,
-                    instance.top  + deltaY);
-            });
+            if (!e.ctrlKey) {
+                getSelectedInstances().forEach(instance => {
+                    unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setInstancePosition(
+                        instance,
+                        instance.left + deltaX,
+                        instance.top  + deltaY);
+                });
+            }
         }
     });
 
@@ -244,15 +247,9 @@
 
     function hexToRGBA(hex, alpha) {
         let r = 0, g = 0, b = 0;
-        if (hex.length == 4) {
-            r = parseInt(hex[1] + hex[1], 16);
-            g = parseInt(hex[2] + hex[2], 16);
-            b = parseInt(hex[3] + hex[3], 16);
-        } else if (hex.length == 7) {
-            r = parseInt(hex[1] + hex[2], 16);
-            g = parseInt(hex[3] + hex[4], 16);
-            b = parseInt(hex[5] + hex[6], 16);
-        }
+        r = parseInt(hex[1] + hex[2], 16);
+        g = parseInt(hex[3] + hex[4], 16);
+        b = parseInt(hex[5] + hex[6], 16);
         return `rgba(${r},${g},${b},${alpha})`;
     }
 

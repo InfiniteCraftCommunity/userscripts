@@ -1900,7 +1900,10 @@
 	    elements.sideControls.appendChild(randomImage);
 	    randomImage.addEventListener('click', (e) => {
 	        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].playInstanceSound();
-	        const randomElement = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements[Math.floor(Math.random() * unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.length)];
+	        var randomElement = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements[Math.floor(Math.random() * unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.length)];
+            while (randomElement.hidden == true){
+            randomElement = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements[Math.floor(Math.random() * unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.length)];
+            }
 	        const data = {
 	            id: unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instanceId++,
 	            text: randomElement.text,

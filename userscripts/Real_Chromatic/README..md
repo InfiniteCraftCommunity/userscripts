@@ -1,5 +1,5 @@
 # Real Chromatic Theme Script | [Install](index.js?raw=1)
 
-Changing Rainbow Background theme
+Changing Rainbow Background Theme
 
-### by [Dude]()
+### by [Pizza_eat99](https://github.com/Pizzaeat99)

@@ -1,5 +1,5 @@
-# Tabs Utils| [Install](index.js?raw=1)
+# Tab Utils| [Install](index.js?raw=1)
 
-Adds Tabs, saved element at refresh or windos closed
+Adds tab functionality! Also comes with Saving Tabs on reload/close window and downloading/importing tabs!
 
 ### by [Catstone](https://github.com/RedCatstone)

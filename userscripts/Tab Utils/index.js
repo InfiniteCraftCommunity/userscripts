@@ -4,10 +4,12 @@
 // @match       https://neal.fun/infinite-craft/
 // @grant       GM_getValue
 // @grant       GM_setValue
-// @version     1.3
+// @version     1.0
 // @author      Catstone
 // @license     MIT
-// @description Adds tab functionality to Infinite Craft!
+// @description Adds tab functionality! Also comes with Saving Tabs on reload/close window and downloading/importing tabs!
+// @downloadURL	https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/Tab%20Utils/index.js
+// @updateURL	  https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/Tab%20Utils/index.js
 // ==/UserScript==
 
 (function() {
@@ -31,11 +33,13 @@
             scrollbar-color: #525252 #262626;
             white-space: nowrap;
             z-index: 69420;
+            pointer-events: none;
         }
         .tabs {
             display: flex;
             align-items: center;
             overflow: auto;
+            pointer-events: auto;
         }
         .tab, .addButton {
             user-select: none;
@@ -47,12 +51,14 @@
             cursor: pointer;
             border-radius: 5px;
             padding: 10px;
-            margin-right: 6px;
-            max-width: 150px;
+            margin-left: 3px;
+            margin-right: 3px;
+            max-width: 300px;
             flex-shrink: 0;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            pointer-events: auto;
         }
         .tab.selected {
             background-color: #555;
@@ -153,7 +159,7 @@
         const sidebar = document.querySelector('.sidebar');
         if (siteTitle && sidebar) {
             const tabBar = document.getElementById('tabBar');
-            tabBar.style.left = `${229}px`;
+            tabBar.style.left = `${225}px`;
             tabBar.style.right = `${document.getElementsByClassName('sidebar')[0].getBoundingClientRect().width + 200}px`;
         }
     }
@@ -171,26 +177,12 @@
 
     function loadTab(index) {
         const tabData = GM_getValue('tabData');
+        if (index >= tabData.length) index = 0;
         const tab = tabData[index];
 
-        if (index >= tabData.length) index = 0;
-
-        // Clear existing instances
         unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].clearInstances();
+        spawnElements(tab.elements);
 
-        // Create a lookup map for elements
-        const elementsMap = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.reduce((map, elem) => {
-            map[elem.text] = elem;
-            return map;
-        }, {});
-
-        // Spawn elements from the tab using the lookup map
-        tab.elements.forEach(savedElem => {
-            const elem = elementsMap[savedElem.name];
-            if (elem) spawnElement(elem, savedElem.x, savedElem.y);
-        });
-
-        // Update current tab and save
         currentTab = index;
         GM_setValue('currentTab', currentTab);
     }
@@ -299,12 +291,34 @@
             const file = event.target.files[0];
             const reader = new FileReader();
             reader.onload = e => {
-                const data = JSON.parse(e.target.result);
-                addTab(-1, data); // Adding the uploaded tab at the end
+                try {
+                    const data = JSON.parse(e.target.result);
+
+                    data.elements.forEach((element, index) => { // Check each element in the elements array
+                        if (typeof element.name !== 'string' || typeof element.x !== 'number' || typeof element.y !== 'number') {
+                            throw new Error(`Invalid element at index ${index}: Must have "name" (string), "x" (number), and "y" (number) properties`);
+                        }
+                    });
+                    addTab(-1, data); // Adding the uploaded tab at the end
+                }
+                catch (error) {
+                    alert(`Error uploading tab: ${error.message}`);
+                    console.error('Upload error:', error);
+                }
             };
             reader.readAsText(file);
         };
         input.click();
+    }
+
+    function icCasing(str) {
+        return str.split('').map((char, index, arr) => {
+            if (index === 0 || arr[index - 1] === ' ') {
+                return char.toUpperCase();
+            } else {
+                return char;
+            }
+        }).join('');
     }
 
     function createTabButton(index, name) {
@@ -377,12 +391,18 @@
             deleteOption.onclick = () => deleteTab(index);
             contextMenu.appendChild(deleteOption);
         }
-        else if (menu === 1) {
+        else if (menu === 1) { // add button menu
             const uploadOption = document.createElement('div');
             uploadOption.classList.add('contextMenuOption');
             uploadOption.textContent = 'Upload Tab';
             uploadOption.onclick = uploadTab;
             contextMenu.appendChild(uploadOption);
+
+            const spawnAlphabetOption = document.createElement('div');
+            spawnAlphabetOption.classList.add('contextMenuOption');
+            spawnAlphabetOption.textContent = 'Spawn Alphabet';
+            spawnAlphabetOption.onclick = () => promptAlphabets();
+            contextMenu.appendChild(spawnAlphabetOption);
         }
 
 
@@ -434,7 +454,72 @@
         });
     }
 
-     function spawnElement(element, x, y) {
+
+
+
+    function spawnAllAlphabets() {
+        const counters = {};
+        JSON.parse(localStorage.getItem("infinite-craft-data")).elements.map(e => e.text.toLowerCase()).forEach(e => {
+            const letters = e.match(/[a-zA-Z]/g);
+            if (letters && letters.length === 1) (counters[e.replace(letters[0], 'x')] ||= new Set()).add(letters[0]);
+            });
+        const alphabets = Object.entries(counters)
+            .map(([key, set]) => ({ alphabet: key, completeness: set.size }))
+            .filter(e => e.completeness >= 3)
+            .sort((a, b) => b.completeness - a.completeness);
+
+        console.table(alphabets);
+        spawnAlphabets(alphabets.map(e => e.alphabet));
+    }
+
+    function promptAlphabets() {
+        const userInput = prompt("Enter Alphabet(s) separated by Double Spaces:\nFor Example: 'x   .x   _x   x!'\n\n(Pssst, don't type 'all')");
+        if (!userInput) return [];
+        if (userInput.toLowerCase() === "all") {
+            addTab(-1, {elements: [], name: "All Alphabets"});
+            spawnAllAlphabets();
+            return;
+        }
+        addTab(-1, {elements: [], name: userInput});
+        spawnAlphabets(userInput.split(/ {2}/));
+    }
+
+    function spawnAlphabets(patterns) {
+        const elements = [];
+        const alphabets = 'abcdefghijklmnopqrstuvwxyz'.split('');
+
+        patterns.forEach((pattern, rowIndex) => {
+            alphabets.forEach((char, colIndex) => {
+                const newElement = {
+                    name: icCasing(pattern.replace('x', char)),
+                    x: 100 + rowIndex * 100,
+                    y: 50 + colIndex * 50
+                };
+                elements.push(newElement);
+            });
+        });
+
+        console.log(elements);
+        spawnElements(elements);
+    }
+
+
+
+    function spawnElements(elements) {
+        // Create a lookup map for elements
+        const elementsMap = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.reduce((map, elem) => {
+            map[elem.text] = elem;
+            return map;
+        }, {});
+
+        // Spawn elements from the tab using the lookup map
+        elements.forEach(savedElem => {
+            const elem = elementsMap[savedElem.name];
+            if (elem) spawnElement(elem, savedElem.x, savedElem.y);
+        });
+    }
+
+    function spawnElement(element, x = 0, y = 0) {
         const data = {
             id: unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instanceId++,
             text: element.text,

@@ -100,21 +100,26 @@ function decodeElements(raw) {
 			if (!initialized || args[0] !== "infinite-craft-data") return unsafeWindow._setItem.apply(this, args);
 
 			const newSave = JSON.parse(args[1]);
-			let hasRemoved = false;
 
-			const currentElements = [...elementSet],
-				newElementSet = new Set();
-			for (let i = newSave.elements.length; i--;)
-				newElementSet.add(newSave.elements[i].text);
-			for (let i = currentElements.length; i--;) {
-				const text = currentElements[i];
+			let hasRemoved = false;
+			const newElementSet = new Set();
+
+			for (let i = newSave.elements.length; i--;) {
+				const e = newSave.elements[i];
+				newElementSet.add(e.text);
+				if (!elementSet.has(e.text)) {
+					newElements.push(e);
+					elementSet.add(e.text);
+				}
+			}
+
+			for (const text of elementSet.values())
 				if (!newElementSet.has(text)) {
 					hasRemoved = true;
 					break;
 				}
-			}
 
-			if (hasRemoved || newElementSet.size - elementSet.size > 1e3) {
+			if (newElementSet.size - elementSet.size > 1e3 || hasRemoved) {
 				if (!confirm(`You're about to ${hasRemoved ? "remove some elements from" : `add ${newElementSet.size - elementSet.size} elements to`} your save. Do you wish to continue?`)) return;
 				elements = newSave.elements;
 				newElements = [];
@@ -122,13 +127,6 @@ function decodeElements(raw) {
 				GM.setValue("elements", encodeElements(elements));
 				GM.setValue("newElements", "[]");
 			} else {
-				for (let i = newSave.elements.length; i--;) {
-					const element = newSave.elements[i];
-					if (!elementSet.has(element.text)) {
-						newElements.push(element);
-						elementSet.add(element.text);
-					}
-				}
 				GM.setValue("newElements", JSON.stringify(newElements));
 			}
 

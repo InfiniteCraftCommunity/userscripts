@@ -144,8 +144,10 @@ function decodeElements(raw) {
 			unsafeWindow._removeItem.apply(this, args);
 		}, unsafeWindow);
 
-		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements = JSON.parse(JSON.stringify(elements));
-		initialized = true;
+		setTimeout(() => {
+			unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements = JSON.parse(JSON.stringify(elements));
+			initialized = true;
+		}, 0);
 
 		await GM.setValue("elements", encodeElements(elements));
 	}

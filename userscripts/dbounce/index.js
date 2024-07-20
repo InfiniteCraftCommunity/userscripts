@@ -65,10 +65,8 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 		const _filteredElements = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.filteredElements.getter;
 		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.filteredElements.getter = exportFunction(function(a = true) {
 			const filtered = _filteredElements.call(this);
-			if ((hideItemsWhenNoQuery && !this.searchQuery) || (this.searchQuery && a)) {
-				if (!this.searchQuery) unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$refs.search.placeholder = `Search (${filtered.length}) items...`;
-				return [];
-			}
+			unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$refs.search.placeholder = `Search (${filtered.length.toLocaleString()}) items...`;
+			if ((hideItemsWhenNoQuery && !this.searchQuery) || (this.searchQuery && a)) return [];
 			return filtered;
 		}, unsafeWindow);
 

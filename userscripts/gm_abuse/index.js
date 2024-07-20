@@ -5,7 +5,7 @@
 // @grant	GM.getValue
 // @grant	GM.setValue
 // @grant	unsafeWindow
-// @run-at	document-end
+// @run-at	document-start
 // @version	1.0.2
 // @author	Natasquare
 // @description	Store elements in GM storage instead of localStorage, allowing bigger save files to be used. Optional encoding functions can be supplied.

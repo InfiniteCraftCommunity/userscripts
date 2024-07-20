@@ -4,7 +4,7 @@
 // @match	https://neal.fun/infinite-craft/*
 // @grant	unsafeWindow
 // @run-at	document-end
-// @version	1.0.1
+// @version	1.0.2
 // @author	Natasquare
 // @description	Adds input debouncing to the search bar and implements some other optimizations.
 // @downloadURL	https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/dbounce/index.js

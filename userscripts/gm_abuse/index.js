@@ -6,7 +6,7 @@
 // @grant	GM.setValue
 // @grant	unsafeWindow
 // @run-at	document-end
-// @version	1.0.1
+// @version	1.0.2
 // @author	Natasquare
 // @description	Store elements in GM storage instead of localStorage, allowing bigger save files to be used. Optional encoding functions can be supplied.
 // @downloadURL	https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/gm_abuse/index.js

@@ -10,7 +10,7 @@
 // @grant			GM.setValue
 // @grant			GM.xmlHttpRequest
 // @grant			unsafeWindow
-// @run-at			document-end
+// @run-at			document-start
 // @noframes
 // @inject-into		page
 // @sandbox			raw

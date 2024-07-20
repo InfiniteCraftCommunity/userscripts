@@ -60,6 +60,8 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 	}
 
 	async function init() {
+		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.searchQuery = "=";
+	
 		const _filteredElements = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.filteredElements.getter;
 		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.filteredElements.getter = exportFunction(function(a = true) {
 			const filtered = _filteredElements.call(this);
@@ -124,6 +126,8 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 			if (document.activeElement !== search)
 				search.focus();
 		});
+
+		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.searchQuery = "";
 	}
 
 	window.addEventListener("load", init, false);

@@ -28,6 +28,12 @@ window.addEventListener("load", () => {
 async function adjustLineage(stepSelector, fixStepNumbers) {
   const elements = new Set((await GM.getValue("elements", "")).split("\x01"));
   const element = document.getElementById("item_id").textContent;
+
+  if (elements.has(element.toLowerCase())) {
+    document.querySelector(stepSelector).before("You already have this element");
+    return;
+  }
+
   console.log("Patching lineage for", element);
 
   const unusedSteps = new Map();

@@ -1,4 +1,4 @@
-# Mongolian Beef Script | [Install](index.js?raw=1)
+# Mongolian Beef Script | [Install](https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/MBS/index.user.js)
 
 Adds even more useful features to Infinite Craft.
 

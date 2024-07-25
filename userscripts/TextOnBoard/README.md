@@ -1,4 +1,4 @@
-# Text On Board | [Install](index.js?raw=1)
+# Text On Board | [Install](https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/TextOnBoard/index.user.js)
 
 Allows you to write text messages on the board
 

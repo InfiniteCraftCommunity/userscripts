@@ -1,4 +1,4 @@
-# Infinite Craft Helper | [Install](index.js?raw=1)
+# Infinite Craft Helper | [Install](https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/InfiniteCraftHelper/index.user.js)
 
 A script that adds various useful features to Infinite Craft.
 

@@ -1,4 +1,4 @@
-# Selection Utils| [Install](index.js?raw=1)
+# Selection Utils| [Install](https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/Selection Utils/index.user.js)
 
 Adds multiselect utilities for deleting, duplicating and moving!
 

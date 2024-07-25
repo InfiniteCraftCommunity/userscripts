@@ -1,4 +1,4 @@
-# SaveFileInfo | [Install](index.js?raw=1)
+# SaveFileInfo | [Install](https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/SaveFileInfo/index.user.js)
 
 Adds a button that displays some useful information about your savefile
 

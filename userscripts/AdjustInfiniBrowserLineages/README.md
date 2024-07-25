@@ -1,4 +1,4 @@
-# Adjust InfiniBrowser Lineages | [Install](index.js?raw=1)
+# Adjust InfiniBrowser Lineages | [Install](https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/AdjustInfiniBrowserLineages/index.user.js)
 
 Adjust lineages on InfiniBrowser, removing steps for elements that you already have on Infinite Craft
 

@@ -1,4 +1,4 @@
-# Better Random Button | [Install](index.js?raw=1)
+# Better Random Button | [Install](https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/BetterRandomButton/index.user.js)
 
 A better Random Element button.
 

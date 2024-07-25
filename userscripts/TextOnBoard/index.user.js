@@ -6,6 +6,7 @@
 // @run-at      document-end
 // @version     0.1
 // @author      zeroptr
+// @downloadURL https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/TextOnBoard/index.user.js
 // @description Allows you to write text messages on the board
 // ==/UserScript==
 

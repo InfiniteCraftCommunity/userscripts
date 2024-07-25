@@ -11,6 +11,7 @@
 // @run-at      document-end
 // @version     0.1
 // @author      zeroptr
+// @downloadURL https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/AdjustInfiniBrowserLineages/index.user.js
 // @description Adjust lineages on InfiniBrowser, removing steps for elements that you already have on Infinite Craft
 // ==/UserScript==
 

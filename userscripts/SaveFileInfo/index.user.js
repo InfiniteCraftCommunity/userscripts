@@ -6,6 +6,7 @@
 // @run-at      document-end
 // @version     0.1
 // @author      zeroptr
+// @downloadURL https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/SaveFileInfo/index.user.js
 // @description Adds a button that displays some useful information about your savefile
 // ==/UserScript==
 

@@ -6,6 +6,7 @@
 // @run-at      document-end
 // @version     0.1
 // @author      zeroptr
+// @downloadURL https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/BetterRandomButton/index.user.js
 // @description A better Random Element button. Works with searching. You can Shift+Click on the button to quickly combine two random elements!
 // ==/UserScript==
 

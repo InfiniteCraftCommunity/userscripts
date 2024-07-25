@@ -4,7 +4,7 @@
 // @match       https://neal.fun/infinite-craft/*
 // @grant       unsafeWindow
 // @run-at      document-end
-// @version     0.1
+// @version     0.2
 // @author      zeroptr
 // @downloadURL https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/TextOnBoard/index.user.js
 // @description Allows you to write text messages on the board
@@ -89,10 +89,17 @@ $.enableTextTool = (x, y) => {
 
 $.finalizeTextInput = (input) => {
   if (!input.value) {
+    try {
+      const idx = IC.instances.indexOf($.getAssociatedInstance(input));
+      if (idx > -1) IC.instances.splice(idx, 1);
+    } catch {}
+
     input.remove();
     IC.deleteSound.play();
   }
 }
+
+$.getInputPos = (input) => input.style.translate.split(" ").map((x) => parseInt(x));
 
 $.createTextInput = (x, y) => {
   const text = document.createElement("input");
@@ -110,7 +117,7 @@ $.createTextInput = (x, y) => {
       _placeTextPlaceholder = null;
       _focusedInput = text;
 
-      const pos = text.style.translate.split(" ").map((x) => parseInt(x));
+      const pos = $.getInputPos(text);
       _inputX = pos[0];
       _inputY = pos[1];
     } else if (_focusedInput != text) {
@@ -120,7 +127,12 @@ $.createTextInput = (x, y) => {
   });
 
   text.addEventListener("blur", () => $.finalizeTextInput(text));
-  text.addEventListener("input", () => $.adjustTextInputWidth(text));
+  text.addEventListener("input", () => {
+    const instance = $.getAssociatedInstance(text);
+    instance._data.text = text.value.trim();
+    
+    $.adjustTextInputWidth(text);
+  });
   
   text.addEventListener("mousedown", (e) => {
     e.stopPropagation();
@@ -161,6 +173,21 @@ $.adjustTextInputWidth = (input) => {
   span.remove();
 }
 
+$.getAssociatedInstance = (input) => {
+  const id = parseInt(input.id.split("-")[1]);
+  const idx = parseInt(input.getAttribute("data-instance-idx"));
+
+  if (IC.instances[idx]?._data?.id == id) {
+    return IC.instances[idx];
+  }
+  
+  const instance = IC.instances.findIndex((x) => x._data?.id == id);
+  if (instance == -1) throw new Error("could not find an instance for the text element");
+  
+  input.setAttribute("data-instance-idx", instance);
+  return IC.instances[instance];
+}
+
 $.placeTextInput = (input, text="Text") => {
   _placeTextPlaceholder = null;
   _focusedInput = input;
@@ -172,9 +199,21 @@ $.placeTextInput = (input, text="Text") => {
   input.select();
   input.setSelectionRange(0, input.value.length);
   
-  // Pannable board compatibility
-  // Let's hope nothing breaks!
-  IC.instances.push({ elem: input });
+  const id = IC.instanceId++;
+  const pos = $.getInputPos(input);
+
+  input.id = `instance-${id}`;
+  input.setAttribute("data-instance-idx", IC.instances.length);
+
+  IC.instances.push({
+    elem: input,
+    _data: {
+      id,
+      left: pos[0],
+      top: pos[1],
+      text
+    }
+  });
 
   IC.playInstanceSound();
   $.adjustTextInputWidth(input);

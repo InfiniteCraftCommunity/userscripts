@@ -9,10 +9,10 @@
 // @grant       GM.getValue
 // @grant       GM.setValue
 // @run-at      document-end
-// @version     0.1
+// @version     0.2
 // @author      zeroptr
 // @downloadURL https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/AdjustInfiniBrowserLineages/index.user.js
-// @description Adjust lineages on InfiniBrowser, removing steps for elements that you already have on Infinite Craft
+// @description Adjust lineages on InfiniBrowser, removing steps for elements that you already have on Infinite Craft. Also removes the "The recipe for this element is too big".
 // ==/UserScript==
 
 window.addEventListener("load", () => {
@@ -107,6 +107,18 @@ function $initIBSearch() {
     document.getElementById("recipes"),
     { childList: true }
   );
+
+  const $originalFetch = unsafeWindow.fetch;
+  unsafeWindow.fetch = (url, ...args) => {
+    if (typeof url == "string" && url.startsWith("/api/recipe")) {
+      return $originalFetch.apply(unsafeWindow, [
+        url.replace(/&max_steps=\d+$/, ""),
+        ...args
+      ]);
+    } else {
+      return $originalFetch.apply(unsafeWindow, arguments);
+    }
+  }
 }
 
 /** Initialize on Infinite Craft */

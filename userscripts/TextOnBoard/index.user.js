@@ -67,7 +67,7 @@ function init$clearBoard() {
 $.disableTextTool = () => {
   if (_placeTextPlaceholder) _placeTextPlaceholder.remove();
   document.activeElement.blur();
-  
+
   container.classList.remove("text_tool_active");
   container.style.cursor = null;
   _btn.style = null;
@@ -103,14 +103,14 @@ $.getInputPos = (input) => input.style.translate.split(" ").map((x) => parseInt(
 
 $.createTextInput = (x, y) => {
   const text = document.createElement("input");
-  
+
   text.classList.add("item", "instance", "board_text", "placeholder");
   text.style.zIndex = 0;
   text.type = "text";
   text.value = "Add text";
   text.tabIndex = -1;
   text.maxLength = 128;
-  
+
   text.addEventListener("focus", () => {
     if (_placeTextPlaceholder && _placeTextPlaceholder != text && _placeTextPlaceholder.classList.contains("placeholder")) {
       _placeTextPlaceholder.remove();
@@ -130,10 +130,10 @@ $.createTextInput = (x, y) => {
   text.addEventListener("input", () => {
     const instance = $.getAssociatedInstance(text);
     instance._data.text = text.value.trim();
-    
+
     $.adjustTextInputWidth(text);
   });
-  
+
   text.addEventListener("mousedown", (e) => {
     e.stopPropagation();
     e.stopImmediatePropagation();
@@ -159,17 +159,17 @@ $.positionTextInput = (input, x, y) => {
 $.adjustTextInputWidth = (input) => {
   // What the actual fuck
   const span = document.createElement("span");
-  
+
   span.style.opacity = 0;
   span.style.display = "fixed";
   span.style.left = span.style.top = "-999%";
   span.style.whiteSpace = "pre";
-  
+
   container.append(span);
 
   span.textContent = input.value;
   input.style.width = span.getBoundingClientRect().width + 10 + "px";
-  
+
   span.remove();
 }
 
@@ -180,10 +180,10 @@ $.getAssociatedInstance = (input) => {
   if (IC.instances[idx]?._data?.id == id) {
     return IC.instances[idx];
   }
-  
+
   const instance = IC.instances.findIndex((x) => x._data?.id == id);
   if (instance == -1) throw new Error("could not find an instance for the text element");
-  
+
   input.setAttribute("data-instance-idx", instance);
   return IC.instances[instance];
 }
@@ -191,14 +191,14 @@ $.getAssociatedInstance = (input) => {
 $.placeTextInput = (input, text="Text") => {
   _placeTextPlaceholder = null;
   _focusedInput = input;
-  
+
   input.style.zIndex = 3;
   input.classList.remove("placeholder");
   input.value = text;
   input.focus();
   input.select();
   input.setSelectionRange(0, input.value.length);
-  
+
   const id = IC.instanceId++;
   const pos = $.getInputPos(input);
 

@@ -44,7 +44,7 @@ async function adjustLineage(stepSelector, fixStepNumbers) {
   document.querySelectorAll(stepSelector).forEach((x) => {
     const items = x.querySelectorAll(".item");
     const result = items[2].childNodes[1].textContent;
-    
+
     if (elements.has(result.toLowerCase())) {
       // hide the step instead of removing it
       // so that the 'copy lineage' button work properly
@@ -63,7 +63,7 @@ async function adjustLineage(stepSelector, fixStepNumbers) {
     step.style.display = "none";
     removedSteps++;
   });
-  
+
   if (fixStepNumbers) {
     // fix step numbers
     let n = 0;

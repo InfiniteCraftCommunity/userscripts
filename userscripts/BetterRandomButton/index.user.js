@@ -60,7 +60,7 @@ function placeInstance(element) {
   IC.$nextTick(() => {
     const position = Math.random() * Math.PI * 2;
     const radius = 80;
-    
+
     IC.setInstancePosition(instance, 0, 0);
     IC.setInstancePosition(
       instance,
@@ -83,7 +83,7 @@ function randomElementButton(e) {
     IC.searchResults.length ? IC.searchResults
     : IC.filteredElements.length ? IC.filteredElements
     : IC.elements;
-  
+
   e.stopImmediatePropagation();
   e.stopPropagation();
   e.preventDefault();
@@ -94,7 +94,7 @@ function randomElementButton(e) {
 
     const a = placeInstance(pickRandomElement(elements));
     const b = placeInstance(pickRandomElement(elements));
-    
+
     IC.playInstanceSound();
     IC.$nextTick(() => {
       IC.setInstancePosition(

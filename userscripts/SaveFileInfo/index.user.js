@@ -79,11 +79,11 @@ function openSaveFileInfo() {
   const dialog = document.createElement("dialog");
   const header = document.createElement("div");
   const content = document.createElement("div");
-  
+
   dialog.classList.add("modal");
   header.classList.add("modal-header");
   content.classList.add("modal-text");
-  
+
   header.innerHTML = `
     <h1 class="modal-title">Save File Info</h1>
       <div onclick="savefile_info.remove()" class="close-button-container">
@@ -92,7 +92,7 @@ function openSaveFileInfo() {
   `;
 
   content.textContent = "Loading...";
-  
+
   dialog.id = "savefile_info";
   dialog.append(header, content);
 
@@ -129,34 +129,34 @@ function loadStats(content) {
     div.append(labelSpan, valueSpan);
     content.append(div);
   }
-  
+
   addCol("Elements", intl.format(data.elements.length));
   addCol("First Discoveries", intl.format(countByPredicate(data.elements, (x) => x.discovered)));
   addCol("Hidden Elements", intl.format(countByPredicate(data.elements, (x) => x.hidden)));
 
   const uniqEmojis = new Set(data.elements.map((x) => x.emoji)).size;
   addCol("Unique Emojis", `${intl.format(uniqEmojis)} (${intl.format(data.elements.length - uniqEmojis)} duplicated)`);
-  
+
   const gmAbuseInstalled = unsafeWindow._getItem && unsafeWindow._setItem && unsafeWindow._removeItem;
   if (gmAbuseInstalled) {
     addCol("Size", prettyBytes(getGMAbuseSaveFileSize(data.elements)) + " (using gm_abuse)");
   } else {
     const saveFileSize = new TextEncoder().encode(raw).length;
     const maxSaveFileSize = 5_242_880;
-    
+
     const progressContainer = document.createElement("div");
     const percentSpan = document.createElement("span");
     const progressbar = document.createElement("div");
     const percent = saveFileSize / maxSaveFileSize;
-    
+
     progressbar.classList.add("progressbar");
     progressContainer.classList.add("progressbar-container");
-  
+
     progressbar.style.setProperty("--progress", percent * 100 + "%");
     percentSpan.textContent = (percent * 100).toFixed(2) + "%";
-  
+
     progressContainer.append(progressbar, percentSpan);
-    
+
     addCol("Size", `${prettyBytes(saveFileSize)} out of ${prettyBytes(maxSaveFileSize)}`);
     content.append(progressContainer);
   }

@@ -43,8 +43,9 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 		sortAfterFilter = true,                  // normally, your elements will get sorted before the searching, this setting will sort them after filtering out results instead
 		                                         // this is indeed faster than the default implementation, but custom sort types implemented in other userscripts will break
 		lengthSortThreshold = resultLimit * 100, // switch to sorting by length when the result count is over this threshold
-		delayElementLoading = false;             // delays the loading of elements, allowing for tweaks to take effect before neal's script is ran
+		delayElementLoading = false,             // delays the loading of elements, allowing for tweaks to take effect before neal's script is ran
 		                                         // this is redundant if you use gm_abuse
+		useCustomRenderer = false;               // use a custom method to render the sidebar to reduce lag and allow for dynamic scrolling
 
 	// do not change anything below here, if anything breaks please report in #dev
 
@@ -84,6 +85,113 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 
 	if (delayElementLoading) delayLoad();
 
+	function injectCSS(css) {
+		const style = document.createElement("style");
+		style.textContent = css;
+		document.head.append(style);
+	}
+
+	function traverseUntil(element, selector) {
+		let result = element;
+		while (true) {
+			if (result?.matches(selector)) return result;
+			if (!result?.parentElement) return null;
+			result = result.parentElement;
+		}
+	}
+
+	let elementStore = [],
+		isDeleting = false,
+		shownElementIndex = 0;
+
+	function initRenderer(context) {
+		const itemsInner = context.itemsInner.cloneNode(),
+			  trashButton = context.trashButton.cloneNode();
+
+		context.itemsInner.replaceWith(itemsInner);
+		context.trashButton.replaceWith(trashButton);
+		context.itemsInner = itemsInner;
+		context.trashButton = trashButton;
+
+		injectCSS(`.sidebar.is-deleting .item-hidden{opacity:.5;display:inline-block}.sidebar .item-hidden{display:none}`);
+
+		context.sidebar.addEventListener("mousedown", function(e) {
+			const item = traverseUntil(e.target, ".item");
+			if (!item) return;
+			const element = elementStore[item.getAttribute("data-element-index")];
+			if (!element) return;
+
+			if (isDeleting) {
+				element.hidden = !element.hidden;
+				if (element.hidden) item.classList.add("item-hidden");
+				else item.classList.remove("item-hidden");
+				unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].deleteSound.play();
+				unsafeWindow.localStorage.setItem("infinite-craft-data", JSON.stringify({
+					elements: unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements,
+					darkMode: unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.isDarkMode
+				}), true);
+				return;
+			}
+
+			unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].selectElement(e, element);
+		});
+		context.sidebar.addEventListener("scroll", () => render(context));
+
+		context.trashButton.addEventListener("click", function() {
+			isDeleting = !isDeleting;
+			if (isDeleting) {
+				context.trashButton.classList.add("trash-active");
+				context.sidebar.classList.add("is-deleting");
+			} else {
+				context.trashButton.classList.remove("trash-active");
+				context.sidebar.classList.remove("is-deleting");
+			}
+		});
+	}
+
+	let ticking = false;
+	function render({ sidebar, itemsInner }) {
+		if (ticking) return;
+		ticking = true;
+		setTimeout(() => ticking = false, 72);
+
+		let scrollPercent = (sidebar.scrollTop + sidebar.clientHeight)/sidebar.scrollHeight;
+		if (scrollPercent < 0.9 && shownElementIndex > 0) return;
+
+		const firstBatch = shownElementIndex < 1;
+
+		const newChildren = [];
+		let toAdd = shownElementIndex > 0 ? (window.innerHeight/(itemsInner.clientHeight/shownElementIndex) << 3) | 0 : 727;
+
+		while (shownElementIndex < elementStore.length && toAdd-- > 0) {
+			newChildren.push(createElementNode(elementStore[shownElementIndex], shownElementIndex));
+			shownElementIndex++;
+		}
+
+		if (firstBatch) itemsInner.replaceChildren(...newChildren);
+		else itemsInner.append(...newChildren);
+	}
+
+	function createElementNode(element, index) {
+		const node = document.createElement("div");
+		node.classList.add("item");
+		if (element.discovered) node.classList.add("item-discovered");
+		if (element.hidden) node.classList.add("item-hidden");
+		const emoji = document.createElement("span");
+		emoji.classList.add("item-emoji");
+		emoji.appendChild(document.createTextNode(element.emoji || "⬜"));
+		node.appendChild(emoji);
+		node.appendChild(document.createTextNode(`\n ${element.text} \n`));
+		node.setAttribute("data-element-index", index);
+		return node;
+	}
+
+	function updateStore(context, newStore) {
+		elementStore = [].concat(newStore);
+		shownElementIndex = 0;
+		setTimeout(render, 0, context);
+	}
+
 	let patchedDeps = false;
 	function limitDeps() {
 		if (patchedDeps) return;
@@ -98,18 +206,30 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 	}
 
 	async function init() {
+		const context = {
+			sidebar: document.querySelector(".sidebar"),
+			itemsInner: document.querySelector(".sidebar .items .items-inner"),
+			trashButton: document.querySelector(".side-controls .trash")
+		}
+
+		if (useCustomRenderer) initRenderer(context);
+
 		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.searchQuery = "=";
 
 		const _filteredElements = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.filteredElements.getter;
-		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.filteredElements.getter = exportFunction(function(a = true) {
+		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.filteredElements.getter = exportFunction(function(notSearching = true) {
 			const filtered = _filteredElements.call(this);
 			unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$refs.search.placeholder = `Search (${filtered.length.toLocaleString()}) items...`;
-			if ((hideItemsWhenNoQuery && !this.searchQuery) || (this.searchQuery && a)) return [];
+			if ((hideItemsWhenNoQuery && !this.searchQuery) || (this.searchQuery && notSearching)) return [];
+			if (useCustomRenderer && notSearching) {
+				updateStore(context, filtered);
+				return [];
+			}
 			return filtered;
 		}, unsafeWindow);
 
 		const _sortedElements = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.sortedElements.getter;
-		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.sortedElements.getter = exportFunction(function(a = true) {
+		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.sortedElements.getter = exportFunction(function() {
 			return (sortAfterFilter && this.searchQuery) || (hideItemsWhenNoQuery && !this.searchQuery) ? this.elements : _sortedElements.call(this);
 		}, unsafeWindow);
 
@@ -140,7 +260,12 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 			} else {
 				sorted = t.sort((a, b) => a.text.length - b.text.length);
 			}
-			return sorted.slice(0, resultLimit);
+			const sliced = sorted.slice(0, resultLimit);
+			if (useCustomRenderer) {
+				updateStore(context, sliced);
+				return [];
+			}
+			return sliced;
 		}, unsafeWindow);
 
 		const search = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$refs.search.cloneNode(true);
@@ -158,7 +283,7 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 			}, delay);
 		});
 
-		window.addEventListener("keydown", (e) => {
+		window.addEventListener("keydown", () => {
 			if (document.activeElement !== search)
 				search.focus();
 		});

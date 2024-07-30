@@ -42,9 +42,47 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 		hideItemsWhenNoQuery = true,             // performance boost, significantly more effective if you use the More Elements script
 		sortAfterFilter = true,                  // normally, your elements will get sorted before the searching, this setting will sort them after filtering out results instead
 		                                         // this is indeed faster than the default implementation, but custom sort types implemented in other userscripts will break
-		lengthSortThreshold = resultLimit * 100; // switch to sorting by length when the result count is over this threshold
+		lengthSortThreshold = resultLimit * 100, // switch to sorting by length when the result count is over this threshold
+		delayElementLoading = false;             // delays the loading of elements, allowing for tweaks to take effect before neal's script is ran
+		                                         // this is redundant if you use gm_abuse
 
 	// do not change anything below here, if anything breaks please report in #dev
+
+	let loaded = false;
+	function delayLoad() {
+		const getItem = unsafeWindow.Storage.prototype.getItem,
+			  setItem = unsafeWindow.Storage.prototype.setItem;
+
+		unsafeWindow.Storage.prototype.getItem = exportFunction(function(...args) {
+			const raw = getItem.apply(this, args);
+			if (args[0] !== "infinite-craft-data" || !raw) return raw;
+			const data = JSON.parse(raw);
+			data.elements = [];
+			unsafeWindow.Storage.prototype.getItem = getItem;
+			return JSON.stringify(data);
+		}, unsafeWindow);
+
+		unsafeWindow.Storage.prototype.setItem = exportFunction(function(...args) {
+			if (args[0] === "infinite-craft-data") {
+				if (!loaded) return;
+				unsafeWindow.Storage.prototype.setItem = setItem;
+			}
+			return setItem.apply(this, args)
+		})
+	}
+
+	function loadElements() {
+		const raw = unsafeWindow.localStorage.getItem("infinite-craft-data");
+		if (raw) {
+			try {
+				const data = JSON.parse(raw);
+				unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements = data.elements;
+			} catch {}
+		}
+		loaded = true;
+	}
+
+	if (delayElementLoading) delayLoad();
 
 	let patchedDeps = false;
 	function limitDeps() {
@@ -124,6 +162,8 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 			if (document.activeElement !== search)
 				search.focus();
 		});
+
+		if (delayElementLoading) loadElements();
 
 		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.searchQuery = "";
 	}

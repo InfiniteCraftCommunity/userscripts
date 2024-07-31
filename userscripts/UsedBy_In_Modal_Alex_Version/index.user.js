@@ -512,6 +512,7 @@
 	    recipes = JSON.parse((await GM.getValue('recipes')) ?? '{}');
       usedBy= {};
 	    delete recipes['Nothing'];
+  //  console.log("Infinite Helper Recipes",recipes);
 	    for (const recipeKey of Object.keys(recipes)) {
 	        for (let i = recipes[recipeKey].length - 1; i >= 0; i--) {
 	            if (recipes[recipeKey][i] === undefined ||
@@ -521,38 +522,37 @@
 	                recipes[recipeKey][i][1].text === recipeKey) {
 	                recipes[recipeKey].splice(i, 1);
 	            }else
-                { if(usedBy[recipes[recipeKey][i][0].text]==undefined)
+                {
+                 // console.log("Recipe",recipes[recipeKey]);
+
+                  if(usedBy[recipes[recipeKey][i][0].text]==undefined)
                   usedBy[recipes[recipeKey][i][0].text]={};
 
                   if(usedBy[recipes[recipeKey][i][1].text]==undefined)
                    usedBy[recipes[recipeKey][i][1].text]={};
 
-                   let parent=recipeKey in cachedElements?cachedElements[recipeKey]:unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == recipeKey);
-                     cachedElements[recipeKey]??=parent;
+                  let parent=recipeKey
 
+                  if(recipes[recipeKey][i][0].text!=recipeKey )
+                    {
+                    let second=recipes[recipeKey][i][1].text
+                     usedBy[recipes[recipeKey][i][0].text][parent]=[parent,second];
 
-                 if(parent!=undefined){
-                    if(recipes[recipeKey][i][0].text!=recipeKey )
-                      {
-                        let second=recipes[recipeKey][i][1].text in cachedElements?cachedElements[recipes[recipeKey][i][1].text]: unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == recipes[recipeKey][i][1].text);
-                         cachedElements[recipes[recipeKey][i][1].text]??=second
+                    }
 
-                        usedBy[recipes[recipeKey][i][0].text][parent.text]=[parent,second];
-                      }
+                   if(recipes[recipeKey][i][1].text!=recipeKey)
+                     {
+                        let second=recipes[recipeKey][i][0].text;
+                          usedBy[recipes[recipeKey][i][1].text][parent]=[parent,second];
 
+                     }
 
-                  if(recipes[recipeKey][i][1].text!=recipeKey)
-                        {
-                           let second=recipes[recipeKey][i][0].text in cachedElements?cachedElements[recipes[recipeKey][i][0].text]:unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == recipes[recipeKey][i][0].text);
-
-                          cachedElements[recipes[recipeKey][i][0].text]??=second
-                          usedBy[recipes[recipeKey][i][1].text][parent.text]=[parent,second];
-                        }
 
                         }
                 }
 	        }
-	    }
+
+    console.log("UsedBy:",usedBy);
 	    await GM.setValue('recipes', JSON.stringify(recipes));
 	    closeButton.addEventListener('click', (e) => {
 	        craftsModal.close();
@@ -626,6 +626,16 @@ if(usedBy[element.text]!=null){
 
         for(const [key, elems]  of Object.entries(usedBy[element.text])){
            let usedByDiv=document.createElement('div');
+             //resolve the elements
+
+                   elems[1]=key in cachedElements?cachedElements[key][1]:unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == key);
+
+
+                   elems[0]=key in cachedElements?cachedElements[key][0]:unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == key);
+
+
+              cachedElements[key]??=[elems[0],elems[1]];
+
 
         	const firstElement = elems[1];
           if(firstElement){

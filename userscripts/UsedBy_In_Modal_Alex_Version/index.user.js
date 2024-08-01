@@ -576,15 +576,12 @@
 	            emoji: ingredients[1].emoji ?? '⬜',
 	        },
 	    ]);
-       cachedElements[result.text]??=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == result.text);
-       cachedElements[second.text]??=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == second.text);
-       cachedElements[first.text]??=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == first.text);
 
-    usedBy[first.text]??={};
-    usedBy[second.text]??={};
+        usedBy[first.text]??={};
+        usedBy[second.text]??={};
 
-      usedBy[first.text][result.text]=[cachedElements[result.text],cachedElements[second.text]]
-      usedBy[second.text][result.text]=[cachedElements[result.text],cachedElements[first.text]]
+        usedBy[first.text][result]=[result,second.text]
+        usedBy[second.text][result]=[result,first.text]
 
 
 
@@ -1217,6 +1214,8 @@ if(usedBy[element.text]!=null){
 	        }));
 	        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements = cloneInto(saveFile, unsafeWindow);
 	        await resetCrafts();
+          usedBy={};
+          cachedElements={};
 	        if (Object.keys(fileContents).includes('recipes')) {
 	            for (const recipeKey of Object.keys(fileContents.recipes)) {
 	                if (recipeKey !== 'Nothing') {
@@ -1229,10 +1228,21 @@ if(usedBy[element.text]!=null){
 	                                text: recipe[1].text,
 	                                emoji: recipe[1].emoji,
 	                            }, recipeKey, true);
+
+
+
+
 	                        }
+
+
+
 	                    }
 	                }
+
+
+
 	            }
+            console.log("used By after savefile",usedBy);
 	            await GM.setValue('recipes', JSON.stringify(fileContents.recipes));
 	        }
 	        await resetDiscoveries();

@@ -6,7 +6,7 @@
 // @grant	GM.setValue
 // @grant	unsafeWindow
 // @run-at	document-start
-// @version	1.1.0
+// @version	1.1.1
 // @author	Natasquare
 // @description	Store elements in GM storage instead of localStorage, allowing bigger save files to be used. Optional encoding functions can be supplied.
 // @downloadURL	https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/gm_abuse/index.user.js
@@ -77,7 +77,7 @@ function decodeElements(raw) {
 		}
 
 		const icData = JSON.parse(unsafeWindow._getItem.call(localStorage, "infinite-craft-data"));
-		if (icData.elements.length > 0) {
+		if (icData && icData.elements.length > 0) {
 			moveToElements(icData.elements);
 			unsafeWindow._setItem.call(localStorage, "infinite-craft-data", JSON.stringify({
 				...icData,

@@ -200,7 +200,7 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 			if (this.newDepIds.size < 10) return addDep.apply(this, a);
 		}, unsafeWindow);
 		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.searchResults.addDep = exportFunction(function(...a) {
-			if (this.newDepIds.size < 10) return addDep.apply(this, a);
+			if (this.newDepIds.size < 20) return addDep.apply(this, a);
 		}, unsafeWindow);
 		patchedDeps = true;
 	}

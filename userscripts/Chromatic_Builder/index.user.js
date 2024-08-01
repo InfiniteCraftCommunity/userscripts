@@ -107,6 +107,7 @@
                    console.log("fail hole step",step);
                    step--;
                    indexInStep= recursiveStep[step]+1;
+                   recursiveStep[step]+=1;
                    stage=recursiveStage;
                  }
 

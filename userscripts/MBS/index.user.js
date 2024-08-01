@@ -351,7 +351,7 @@ let tooltipHandlers = [{
 	}) {
 		if (madePannable) return;
 		container.addEventListener("mousedown", function(e) {
-			if (e.ctrlKey && settings.pannableBoard) {
+			if (e.ctrlKey && e.button === 0 && settings.pannableBoard) {
 				mouseData.down = true;
 				mouseData.x = e.pageX;
 				mouseData.y = e.pageY;

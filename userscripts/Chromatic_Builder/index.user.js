@@ -628,7 +628,7 @@ if(usedBy[element.text]!=null){
                    elems[1]=key in cachedElements?cachedElements[key][1]:unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == elems[1]);
 
 
-                   elems[0]=key in cachedElements?cachedElements[key][0]:unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == elems[2]);
+                   elems[0]=key in cachedElements?cachedElements[key][0]:unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == elems[0]);
 
 
               cachedElements[key]??=[elems[0],elems[1]];

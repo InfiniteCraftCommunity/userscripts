@@ -699,7 +699,7 @@
           {
               let instances = document.getElementsByClassName("instance");
              for (const node of instances)
-               {
+               {   if(node.querySelector(".instance-emoji"))
                    applyOnOneElement(node);
 
                }

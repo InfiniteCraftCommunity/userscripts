@@ -101,6 +101,18 @@ function decodeElements(raw) {
 
 			const newSave = JSON.parse(args[1]);
 
+			// force save, skip checking for new entries
+			if (args[2] === true) {
+				elements = newSave.elements;
+				newElements = [];
+				elementSet = new Set();
+				for (let i = newSave.elements.length; i--;)
+					elementSet.add(newSave.elements[i]);
+				GM.setValue("elements", encodeElements(elements));
+				GM.setValue("newElements", "[]");
+				return;
+			}
+
 			let hasRemoved = false;
 			const newElementSet = new Set();
 

@@ -18,7 +18,7 @@ function encodeElements(elements) {
 		encodedEmojis = "";
 
 	for (const element of elements) {
-		encodedElements += (element.discovered ? "\x02" : "\x01") + element.text
+		encodedElements += String.fromCharCode(element.discovered + (element.hidden << 1) + 1) + element.text
 		encodedEmojis += "\x01" + (element.emoji ?? "");
 	}
 
@@ -31,12 +31,14 @@ function decodeElements(raw) {
 	const emojis = encodedEmojis.split("\x01");
 	const out = [];
 	for (let i = 0, length = encodedElements.length; i < length;) {
+		const first = encodedElements[i++].charCodeAt() - 1;
 		const element = {
-			discovered: encodedElements[i++] === "\x02",
+			discovered: first & 1,
 			text: encodedElements[i++],
 			emoji: emojis[out.length] || undefined
 		}
-		while (i < length && encodedElements[i] !== "\x01" && encodedElements[i] !== "\x02")
+		if (first >> 1 & 1) element.hidden = true;
+		while (i < length && encodedElements[i] > "\x05")
 			element.text += encodedElements[i++];
 		out.push(element);
 	}

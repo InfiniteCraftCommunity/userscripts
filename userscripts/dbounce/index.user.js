@@ -4,7 +4,7 @@
 // @match	https://neal.fun/infinite-craft/*
 // @grant	unsafeWindow
 // @run-at	document-start
-// @version	1.1.0
+// @version	1.1.1
 // @author	Natasquare
 // @description	Adds input debouncing to the search bar and implements some other optimizations.
 // @downloadURL	https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/dbounce/index.user.js
@@ -200,7 +200,7 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 			if (this.newDepIds.size < 10) return addDep.apply(this, a);
 		}, unsafeWindow);
 		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.searchResults.addDep = exportFunction(function(...a) {
-			if (this.newDepIds.size < 10) return addDep.apply(this, a);
+			if (this.newDepIds.size < 20) return addDep.apply(this, a);
 		}, unsafeWindow);
 		patchedDeps = true;
 	}

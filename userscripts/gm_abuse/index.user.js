@@ -6,11 +6,11 @@
 // @grant	GM.setValue
 // @grant	unsafeWindow
 // @run-at	document-start
-// @version	1.0.2
+// @version	1.1.1
 // @author	Natasquare
 // @description	Store elements in GM storage instead of localStorage, allowing bigger save files to be used. Optional encoding functions can be supplied.
-// @downloadURL	https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/gm_abuse/index.js
-// @updateURL	https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/gm_abuse/index.js
+// @downloadURL	https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/gm_abuse/index.user.js
+// @updateURL	https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/gm_abuse/index.user.js
 // ==/UserScript==
 
 function encodeElements(elements) {
@@ -18,7 +18,7 @@ function encodeElements(elements) {
 		encodedEmojis = "";
 
 	for (const element of elements) {
-		encodedElements += (element.discovered ? "\x02" : "\x01") + element.text
+		encodedElements += String.fromCharCode(element.discovered + (element.hidden << 1) + 1) + element.text
 		encodedEmojis += "\x01" + (element.emoji ?? "");
 	}
 
@@ -31,12 +31,14 @@ function decodeElements(raw) {
 	const emojis = encodedEmojis.split("\x01");
 	const out = [];
 	for (let i = 0, length = encodedElements.length; i < length;) {
+		const first = encodedElements[i++].charCodeAt() - 1;
 		const element = {
-			discovered: encodedElements[i++] === "\x02",
+			discovered: first & 1,
 			text: encodedElements[i++],
 			emoji: emojis[out.length] || undefined
 		}
-		while (i < length && encodedElements[i] !== "\x01" && encodedElements[i] !== "\x02")
+		if (first >> 1 & 1) element.hidden = true;
+		while (i < length && encodedElements[i] > "\x05")
 			element.text += encodedElements[i++];
 		out.push(element);
 	}
@@ -75,7 +77,7 @@ function decodeElements(raw) {
 		}
 
 		const icData = JSON.parse(unsafeWindow._getItem.call(localStorage, "infinite-craft-data"));
-		if (icData.elements.length > 0) {
+		if (icData && icData.elements.length > 0) {
 			moveToElements(icData.elements);
 			unsafeWindow._setItem.call(localStorage, "infinite-craft-data", JSON.stringify({
 				...icData,
@@ -100,6 +102,18 @@ function decodeElements(raw) {
 			if (!initialized || args[0] !== "infinite-craft-data") return unsafeWindow._setItem.apply(this, args);
 
 			const newSave = JSON.parse(args[1]);
+
+			// force save, skip checking for new entries
+			if (args[2] === true) {
+				elements = newSave.elements;
+				newElements = [];
+				elementSet = new Set();
+				for (let i = newSave.elements.length; i--;)
+					elementSet.add(newSave.elements[i]);
+				GM.setValue("elements", encodeElements(elements));
+				GM.setValue("newElements", "[]");
+				return;
+			}
 
 			let hasRemoved = false;
 			const newElementSet = new Set();

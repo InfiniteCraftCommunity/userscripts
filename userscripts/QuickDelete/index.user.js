@@ -5,7 +5,7 @@
 // @grant       unsafeWindow
 // @version     1.0
 // @author      Margen67
-// @description Quickly delete elements by holding CTRL+Right Click and hovering over them.
+// @description Quickly delete elements by holding CTRL+RMB and hovering over them.
 // ==/UserScript==
 
 window.addEventListener("load", () => {

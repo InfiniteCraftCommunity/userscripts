@@ -86,7 +86,9 @@
         console.log(step,expectedResults[step])
      if(expectedResults[step].includes(response.result))
        {
-         if(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == toCombineText[step][indexInStep]))
+         if(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == toCombineText[step][indexInStep])
+			 && toCombineText[step][indexInStep]!="nothing"
+		 )
            await unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].craft({text:stage}, { text:toCombineText[step][indexInStep] });
 
 

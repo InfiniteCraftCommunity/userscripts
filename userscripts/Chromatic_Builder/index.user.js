@@ -52,7 +52,6 @@
 
 
                         ];
-        console.log("EXPR:",expectedResults);
     let recursiveStep=[0,0,0,0,0,0];
     let recursiveStage=[stage,"","","","",""];
 
@@ -87,8 +86,8 @@
         console.log(step,expectedResults[step])
      if(expectedResults[step].includes(response.result))
        {
-          await unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].craft({text:stage}, { text:toCombineText[step][indexInStep] });
-
+         if(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == toCombineText[step][indexInStep]))
+           await unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].craft({text:stage}, { text:toCombineText[step][indexInStep] });
 
 
          recursiveStage[step]=stage;
@@ -134,6 +133,8 @@
                    console.log("fail hole step",step);
                    step--;
                    indexInStep= recursiveStep[step]+1;
+                   stage=recursiveStage[step];
+                   recursiveStep[step]+=1;
        }
 
     }

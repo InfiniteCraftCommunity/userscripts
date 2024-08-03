@@ -4,7 +4,7 @@
 // @match       https://neal.fun/infinite-craft/*
 // @grant       none
 // @version     1.0
-// @author      -
+// @author      Alexander_Andercou
 // @description 7/11/2024, 10:00:45 PM
 // ==/UserScript==
  (function() {

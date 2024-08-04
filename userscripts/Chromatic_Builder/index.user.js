@@ -23,7 +23,7 @@
      " Delete The First Word","Remove First Word","Remove The First Word","Delete Chromatic","Delete Achromatic","Delete Monochromatic","Remove Chromatic","Remove Achromatic"],
     [bar, "\"the "+bar+"\""],
     ["Delete First Word", " Delete The First Word","Remove First Word","Remove The First Word","Delete Chromatic","Delete Achromatic","Delete Monochromatic","Remove Chromatic","Remove Achromatic",
-     "U+0020", "U++0020","U+++0020","Append U+0020"," Prepend U+0020",
+     "U+0020", "U++0020","U+++0020","Append U+0020"," Prepend U+0020","Inverse","Reverse","Backward","Backwards",
     "Delete The The","Remove The The","Without The The","Delete The Word The","Remove The Word The","Without The Word The","U+0020", "U++0020","U+++0020","Append U+0020"," Prepend U+0020",bar,"the "+bar],
     ["Delete The The","Remove The The","Without The The","Delete The Word The","Remove The Word The","Without The Word The"]
 
@@ -43,7 +43,9 @@
                          "\"the "+foo+"\"", "\"the Chromatic "+foo+"\"","\"the Achromatic "+foo+"\"","\"the Monochromatic "+foo+"\""],
 
                          ["\"the "+foo+" "+bar+"\"","\"the Chromatic "+foo+" "+bar+"\"","\"the Achromatic "+foo+" "+bar+"\"","\"the Monochromatic "+foo+" "+bar+"\"",
-                         "\"the "+foo+" "+bar.toLowerCase()+"\"","\"the Chromatic "+foo+" "+bar.toLowerCase()+"\"","\"the Achromatic "+foo+" "+bar.toLowerCase()+"\"","\"the Monochromatic "+foo+" "+bar.toLowerCase()+"\""
+                         "\"the "+foo+" "+bar.toLowerCase()+"\"","\"the Chromatic "+foo+" "+bar.toLowerCase()+"\"","\"the Achromatic "+foo+" "+bar.toLowerCase()+"\"","\"the Monochromatic "+foo+" "+bar.toLowerCase()+"\"",
+                         "\"the "+bar+" "+foo+"\"","\"the Chromatic "+bar+" "+foo+"\"","\"the Achromatic "+bar+" "+foo+"\"","\"the Monochromatic "+bar+" "+foo+"\"",
+                         "\"the "+bar+" "+foo.toLowerCase()+"\"","\"the Chromatic "+bar+" "+foo.toLowerCase()+"\"","\"the Achromatic "+bar+" "+foo.toLowerCase()+"\"","\"the Monochromatic "+bar+" "+foo.toLowerCase()+"\"",
                           ],
                          [foo+" "+bar,"\"the "+foo+" "+bar+"\"","\"Chromatic "+foo+" "+bar+"\"","\"Achromatic "+foo+" "+bar+"\"","\"Monochromatic "+foo+" "+bar+"\"",
                          foo+" "+bar.toLowerCase(),"\"the "+foo+" "+bar.toLowerCase()+"\"","\"Chromatic "+foo+" "+bar.toLowerCase()+"\"","\"Achromatic "+foo+" "+bar.toLowerCase()+"\"","\"Monochromatic "+foo+" "+bar.toLowerCase()+"\""
@@ -66,7 +68,7 @@
 
     let response=stage;
 
-
+      console.log("step","instep",step,indexInStep);
     if(toCombineText[step][indexInStep]!="nothing" &&
       unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == toCombineText[step][indexInStep])
       )
@@ -83,13 +85,16 @@
 
 
         console.log("response:",response.result);
-        console.log(step,expectedResults[step])
+      //  console.log(step,expectedResults[step])
      if(expectedResults[step].includes(response.result))
        {
-         if(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == toCombineText[step][indexInStep])
-			 && toCombineText[step][indexInStep]!="nothing"
-		 )
-           await unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].craft({text:stage}, { text:toCombineText[step][indexInStep] });
+         if(
+           toCombineText[step][indexInStep]!="nothing" &&
+           unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == toCombineText[step][indexInStep]))
+             unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.push( {text: response.result,
+                                    emoji: response.emoji,
+                                    disabled: !1,
+                                    discovered: response.isNew});
 
 
          recursiveStage[step]=stage;

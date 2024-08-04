@@ -9,24 +9,54 @@
 // ==/UserScript==
 (function()
 {
+
+
+  let cache={}
+
+  function checkInInventory(element)
+  {
+     if(cache[element]!=null)
+        return true;
+
+
+
+     return unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == element);
+
+  }
+
+
+
+
+
   async function buildUsingChromatic(foo,bar)
   {
 
-    if( unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == foo) && unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == bar))
+
+     unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == foo) && unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.forEach(
+     e=>{
+       cache[e.text]=e;
+     }
+
+
+     );
+     let visited=[];
+
+
+
+    if(checkInInventory(foo) && checkInInventory(bar))
       {
     let stage=foo;
     let step=0;
     let indexInStep=0;
-
     let toCombineText=[["\"the\"","\"the \"", "\"the Chromatic\"","\"the Chromatic \"","\"the Achromatic\"","\"the Achromatic \"","\"the Monochromatic\"","\"the Monochromatic \""],
     ["nothing","U+0020", "U++0020","U+++0020","Append U+0020"," Prepend U+0020","Append Space","Prepend Space","Delete First Word",
      " Delete The First Word","Remove First Word","Remove The First Word","Delete Chromatic","Delete Achromatic","Delete Monochromatic","Remove Chromatic","Remove Achromatic"],
-    [bar, "\"the "+bar+"\""],
+    [bar],
     ["Delete First Word", " Delete The First Word","Remove First Word","Remove The First Word","Delete Chromatic","Delete Achromatic","Delete Monochromatic","Remove Chromatic","Remove Achromatic",
      "U+0020", "U++0020","U+++0020","Append U+0020"," Prepend U+0020","Inverse","Reverse","Backward","Backwards",
     "Delete The The","Remove The The","Without The The","Delete The Word The","Remove The Word The","Without The Word The","U+0020", "U++0020","U+++0020","Append U+0020"," Prepend U+0020",bar,"the "+bar],
-    ["Delete The The","Remove The The","Without The The","Delete The Word The","Remove The Word The","Without The Word The"]
-
+    ["Delete The The","Remove The The","Without The The","Delete The Word The","Remove The Word The","Without The Word The","Inverse","Reverse","Backward","Backwards"],
+    ["Inverse","Reverse","Backward","Backwards"]
 
 
                       ];
@@ -35,7 +65,8 @@
 
 
 
-    let expectedResults=[
+
+      let expectedResults=[
 
                          ["\"the "+foo+"\"", "\"the Chromatic "+foo+"\"","\"the Achromatic "+foo+"\"","\"the Monochromatic "+foo+"\""],
 
@@ -47,17 +78,42 @@
                          "\"the "+bar+" "+foo+"\"","\"the Chromatic "+bar+" "+foo+"\"","\"the Achromatic "+bar+" "+foo+"\"","\"the Monochromatic "+bar+" "+foo+"\"",
                          "\"the "+bar+" "+foo.toLowerCase()+"\"","\"the Chromatic "+bar+" "+foo.toLowerCase()+"\"","\"the Achromatic "+bar+" "+foo.toLowerCase()+"\"","\"the Monochromatic "+bar+" "+foo.toLowerCase()+"\"",
                           ],
-                         [foo+" "+bar,"\"the "+foo+" "+bar+"\"","\"Chromatic "+foo+" "+bar+"\"","\"Achromatic "+foo+" "+bar+"\"","\"Monochromatic "+foo+" "+bar+"\"",
-                         foo+" "+bar.toLowerCase(),"\"the "+foo+" "+bar.toLowerCase()+"\"","\"Chromatic "+foo+" "+bar.toLowerCase()+"\"","\"Achromatic "+foo+" "+bar.toLowerCase()+"\"","\"Monochromatic "+foo+" "+bar.toLowerCase()+"\""
-
-                         ],[foo+" "+bar]
+                         [foo+" "+bar,bar+" "+foo,"\"the "+foo+" "+bar+"\"","\"Chromatic "+foo+" "+bar+"\"","\"Achromatic "+foo+" "+bar+"\"","\"Monochromatic "+foo+" "+bar+"\"",
+                         foo+" "+bar.toLowerCase(),"\"the "+foo+" "+bar.toLowerCase()+"\"","\"Chromatic "+foo+" "+bar.toLowerCase()+"\"","\"Achromatic "+foo+" "+bar.toLowerCase()+"\"","\"Monochromatic "+foo+" "+bar.toLowerCase()+"\"",
+                         "\"the "+bar+" "+foo+"\"","\"the Chromatic "+bar+" "+foo+"\"","\"the Achromatic "+bar+" "+foo+"\"","\"the Monochromatic "+bar+" "+foo+"\"",
+                         "\"the "+bar+" "+foo.toLowerCase()+"\"","\"the Chromatic "+bar+" "+foo.toLowerCase()+"\"","\"the Achromatic "+bar+" "+foo.toLowerCase()+"\"","\"the Monochromatic "+bar+" "+foo.toLowerCase()+"\"",
+                         bar+" "+foo,bar+" "+foo.toLowerCase()
+                         ],
+                           [bar+" "+foo,foo+" "+bar ,bar+" "+foo.toLowerCase()],[foo+" "+bar]
 
 
                         ];
     let recursiveStep=[0,0,0,0,0,0];
     let recursiveStage=[stage,"","","","",""];
 
-    while(step<5 )
+
+        //prestep get all elementnts derived from bar to use in step 3
+        for(let element of toCombineText[0])
+          {
+
+               let response2= await unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse({text:bar}, { text:element});
+                 if(response2.result!="Nothing" && !toCombineText[2].includes(response2))
+               {
+                 toCombineText[2].push(response2.result);
+                 if(!checkInInventory(response2.result))
+                    unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.push( {text: response2.result,
+                                    emoji: response2.emoji,
+                                    disabled: !1,
+                                    discovered: response2.isNew});
+
+               }
+
+
+          }
+
+  console.log("tools step 3",toCombineText[2])
+
+    while(step<6 )
     {
       console.log(step);
       if(step<0)
@@ -66,17 +122,44 @@
       if(indexInStep<toCombineText[step].length)
       {
 
-    let response=stage;
+         let response=stage;
 
       console.log("step","instep",step,indexInStep);
+        if(foo+" "+bar==stage)
+              break;
+
+
+
+
     if(toCombineText[step][indexInStep]!="nothing" &&
-      unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == toCombineText[step][indexInStep])
+
+      checkInInventory(toCombineText[step][indexInStep])
       )
+      {  console.log("verified:",visited)
+         if(visited.find(x=>{ return x.first==stage && x.second==toCombineText[step][indexInStep]}))
+            {
+              indexInStep+=1;
+              console.log("recipe already checked");
+              continue;
 
 
-    response= await unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse({text:stage}, { text:toCombineText[step][indexInStep] });
+            }
+
+
+
+         visited.push({first:stage,second:toCombineText[step][indexInStep]});
+
+           response= await unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse({text:stage}, { text:toCombineText[step][indexInStep] });
+
+
+
+      }
+
+
      else
     {
+
+
       response={};
       response.result=stage;
     }
@@ -88,19 +171,30 @@
       //  console.log(step,expectedResults[step])
      if(expectedResults[step].includes(response.result))
        {
+
+
+
          if(
-           toCombineText[step][indexInStep]!="nothing" &&
-           unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == toCombineText[step][indexInStep]))
-             unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.push( {text: response.result,
+             toCombineText[step][indexInStep]!="nothing" &&
+             response.result!="Nothing" &&
+             !checkInInventory(response.result) &&
+              checkInInventory(toCombineText[step][indexInStep]))
+           {
+
+                    unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.push( {text: response.result,
                                     emoji: response.emoji,
                                     disabled: !1,
                                     discovered: response.isNew});
+
+           }
+
+
 
 
          recursiveStage[step]=stage;
           console.log("success");
 
-         if(foo+" "+bar==stage)
+         if(foo+" "+bar==stage || foo+" "+bar==response.result)
           break;
 
          recursiveStep[step]=indexInStep;

@@ -85,113 +85,6 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 
 	if (delayElementLoading) delayLoad();
 
-	function injectCSS(css) {
-		const style = document.createElement("style");
-		style.textContent = css;
-		document.head.append(style);
-	}
-
-	function traverseUntil(element, selector) {
-		let result = element;
-		while (true) {
-			if (result?.matches(selector)) return result;
-			if (!result?.parentElement) return null;
-			result = result.parentElement;
-		}
-	}
-
-	let elementStore = [],
-		isDeleting = false,
-		shownElementIndex = 0;
-
-	function initRenderer(context) {
-		const itemsInner = context.itemsInner.cloneNode(),
-			  trashButton = context.trashButton.cloneNode();
-
-		context.itemsInner.replaceWith(itemsInner);
-		context.trashButton.replaceWith(trashButton);
-		context.itemsInner = itemsInner;
-		context.trashButton = trashButton;
-
-		injectCSS(`.sidebar.is-deleting .item-hidden{opacity:.5;display:inline-block}.sidebar .item-hidden{display:none}`);
-
-		context.sidebar.addEventListener("mousedown", function(e) {
-			const item = traverseUntil(e.target, ".item");
-			if (!item) return;
-			const element = elementStore[item.getAttribute("data-element-index")];
-			if (!element) return;
-
-			if (isDeleting) {
-				element.hidden = !element.hidden;
-				if (element.hidden) item.classList.add("item-hidden");
-				else item.classList.remove("item-hidden");
-				unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].deleteSound.play();
-				unsafeWindow.localStorage.setItem("infinite-craft-data", JSON.stringify({
-					elements: unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements,
-					darkMode: unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.isDarkMode
-				}), true);
-				return;
-			}
-
-			unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].selectElement(e, element);
-		});
-		context.sidebar.addEventListener("scroll", () => render(context));
-
-		context.trashButton.addEventListener("click", function() {
-			isDeleting = !isDeleting;
-			if (isDeleting) {
-				context.trashButton.classList.add("trash-active");
-				context.sidebar.classList.add("is-deleting");
-			} else {
-				context.trashButton.classList.remove("trash-active");
-				context.sidebar.classList.remove("is-deleting");
-			}
-		});
-	}
-
-	let ticking = false;
-	function render({ sidebar, itemsInner }) {
-		if (ticking) return;
-		ticking = true;
-		setTimeout(() => ticking = false, 72);
-
-		let scrollPercent = (sidebar.scrollTop + sidebar.clientHeight)/sidebar.scrollHeight;
-		if (scrollPercent < 0.9 && shownElementIndex > 0) return;
-
-		const firstBatch = shownElementIndex < 1;
-
-		const newChildren = [];
-		let toAdd = shownElementIndex > 0 ? (window.innerHeight/(itemsInner.clientHeight/shownElementIndex) << 3) | 0 : 727;
-
-		while (shownElementIndex < elementStore.length && toAdd-- > 0) {
-			newChildren.push(createElementNode(elementStore[shownElementIndex], shownElementIndex));
-			shownElementIndex++;
-		}
-
-		if (firstBatch) itemsInner.replaceChildren(...newChildren);
-		else itemsInner.append(...newChildren);
-	}
-
-	function createElementNode(element, index) {
-		const node = document.createElement("div");
-		node.classList.add("item");
-		if (element.discovered) node.classList.add("item-discovered");
-		if (element.hidden) node.classList.add("item-hidden");
-		const emoji = document.createElement("span");
-		emoji.classList.add("item-emoji");
-		emoji.appendChild(document.createTextNode(element.emoji || "⬜"));
-		node.appendChild(emoji);
-		node.appendChild(document.createTextNode(`\n ${element.text} \n`));
-		node.setAttribute("data-element-index", index);
-		return node;
-	}
-
-	function updateStore(context, newStore) {
-		elementStore = [].concat(newStore);
-		shownElementIndex = 0;
-		setTimeout(render, 0, context);
-	}
-
 	let patchedDeps = false;
 	function limitDeps() {
 		if (patchedDeps) return;
@@ -206,14 +99,6 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 	}
 
 	async function init() {
-		const context = {
-			sidebar: document.querySelector(".sidebar"),
-			itemsInner: document.querySelector(".sidebar .items .items-inner"),
-			trashButton: document.querySelector(".side-controls .trash")
-		}
-
-		if (useCustomRenderer) initRenderer(context);
-
 		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.searchQuery = "=";
 
 		const _filteredElements = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.filteredElements.getter;
@@ -221,10 +106,6 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 			const filtered = _filteredElements.call(this);
 			unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$refs.search.placeholder = `Search (${filtered.length.toLocaleString()}) items...`;
 			if ((hideItemsWhenNoQuery && !this.searchQuery) || (this.searchQuery && notSearching)) return [];
-			if (useCustomRenderer && notSearching) {
-				updateStore(context, filtered);
-				return [];
-			}
 			return filtered;
 		}, unsafeWindow);
 
@@ -260,12 +141,7 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 			} else {
 				sorted = t.sort((a, b) => a.text.length - b.text.length);
 			}
-			const sliced = sorted.slice(0, resultLimit);
-			if (useCustomRenderer) {
-				updateStore(context, sliced);
-				return [];
-			}
-			return sliced;
+			return sorted.slice(0, resultLimit);
 		}, unsafeWindow);
 
 		const search = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$refs.search.cloneNode(true);
@@ -288,6 +164,11 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 				search.focus();
 		});
 
+		if (useCustomRenderer) {
+			const renderer = new Renderer(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0], {});
+			renderer.init();
+		}
+
 		if (delayElementLoading) loadElements();
 
 		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.searchQuery = "";
@@ -295,3 +176,161 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 
 	window.addEventListener("load", init, false);
 })()
+
+class Renderer {
+	#elementStore = [];
+
+	constructor(context, options) {
+		this.context = context;
+		this.options = options;
+	}
+	init() {
+		const elements = {
+			sidebar: document.querySelector(".sidebar"),
+			itemsInner: document.querySelector(".sidebar .items .items-inner"),
+			trashButton: document.querySelector(".side-controls .trash")
+		}
+
+		const itemsInner = elements.itemsInner.cloneNode(),
+			  trashButton = elements.trashButton.cloneNode();
+
+		elements.itemsInner.replaceWith(itemsInner);
+		elements.trashButton.replaceWith(trashButton);
+		elements.itemsInner = itemsInner;
+		elements.trashButton = trashButton;
+
+		this.elements = elements;
+		this.isDeleting = false;
+		this.shownElementIndex = 0;
+
+		const updateSidebar = this.throttle(this.updateSidebar, 72);
+		elements.sidebar.addEventListener("mousedown", (e) => this.handleElementSelection(e));
+		elements.sidebar.addEventListener("scroll", (e) => updateSidebar(e));
+
+		elements.trashButton.addEventListener("click", this.handleTrashToggle);
+		this.injectCSS(`.sidebar.is-deleting .item-hidden{opacity:.5;display:inline-block}.sidebar .item-hidden{display:none}`);
+
+		this.patchWatchers();
+	}
+	patchWatchers() {
+		const filteredElements = this.context._computedWatchers.filteredElements.getter,
+			  searchResults = this.context._computedWatchers.searchResults.getter,
+			  renderer = this;
+		this.context._computedWatchers.filteredElements.getter = exportFunction(function() {
+			renderer.elementStore = filteredElements.apply(this, arguments);
+			return [];
+		}, unsafeWindow);
+		this.context._computedWatchers.searchResults.getter = exportFunction(function() {
+			const results = searchResults.apply(this, arguments);
+			if (!this.searchQuery) return results;
+			renderer.elementStore = results;
+			return [];
+		}, unsafeWindow);
+	}
+	handleElementSelection(e) {
+		const item = this.traverseUntil(e.target, ".item");
+		if (!item) return;
+
+		const element = this.#elementStore[item.getAttribute("data-element-index")];
+		if (!element) return;
+
+		if (this.isDeleting) {
+			element.hidden = !element.hidden;
+			if (element.hidden) item.classList.add("item-hidden");
+			else item.classList.remove("item-hidden");
+
+			this.context.deleteSound.play();
+
+			unsafeWindow.localStorage.setItem("infinite-craft-data", JSON.stringify({
+				elements: this.context.elements,
+				darkMode: this.context.isDarkMode
+			}), true);
+
+			return;
+		}
+
+		this.context.selectElement(e, element);
+	}
+	updateSidebar() {
+		const sidebar = this.elements.sidebar,
+			  itemsInner = this.elements.itemsInner;
+
+		let scrollPercent = (sidebar.scrollTop + sidebar.clientHeight)/sidebar.scrollHeight;
+		if (scrollPercent < 0.9 && this.shownElementIndex > 0) return;
+
+		const newChildren = [],
+			  store = this.#elementStore,
+			  isFirstBatch = this.shownElementIndex < 1;
+
+		let toAdd = this.shownElementIndex > 0 ? (window.innerHeight/(itemsInner.clientHeight/this.shownElementIndex) << 3) | 0 : 727;
+
+		while (this.shownElementIndex < store.length && toAdd-- > 0) {
+			newChildren.push(this.createElementNode(store[this.shownElementIndex], this.shownElementIndex));
+			this.shownElementIndex++;
+		}
+
+		if (isFirstBatch) itemsInner.replaceChildren(...newChildren);
+		else itemsInner.append(...newChildren);
+	}
+	createElementNode(element, index) {
+		const node = document.createElement("div");
+		node.classList.add("item");
+		if (element.discovered) node.classList.add("item-discovered");
+		if (element.hidden) node.classList.add("item-hidden");
+		const emoji = document.createElement("span");
+		emoji.classList.add("item-emoji");
+		emoji.appendChild(document.createTextNode(element.emoji || "⬜"));
+		node.appendChild(emoji);
+		node.appendChild(document.createTextNode(`\n ${element.text} \n`));
+		node.setAttribute("data-element-index", index);
+		return node;
+	}
+	handleTrashToggle() {
+		const trashButton = this.elements.trashButton,
+			  sidebar = this.elements.sidebar,
+			  newStatus = !this.isDeleting;
+
+		if (newStatus) {
+			trashButton.classList.add("trash-active");
+			sidebar.classList.add("is-deleting");
+		} else {
+			trashButton.classList.remove("trash-active");
+			sidebar.classList.remove("is-deleting");
+		}
+
+		this.isDeleting = newStatus;
+	}
+
+	set elementStore(newStore) {
+		this.#elementStore = [].concat(newStore);
+		this.shownElementIndex = 0;
+		setTimeout(() => this.updateSidebar());
+	}
+	get elementStore() {
+		return this.#elementStore
+	}
+
+	injectCSS(css) {
+		const style = document.createElement("style");
+		style.textContent = css;
+		document.head.append(style);
+	}
+	traverseUntil(element, selector) {
+		let result = element;
+		while (true) {
+			if (result?.matches(selector)) return result;
+			if (!result?.parentElement) return null;
+			result = result.parentElement;
+		}
+	}
+	throttle(fn, delay) {
+		const context = this;
+		let lastCall = 0;
+		return function() {
+			const now = Date.now();
+			if (now - lastCall < delay) return;
+			lastCall = now;
+			return fn.apply(context, arguments);
+		}
+	}
+}

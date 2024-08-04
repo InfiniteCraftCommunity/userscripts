@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name        Infinte Craft Selection Utils
+// @name        Infinite Craft Selection Utils
 // @namespace   Catstone
 // @match       https://neal.fun/infinite-craft/
 // @grant			  GM_getValue

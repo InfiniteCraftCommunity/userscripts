@@ -5,7 +5,7 @@
 // @require     https://raw.githubusercontent.com/Infinite-Craft-Discord-Community/Community_Library_UserScripts_IC/main/dist/lib.user.js
 // @grant       unsafeWindow
 // @version     1.0
-// @author      -
+// @author      Alexander_Andercou
 // @description 5/11/2024, 7:54:23 PM
 // ==/UserScript==
 (function(){

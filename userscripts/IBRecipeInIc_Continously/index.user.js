@@ -24,13 +24,37 @@ window.addEventListener("load", async () => {
    let currentState= await GM.getValue("state");
     if(currentState=="start")
     {
+
+
       GM.setValue("state","progress");
       let recipeRaw= await GM.getValue("recipeIB");
       console.log("recipe raw",recipeRaw);
       let recipes=JSON.parse(recipeRaw);
+
+
+
      for(let recipe of recipes)
       {
-        await unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].craft({text:recipe[0]}, { text:recipe[1]});
+
+
+        let elm=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find(x=>x.text==recipe[1]);
+        let elm1=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find(x=>x.text==recipe[0]);
+          try{
+
+
+
+        console.log("this ones:",elm,elm1);
+       await unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].craft({text:recipe[0],emoji:elm1?.emoji,discovered:elm1?.discovered}, {text:recipe[1],emoji:elm?.emoji,discovered:elm?.discovered});
+
+
+          }catch(err)
+            {
+              console.log(err);
+            }
+
+
+
+
 
 
       }

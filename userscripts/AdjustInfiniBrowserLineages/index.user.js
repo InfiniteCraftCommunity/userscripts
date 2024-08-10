@@ -9,7 +9,7 @@
 // @grant       GM.getValue
 // @grant       GM.setValue
 // @run-at      document-end
-// @version     0.2
+// @version     0.3
 // @author      zeroptr
 // @downloadURL https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/AdjustInfiniBrowserLineages/index.user.js
 // @description Adjust lineages on InfiniBrowser, removing steps for elements that you already have on Infinite Craft. Also removes the "The recipe for this element is too big".
@@ -20,18 +20,27 @@ window.addEventListener("load", () => {
     $initInfiniteCraft();
   } else if (window.location.pathname.startsWith("/item/")) {
     $initIBItemView();
-  } else if (window.location.pathname.startsWith("/search")) {
+  } else if (window.location.pathname == "/" || window.location.pathname.startsWith("/search")) {
     $initIBSearch();
   }
 });
 
 /** Adjust a lineage on InfiniBrowser */
 async function adjustLineage(stepSelector, fixStepNumbers) {
+  document.querySelectorAll(".youalreadyhavethiselement").forEach((x) => x.remove());
+
+  const steps = document.querySelectorAll(stepSelector);
+  if (!steps.length) return;
+
   const elements = new Set((await GM.getValue("elements", "")).split("\x01"));
   const element = document.getElementById("item_id").textContent;
 
   if (elements.has(element.toLowerCase())) {
-    document.querySelector(stepSelector).before("You already have this element");
+    const span = document.createElement("span");
+    span.textContent = "You already have this element";
+    span.classList.add("youalreadyhavethiselement");
+
+    document.querySelector(".recipes").before(span);
     return;
   }
 
@@ -41,7 +50,7 @@ async function adjustLineage(stepSelector, fixStepNumbers) {
   let removedSteps = 0;
 
   // remove steps for elements that the player already has
-  document.querySelectorAll(stepSelector).forEach((x) => {
+  steps.forEach((x) => {
     const items = x.querySelectorAll(".item");
     const result = items[2].childNodes[1].textContent;
 
@@ -96,13 +105,10 @@ function $initIBItemView() {
 
 /** Initialize on InfiniBrowser at /search */
 function $initIBSearch() {
-  new MutationObserver((e) => {
-    if (
-      e.length && e[0].addedNodes.length
-      && e[0].addedNodes[0].tagName == "LI"
-    ) {
-      adjustLineage("#recipes li", false);
-    }
+  if (!document.getElementById("recipes")) return;
+  
+  new MutationObserver(() => {
+    adjustLineage("#recipes li", false);
   }).observe(
     document.getElementById("recipes"),
     { childList: true }

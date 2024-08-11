@@ -1,3 +1,4 @@
+
 // ==UserScript==
 // @name        Chromatic Builder
 // @namespace   Violentmonkey Scripts
@@ -61,13 +62,14 @@
     let stage=foo;
     let step=0;
     let indexInStep=0;
-    let toCombineText=[["\"the\"","\"the \"", "\"the Chromatic\"","\"the Chromatic \"","\"the Achromatic\"","\"the Achromatic \"","\"the Monochromatic\"","\"the Monochromatic \""],
+    let toCombineText=[["\"the\"","\"the \"", "\"the Chromatic\"","\"the Chromatic \"","\"the Achromatic\"","\"the Achromatic \"","\"the Monochromatic\"","\"the Monochromatic \"","Append The The"],
     ["nothing","U+0020", "U++0020","U+++0020","Append U+0020"," Prepend U+0020","Append Space","Prepend Space","Delete First Word",
-     " Delete The First Word","Remove First Word","Remove The First Word","Delete Chromatic","Delete Achromatic","Delete Monochromatic","Remove Chromatic","Remove Achromatic"],
+     " Delete The First Word","Remove First Word","Remove The First Word","Delete The Quotation Mark","Delete The Quotation Marks","Remove The Quotation Mark","Remove The Quotation Marks",
+     "Delete Chromatic","Delete Achromatic","Delete Monochromatic","Remove Chromatic","Remove Achromatic"]
     ["nothing","U+0020", "U++0020","U+++0020","Append U+0020"," Prepend U+0020","Append Space","Prepend Space"],
     [bar],
     ["Delete First Word", " Delete The First Word","Remove First Word","Remove The First Word","Delete Chromatic","Delete Achromatic","Delete Monochromatic","Remove Chromatic","Remove Achromatic",
-     "U+0020", "U++0020","U+++0020","Append U+0020"," Prepend U+0020","Inverse","Reverse","Backward","Backwards",
+     "U+0020", "U++0020","U+++0020","Append U+0020"," Prepend U+0020","Inverse","Reverse","Backward","Backwards","Delete The Quotation Mark","Delete The Quotation Marks","Remove The Quotation Mark","Remove The Quotation Marks",
     "Delete The The","Remove The The","Without The The","Delete The Word The","Remove The Word The","Without The Word The","U+0020", "U++0020","U+++0020","Append U+0020"," Prepend U+0020",bar,"the "+bar],
     ["Delete The The","Remove The The","Without The The","Delete The Word The","Remove The Word The","Without The Word The","Inverse","Reverse","Backward","Backwards"],
     ["Inverse","Reverse","Backward","Backwards"]
@@ -85,16 +87,16 @@
                          ["\"the "+foo+"\"", "\"the Chromatic "+foo+"\"","\"the Achromatic "+foo+"\"","\"the Monochromatic "+foo+"\""],
 
                          ["\"the "+foo+"\"","\"the "+foo+" \"","\"the Chromatic "+foo+" \"","\"the Achromatic "+foo+" \"","\"the Monochromatic "+foo+" \"",
-                         "\"the "+foo+"\"", "\"the Chromatic "+foo+"\"","\"the Achromatic "+foo+"\"","\"the Monochromatic "+foo+"\"","The "+foo],
+                         "\"the "+foo+"\"", "\"the Chromatic "+foo+"\"","\"the Achromatic "+foo+"\"","\"the Monochromatic "+foo+"\"","The "+foo,"The Chromatic "+foo,"The Achromatic "+foo],
 
                          ["\"the "+foo+"\"","\"the "+foo+" \"","\"the Chromatic "+foo+" \"","\"the Achromatic "+foo+" \"","\"the Monochromatic "+foo+" \"",
-                         "\"the "+foo+"\"", "\"the Chromatic "+foo+"\"","\"the Achromatic "+foo+"\"","\"the Monochromatic "+foo+"\"","The "+foo],
+                         "\"the "+foo+"\"", "\"the Chromatic "+foo+"\"","\"the Achromatic "+foo+"\"","\"the Monochromatic "+foo+"\"","The "+foo,"The Chromatic "+foo,"The Achromatic "+foo],
 
                          ["\"the "+foo+" "+bar+"\"","\"the Chromatic "+foo+" "+bar+"\"","\"the Achromatic "+foo+" "+bar+"\"","\"the Monochromatic "+foo+" "+bar+"\"",
                          "\"the "+foo+" "+bar.toLowerCase()+"\"","\"the Chromatic "+foo+" "+bar.toLowerCase()+"\"","\"the Achromatic "+foo+" "+bar.toLowerCase()+"\"","\"the Monochromatic "+foo+" "+bar.toLowerCase()+"\"",
                          "\"the "+bar+" "+foo+"\"","\"the Chromatic "+bar+" "+foo+"\"","\"the Achromatic "+bar+" "+foo+"\"","\"the Monochromatic "+bar+" "+foo+"\"",
                          "\"the "+bar+" "+foo.toLowerCase()+"\"","\"the Chromatic "+bar+" "+foo.toLowerCase()+"\"","\"the Achromatic "+bar+" "+foo.toLowerCase()+"\"","\"the Monochromatic "+bar+" "+foo.toLowerCase()+"\"",
-                          "The "+foo+" "+bar,
+                          "The "+foo+" "+bar,"The Chromatic "+foo+" "+bar
                           ],
                          [foo+" "+bar,bar+" "+foo,"\"the "+foo+" "+bar+"\"","\"Chromatic "+foo+" "+bar+"\"","\"Achromatic "+foo+" "+bar+"\"","\"Monochromatic "+foo+" "+bar+"\"",
                          foo+" "+bar.toLowerCase(),"\"the "+foo+" "+bar.toLowerCase()+"\"","\"Chromatic "+foo+" "+bar.toLowerCase()+"\"","\"Achromatic "+foo+" "+bar.toLowerCase()+"\"","\"Monochromatic "+foo+" "+bar.toLowerCase()+"\"",
@@ -118,10 +120,10 @@
                          ["\"the "+bar+"\"", "\"the Chromatic "+bar+"\"","\"the Achromatic "+bar+"\"","\"the Monochromatic "+bar+"\""],
 
                          ["\"the "+bar+"\"","\"the "+bar+" \"","\"the Chromatic "+bar+" \"","\"the Achromatic "+bar+" \"","\"the Monochromatic "+bar+" \"",
-                         "\"the "+bar+"\"", "\"the Chromatic "+bar+"\"","\"the Achromatic "+bar+"\"","\"the Monochromatic "+bar+"\"","The "+bar],
+                         "\"the "+bar+"\"", "\"the Chromatic "+bar+"\"","\"the Achromatic "+bar+"\"","\"the Monochromatic "+bar+"\"","The "+bar, "The Chromatic "+bar,"The Achromatic "+bar],
 
                         ["\"the "+bar+"\"","\"the "+bar+" \"","\"the Chromatic "+bar+" \"","\"the Achromatic "+bar+" \"","\"the Monochromatic "+bar+" \"",
-                         "\"the "+bar+"\"", "\"the Chromatic "+bar+"\"","\"the Achromatic "+bar+"\"","\"the Monochromatic "+bar+"\"","The "+bar],
+                         "\"the "+bar+"\"", "\"the Chromatic "+bar+"\"","\"the Achromatic "+bar+"\"","\"the Monochromatic "+bar+"\"","The "+bar, "The Chromatic "+bar,"The Achromatic "+bar],
 
                         ];
 

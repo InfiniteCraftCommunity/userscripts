@@ -9,7 +9,7 @@
 // @grant       GM.getValue
 // @grant       GM.setValue
 // @run-at      document-end
-// @version     0.3
+// @version     0.4
 // @author      zeroptr
 // @downloadURL https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/AdjustInfiniBrowserLineages/index.user.js
 // @description Adjust lineages on InfiniBrowser, removing steps for elements that you already have on Infinite Craft. Also removes the "The recipe for this element is too big".
@@ -142,4 +142,9 @@ function $initInfiniteCraft() {
 
     setItem.apply(this, arguments);
   }
+
+  unsafeWindow.localStorage.setItem(
+    "infinite-craft-data",
+    unsafeWindow.localStorage.getItem("infinite-craft-data")
+  );
 }

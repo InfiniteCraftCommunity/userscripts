@@ -8,6 +8,8 @@
 // @author      Catstone
 // @license     MIT
 // @description Combines Infinite Craft Selection Utils, Tab Utils and more misc stuff!
+// @downloadURL https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/Utils_Mod/index.user.js
+// @updateURL   https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/Utils_Mod/index.user.js
 // ==/UserScript==
 
 (function() {
@@ -490,7 +492,7 @@ document.head.appendChild(css);
             toggle: false,
             inputs: [{
                 label: "Copy Paste Elements: ",
-                description: "Ctrl + C   to copy the text of a hovered Element\nCtrl + Shift + V   to paste Element\nAlso works on Selections!",
+                description: "Ctrl + C   to copy the text of a hovered Element\nCtrl + Shift + V   to paste Element(s)\nAlso works on Selections!\nYou can also paste in gigantic lists, for example all countries (just seperate each \"Word\" with a new line)",
                 type: "toggle",
                 content: () => settings.misc.copyHoveredElement,
                 handle(elements) {

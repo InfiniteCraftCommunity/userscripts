@@ -2,9 +2,10 @@
 // @name        Utils Mod
 // @namespace   Catstone
 // @match       https://neal.fun/infinite-craft/
+// @grant       GM.xmlHttpRequest
 // @grant       GM_getValue
 // @grant       GM_setValue
-// @version     1.0
+// @version     1.1.1
 // @author      Catstone
 // @license     MIT
 // @description Combines Infinite Craft Selection Utils, Tab Utils and more misc stuff!
@@ -100,6 +101,7 @@
 
 .checkbox-container {
 	position: relative;
+  margin-left: 5px;
 	display: inline-block;
 	width: 50px;
 	height: 30px;
@@ -173,6 +175,12 @@ input:checked + .checkbox-slider:before {
 	opacity: 0;
 }
 
+
+.input-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
 
 .selectionbox {
   position: absolute;
@@ -305,6 +313,74 @@ input:checked + .checkbox-slider:before {
 .contextMenuOption.delete {
     color: red;
 }
+
+
+
+
+.unicode-container {
+	max-width: 900px;
+	margin-left: auto;
+	margin-right: auto;
+	padding: 9px;
+	border: 0px;
+	border-bottom: 1px;
+	border-style: solid;
+	border-color: var(--border-color);
+}
+
+.unicode-header {
+    display: flex;
+    align-items: center;
+}
+
+.unicode-title {
+	margin: 4px;
+	font-size: 15px;
+	font-family: Roboto, sans-serif;
+	color: var(--text-color);
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
+	pointer-events: none;
+}
+
+#unicode-checkbox {
+    appearance: none; /* Remove default styling */
+    width: 16px;
+    height: 16px;
+    margin-right: 10px;
+    border: 2px solid var(--border-color);
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+    position: relative;
+    background-color: #000; /* Background color when unchecked */
+    transition: background-color 0.2s ease;
+}
+#unicode-checkbox:hover {
+    background-color: #242424; /* Light background on hover */
+}
+#unicode-checkbox:checked {
+    background-color: var(--border-color); /* Background color when checked */
+}
+#unicode-checkbox:checked::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0; /* Checkmark shape */
+    transform: rotate(45deg); /* Rotate to form checkmark */
+}
+
+
+.subtitle {
+    font-size: 14px;
+    color: #fff;
+    margin-top: 4px;
+    font: caption;
 }
 `
 document.head.appendChild(css);
@@ -313,6 +389,7 @@ document.head.appendChild(css);
     // Variables to store the init states
     let selectionUtilsInit = false;
     let tabUtilsInit = false;
+    let unicodeInit = false;
 
     const defaultSettings = {
         sel: {
@@ -324,6 +401,11 @@ document.head.appendChild(css);
         },
         tabs: {
             enabled: true
+        },
+        uni: {
+            enabled: true,
+            checkbox: true,
+            infoInRecipeModal: true
         },
         misc: {
             copyHoveredElement: true
@@ -376,7 +458,6 @@ document.head.appendChild(css);
         else if (!selectionUtilsInit) initSelectionUtils();
 
         settings.sel.enabled = !settings.sel.enabled;
-        GM_setValue('selectionUtilsEnabled', settings.sel.enabled);
     }
 
     let externalSaveCurrentTab;
@@ -391,8 +472,22 @@ document.head.appendChild(css);
         }
 
         settings.tabs.enabled = !settings.tabs.enabled;
-        GM_setValue('tabUtilsEnabled', settings.tabs.enabled);
         // location.reload();
+    }
+
+    let externalUpdateUnicodeSearch;
+    function toggleUnicodeSearch() {
+        if (settings.uni.enabled) {
+            document.getElementById('unicode-checkbox').checked = false;
+            document.querySelector('.unicode-container').style.display = 'none';
+            externalUpdateUnicodeSearch([]);
+        }
+        else {
+            if (!unicodeInit) initUnicodeSearch();
+            document.querySelector('.unicode-container').style.display = 'block';
+        }
+
+        settings.uni.enabled = !settings.uni.enabled;
     }
 
 
@@ -427,6 +522,7 @@ document.head.appendChild(css);
         addToggleButtons();
         if (settings.sel.enabled) initSelectionUtils();
         if (settings.tabs.enabled) initTabUtils();
+        if (settings.uni.enabled) initUnicodeSearch();
     });
 
 
@@ -456,7 +552,6 @@ document.head.appendChild(css);
                 type: "toggle",
                 content: () => settings.sel.borderStyle === 'dashed',
                 handle(elements) {
-                    console.log(elements.value)
                     settings.sel.borderStyle = settings.sel.borderStyle === 'dashed' ? 'solid' : 'dashed';
                 }
             },
@@ -477,14 +572,29 @@ document.head.appendChild(css);
                 handle(elements) {
                     settings.sel.chromaSpeed = Number(elements.value);
                 }
-            },]
+            }]
         },
         {
             name: "Tab Utils",
-            description: "- Enables Tabs!\n- Adding, Deleting, Duplicating, Moving, Renaming Tabs\n- Saves Board on close/reload\n- Download/Upload Tabs\n- spawning entire Alphabets (right click the Add Button)",
+            description: "- Enables Tabs!\n- Adding, Deleting, Duplicating, Moving, Renaming Tabs\n- Saves Board on close/reload\n- Download/Upload Tabs\n- Spawning entire Alphabets (right click the Add Button)",
             toggle: true,
             toggleState: () => settings.tabs.enabled,
             toggleHandle: (elements) => toggleTabUtils(),
+        },
+        {
+            name: "Unicode Search",
+            description: "Enables searching in:\n- the Unicode Codepoint (e.g. U+0069)\n- and the Unicode Name (e.g. LATIN CAPITAL LETTER A)",
+            toggle: true,
+            toggleState: () => settings.uni.enabled,
+            toggleHandle: (elements) => toggleUnicodeSearch(),
+            inputs: [{
+                label: "Show Unicode Info in Craft Menu",
+                type: "toggle",
+                content: () => settings.uni.infoInRecipeModal,
+                handle(elements) {
+                    settings.uni.infoInRecipeModal = !settings.uni.infoInRecipeModal;
+                }
+            }]
         },
         {
             name: "Misc",
@@ -884,16 +994,25 @@ function showUtilsSettingsMenu() {
             GM_setValue('tabData', defaultData);
         }
 
-        const observer = new MutationObserver((mutations, obs) => {
+        const initIfElementsDataExists = () => {
             const elementsData = unsafeWindow.$nuxt?.$root?.$children[2]?.$children[0]?.$children[0]?._data?.elements;
             if (elementsData && elementsData.length > 0) {
-                obs.disconnect();
                 tabUtilsInit = true;
                 externalSaveCurrentTab = saveCurrentTab;
                 init();
+                return true;
             }
-        });
-        observer.observe(document, {childList: true, subtree: true});
+        };
+        // Initial check
+        if (!initIfElementsDataExists()) {
+            // Set up the observer only if the initial check fails
+            const observer = new MutationObserver((mutations, obs) => {
+                if (initIfElementsDataExists()) {
+                    obs.disconnect();
+                }
+            });
+            observer.observe(document, { childList: true, subtree: true });
+        }
 
         function init() {
             const tabBar = document.createElement('div');
@@ -1325,6 +1444,227 @@ function showUtilsSettingsMenu() {
 
 
 
+//            _____  _____ ____  _____ _____   ______   ____   ________   _________      _______ _________      __      _______      ______ ____  ____
+//           |_   _||_   _|_   \|_   _|_   _|./ ___  |.'    \.|_   ___ \.|_   ___  |    /  ___  |_   ___  |    /  \    |_   __ \   ./ ___  |_   ||   _|
+//             | |    | |   |   \ | |   | | / ./   \_|  .--.  \ | |   \. \ | |_  \_|   |  (__ \_| | |_  \_|   / /\ \     | |__) | / ./   \_| | |__| |
+//             | '    ' |   | |\ \| |   | | | |      | |    | | | |    | | |  _|  _     '.___\-.  |  _|  _   / ____ \    |  __ /  | |        |  __  |
+//              \ \--' /   _| |_\   |_ _| |_\ \.___.'\  \--'  /_| |___.' /_| |___/ |   |\\____) |_| |___/ |_/ /    \ \_ _| |  \ \_\ \.___.'\_| |  | |_
+//               \.__.'   |_____|\____|_____|\._____.'\.____.'|________.'|_________|   |_______.'_________|____|  |____|____| |___|\._____.'____||____|
+//
+
+    function initUnicodeSearch() {
+        const unicodeMap = {};
+        fetchUnicodeData();
+
+        const unicodeContainer = document.createElement("div");
+        const header = document.createElement('div');
+        const unicodeTitle = document.createElement('div');
+        const unicodeCheckbox = document.createElement('input');
+
+        init();
+        unicodeInit = true;
+        externalUpdateUnicodeSearch = updateUnicodeSearch;
+
+        function init() {
+            unicodeCheckbox.type = 'checkbox';
+            unicodeCheckbox.id = 'unicode-checkbox';
+            unicodeCheckbox.checked = settings.uni.checkbox;
+            unicodeCheckbox.addEventListener('change', toggleUnicodeSearch);
+
+            unicodeContainer.classList.add('unicode-container');
+
+            header.classList.add('unicode-header');
+
+            unicodeTitle.classList.add('unicode-title');
+            unicodeTitle.appendChild(document.createTextNode('Unicode Search - 0'));
+
+            header.appendChild(unicodeCheckbox);
+            header.appendChild(unicodeTitle);
+            unicodeContainer.appendChild(header);
+
+            document.querySelector(".pinned").after(unicodeContainer);
+
+            // Event listener on search
+            const search = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$refs.search;
+            search.addEventListener("input", function(e) {
+                if (unicodeCheckbox.checked) {
+                    searchUnicodeElements(e.target.value);
+                }
+            });
+
+
+            // MutationObserver on Recipe Modal Open
+            const recipeModal = document.querySelector('.modal');
+
+            function checkModalOpen() {
+                if (settings.uni.infoInRecipeModal && recipeModal.hasAttribute('open')) {
+                    const titleElement = recipeModal.querySelector('.modal-title');
+                    const titleText = titleElement.childNodes[1].nodeValue.trim()
+
+                    if (titleText.length === 1) {
+                        // Remove any existing subtitle
+                        let existingSubtitle = recipeModal.querySelector('.subtitle');
+                        if (existingSubtitle) existingSubtitle.remove();
+
+                        const codePoint = titleText.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
+                        const unicodeName = unicodeMap[codePoint] || '';
+                        const subtitle = document.createElement('div');
+                        subtitle.textContent = `U+${codePoint.padStart(4, '0') || "no codepoint found"} - ${unicodeName || "no name found"}`;
+                        subtitle.classList.add('subtitle');
+                        titleElement.appendChild(subtitle);
+                    }
+                }
+            }
+            const observer = new MutationObserver(checkModalOpen);
+            observer.observe(recipeModal, { attributes: true });
+        }
+
+        function toggleUnicodeSearch() {
+            settings.uni.checkbox = unicodeCheckbox.checked;
+            // Hide search results and disable search
+            if (!unicodeCheckbox.checked) updateUnicodeSearch([]);
+            // Search with current Searchquery
+            else searchUnicodeElements(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].searchQuery);
+        }
+
+        function fetchUnicodeData() {
+            GM.xmlHttpRequest({
+                method: "GET",
+                url: "https://unicode.org/Public/UNIDATA/UnicodeData.txt",
+                onload: function(response) {
+                    if (response.status === 200) {
+                        const parsedData = parseUnicodeData(response.responseText);
+                        Object.assign(unicodeMap, parsedData); // Populate the unicodeMap
+                    } else {
+                        console.error("Failed to load Unicode data:", response.status, response.statusText);
+                    }
+                },
+                onerror: function(error) {
+                    console.error("Error fetching Unicode data:", error);
+                }
+            });
+        }
+
+        function parseUnicodeData(unicodeText) {
+            const unicodeMap = {};
+            const lines = unicodeText.trim().split('\n');
+            lines.forEach(line => {
+                const fields = line.split(';');
+                const codePoint = fields[0];
+                const name = fields[1];
+                if (codePoint && name) {
+                    unicodeMap[codePoint] = name;
+                }
+            });
+            return unicodeMap;
+        }
+
+        function fetchEmojiAndDiscovery(texts) {
+            const elementsMap = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.reduce((map, elem) => {
+                map[elem.text] = elem;
+                return map;
+            }, {});
+
+            return texts.map(text => {
+                const element = elementsMap[text];
+                return element ? { text, emoji: element.emoji, discovered: element.discovered, name: element.name }
+                               : { text, emoji: '⬜', discovered: false, name: '' };
+            });
+        }
+
+        function updateUnicodeSearch(elements = []) {
+            unicodeContainer.innerHTML = ""; // Clear container content
+            unicodeContainer.appendChild(header);
+
+            const sidebarUnicodeElements = fetchEmojiAndDiscovery(elements);
+            unicodeTitle.textContent = "Unicode Search - " + sidebarUnicodeElements.length;
+
+            for (const unicodeElement of sidebarUnicodeElements) {
+                const elementDiv = document.createElement('div');
+                elementDiv.classList.add('item');
+                if (unicodeElement.discovered) elementDiv.classList.add("item-discovered");
+                const elementEmoji = document.createElement('span');
+                elementEmoji.classList.add('item-emoji');
+                elementEmoji.appendChild(document.createTextNode(unicodeElement.emoji ?? '⬜'));
+                elementDiv.appendChild(elementEmoji);
+                elementDiv.appendChild(document.createTextNode(` ${unicodeElement.text} `));
+                elementDiv.addEventListener('mousedown', (e) => {
+                    unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].selectElement(e, cloneInto(unicodeElement, unsafeWindow));
+                });
+                unicodeContainer.appendChild(elementDiv);
+            }
+        }
+
+        function searchUnicodeElements(query) {
+            const filteredElements = Object.values(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements)
+                .filter(elem => elem.text.length === 1)
+                .filter(elem => {
+                    const codePoint = elem.text.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
+                    const name = unicodeMap[codePoint] || "";
+                    return ("U+" + codePoint).includes(query.toUpperCase()) || name.includes(query.toUpperCase()); // Match code point or name
+                });
+            updateUnicodeSearch(filteredElements.map(el => el.text));
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1389,7 +1729,6 @@ function showUtilsSettingsMenu() {
             if (parts.length < 1) return null; // Skip malformed lines
 
             let xSkips = Math.floor(coordLessCounter / 25);
-            console.log(xSkips)
             let xOffset = -25 + (xSkips * 200), yOffset = -25 + ((coordLessCounter - (xSkips * 25)) * 50);
             if (parts.length >= 2) {
                 [xOffset, yOffset] = parts[1].split(' ').map(Number);

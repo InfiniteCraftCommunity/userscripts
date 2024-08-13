@@ -26,6 +26,15 @@ and yes, everything can be turned On/Off!
 
 
 
+# Unicode Search
+![image](https://github.com/user-attachments/assets/16c2c675-b2e0-488f-a020-b07605c058c6)
+![image](https://github.com/user-attachments/assets/d4fe3fe5-27f4-42d9-9f29-8c259611d29b)
+Enables searching in:
+- the Unicode Codepoint (e.g. U+0069)
+- and the Unicode Name (e.g. LATIN CAPITAL LETTER A)
+
+
+
 
 # Misc
 - copy hovered element to clipboard

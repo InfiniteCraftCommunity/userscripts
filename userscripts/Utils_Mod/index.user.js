@@ -5,10 +5,10 @@
 // @grant       GM.xmlHttpRequest
 // @grant       GM_getValue
 // @grant       GM_setValue
-// @version     1.1
+// @version     1.3
 // @author      Catstone
 // @license     MIT
-// @description Combines Infinite Craft Selection Utils, Tab Utils and more misc stuff!
+// @description Combines Infinite Craft Selection Utils, Tab Utils, Unicode Utils and more misc stuff!
 // @downloadURL https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/Utils_Mod/index.user.js
 // @updateURL   https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/Utils_Mod/index.user.js
 // ==/UserScript==
@@ -74,6 +74,14 @@
 	max-width: calc(100% - 5vw);
 }
 
+.utils-input-description {
+  margin-bottom: 5px;
+}
+
+.utils-input-wrapper {
+  margin-bottom: 10px;
+}
+
 .utils-setting-block label[for*="input"] {
 	float: left;
 	margin-right: 7px;
@@ -101,7 +109,6 @@
 
 .checkbox-container {
 	position: relative;
-  margin-left: 5px;
 	display: inline-block;
 	width: 50px;
 	height: 30px;
@@ -143,7 +150,7 @@
   outline: var(--custom-outline);
   border-width: 0;
   background-color: var(--custom-background);
-  animation: chromaCycleOutline var(--chroma-speed) infinite linear, chromaCycleBackground var(--chroma-speed) infinite linear;
+  animation: var(--chroma-animation);
   padding-left: 59px;
   padding-top: 10px;
   width: 69px;
@@ -154,6 +161,22 @@
 .utils-number-input {
   background: transparent;
   border: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+.utils-dropdown {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  padding: 5px;
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+}
+
+
+.utils-dropdown option {
+  background-color: var(--background-color);
   color: var(--text-color);
 }
 
@@ -169,46 +192,41 @@ input:checked + .checkbox-slider:before {
 	transform: translateX(19px);
 }
 
-.utils-setting-block:has(h1 > .checkbox-container > input[type="checkbox"]:not(:checked)) .input-wrapper {
+.utils-setting-block:has(h1 > .checkbox-container > input[type="checkbox"]:not(:checked)) .utils-input-wrapper {
 	margin-top: -33px;
   pointer-events: none;
 	opacity: 0;
 }
 
-
-.input-wrapper {
-  display: flex;
-  flex-wrap: wrap;
+.label-toggle-container {
   align-items: center;
+  display: flex;
+}
+
+.label-toggle-container label {
+  margin-right: 10px;
 }
 
 .selectionbox {
   position: absolute;
-  z-index: 9;
+  z-index: 6942069;
   outline: var(--custom-outline);
   background-color: var(--custom-background);
-  animation: chromaCycleOutline var(--chroma-speed) infinite linear,
-             chromaCycleBackground var(--chroma-speed) infinite linear;
-}
-
-.selectionbox.border-30 {
-    animation: chromaCycleOutline var(--chroma-speed) infinite linear,
-               chromaCycleBackground var(--chroma-speed) infinite linear,
-               rotateBorder var(--chroma-speed) infinite linear;
+  animation: var(--chroma-animation);
 }
 
 @keyframes chromaCycleOutline {
-  0% { outline-color: rgb(255, 0, 0); } /* Red */
-  10% { outline-color: rgb(255, 127, 0); } /* Orange */
-  20% { outline-color: rgb(255, 255, 0); } /* Yellow */
-  30% { outline-color: rgb(127, 255, 0); } /* Lime */
-  40% { outline-color: rgb(0, 255, 0); } /* Green */
-  50% { outline-color: rgb(0, 255, 255); } /* Aqua */
-  60% { outline-color: rgb(0, 127, 255); } /* Light Blue */
-  70% { outline-color: rgb(0, 0, 255); } /* Blue */
-  80% { outline-color: rgb(127, 0, 255); } /* Purple */
-  90% { outline-color: rgb(255, 0, 255); } /* Magenta */
-  100% { outline-color: rgb(255, 0, 127); } /* Pink */
+  0%  { outline-color: rgb(255, 0,   0  ); } /* Red */
+  10% { outline-color: rgb(255, 127, 0  ); } /* Orange */
+  20% { outline-color: rgb(255, 255, 0  ); } /* Yellow */
+  30% { outline-color: rgb(127, 255, 0  ); } /* Lime */
+  40% { outline-color: rgb(0,   255, 0  ); } /* Green */
+  50% { outline-color: rgb(0,   255, 255); } /* Aqua */
+  60% { outline-color: rgb(0,   127, 255); } /* Light Blue */
+  70% { outline-color: rgb(0,   0,   255); } /* Blue */
+  80% { outline-color: rgb(127, 0,   255); } /* Purple */
+  90% { outline-color: rgb(255, 0,   255); } /* Magenta */
+  100%{ outline-color: rgb(255, 0,   127); } /* Pink */
 }
 @keyframes chromaCycleBackground {
   0%  { background-color: rgba(255, 0,   0,   0.3); } /* Red */
@@ -224,7 +242,6 @@ input:checked + .checkbox-slider:before {
   100%{ background-color: rgba(255, 0,   127, 0.3); } /* Pink */
 }
 @keyframes rotateBorder {
-  0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
@@ -391,24 +408,28 @@ document.head.appendChild(css);
     let tabUtilsInit = false;
     let unicodeInit = false;
 
+    let chromaAnimation;
+
     const defaultSettings = {
         sel: {
-            enabled: true,
+            enabled: false,
             customColor: '#ff0000',
             borderStyle: 'solid',
-            borderWidth: 1,
+            borderWidth: 3,
             chromaSpeed: 0
         },
         tabs: {
-            enabled: true
+            enabled: false
         },
         uni: {
-            enabled: true,
-            checkbox: true,
-            infoInRecipeModal: true
+            search : false,
+            maxShown: 250,
+            sort: true,
+            infoInRecipeModal: true,
         },
         misc: {
-            copyHoveredElement: true
+            copyHoveredElement: false,
+            spawnUndiscovered: false
         }
     };
 
@@ -428,7 +449,12 @@ document.head.appendChild(css);
         GM_setValue('settings', settings);
         document.documentElement.style.setProperty('--custom-outline', `${settings.sel.borderWidth}px ${settings.sel.borderStyle} ${settings.sel.customColor}`);
         document.documentElement.style.setProperty('--custom-background', hexToRgba(settings.sel.customColor, 0.3));
-        document.documentElement.style.setProperty('--chroma-speed', 10 / settings.sel.chromaSpeed + 's');
+
+        const chromaSpeed = 10 / settings.sel.chromaSpeed;
+        chromaAnimation = `chromaCycleOutline ${Math.abs(chromaSpeed)}s infinite linear${chromaSpeed < 0 ? ' reverse' : ''}, ` +
+                          `chromaCycleBackground ${Math.abs(chromaSpeed)}s infinite linear${chromaSpeed < 0 ? ' reverse' : ''}` +
+                          `${settings.sel.borderWidth >= 30 ? `, rotateBorder ${Math.abs(chromaSpeed)}s infinite linear${chromaSpeed < 0 ? ' reverse' : ''}` : ''}`
+        document.documentElement.style.setProperty('--chroma-animation', chromaAnimation);
     }
 
     const handler = {
@@ -476,8 +502,9 @@ document.head.appendChild(css);
     }
 
     let externalUpdateUnicodeSearch;
+    let externalSearchUnicodeElements;
     function toggleUnicodeSearch() {
-        if (settings.uni.enabled) {
+        if (settings.uni.search) {
             document.getElementById('unicode-checkbox').checked = false;
             document.querySelector('.unicode-container').style.display = 'none';
             externalUpdateUnicodeSearch([]);
@@ -487,7 +514,7 @@ document.head.appendChild(css);
             document.querySelector('.unicode-container').style.display = 'block';
         }
 
-        settings.uni.enabled = !settings.uni.enabled;
+        settings.uni.search = !settings.uni.search;
     }
 
 
@@ -522,7 +549,7 @@ document.head.appendChild(css);
         addToggleButtons();
         if (settings.sel.enabled) initSelectionUtils();
         if (settings.tabs.enabled) initTabUtils();
-        if (settings.uni.enabled) initUnicodeSearch();
+        if (settings.uni.search) initUnicodeSearch();
     });
 
 
@@ -548,11 +575,12 @@ document.head.appendChild(css);
                 }
             },
             {
-                label: "Border Dashed: ",
-                type: "toggle",
-                content: () => settings.sel.borderStyle === 'dashed',
-                handle(elements) {
-                    settings.sel.borderStyle = settings.sel.borderStyle === 'dashed' ? 'solid' : 'dashed';
+                label: "Border Style: ",
+                type: "dropdown",
+                options: ["solid", "dashed", "dotted", "double", "groove", "ridge", "inset", "outset"],
+                content: () => settings.sel.borderStyle,
+                handle(value) {
+                    settings.sel.borderStyle = value;
                 }
             },
             {
@@ -561,8 +589,6 @@ document.head.appendChild(css);
                 content: () => settings.sel.borderWidth,
                 handle(elements) {
                     settings.sel.borderWidth = Math.min(elements.value, 30);
-                    if (settings.sel.borderWidth === 30) document.querySelector('.selectionbox').classList.add('border-30');
-                    else document.querySelector('.selectionbox').classList.remove('border-30');
                 }
             },
             {
@@ -576,19 +602,44 @@ document.head.appendChild(css);
         },
         {
             name: "Tab Utils",
-            description: "- Enables Tabs!\n- Adding, Deleting, Duplicating, Moving, Renaming Tabs\n- Saves Board on close/reload\n- Download/Upload Tabs\n- Spawning entire Alphabets (right click the Add Button)",
+            description: "saves all elements on screen into one Tab\n- Tabs save on reloading/closing Infinite Craft\n- Downloading/Uploading Tabs\n- Spawning entire Alphabets (right click the Add Button)",
             toggle: true,
             toggleState: () => settings.tabs.enabled,
             toggleHandle: (elements) => toggleTabUtils(),
         },
         {
-            name: "Unicode Search",
-            description: "Enables searching in:\n- the Unicode Codepoint (e.g. U+0069)\n- and the Unicode Name (e.g. LATIN CAPITAL LETTER A)",
-            toggle: true,
-            toggleState: () => settings.uni.enabled,
-            toggleHandle: (elements) => toggleUnicodeSearch(),
+            name: "Unicode Utils",
+            description: "",
             inputs: [{
-                label: "Show Unicode Info in Craft Menu",
+                label: "Unicode Search",
+                description: "Enables searching in:\n- the Unicode Codepoint (e.g. U+0069)\n- the Unicode Name (e.g. LATIN CAPITAL LETTER A)",
+                type: "toggle",
+                content: () => settings.uni.search,
+                handle(elements) {
+                    toggleUnicodeSearch();
+                }
+            },
+            {
+                label: "Max Elements Displayed",
+                type: "number",
+                content: () => settings.uni.maxShown,
+                handle(elements) {
+                    settings.uni.maxShown = Number(elements.value);
+                    externalSearchUnicodeElements();
+                }
+            },
+            {
+                label: "Sort Unicode Search",
+                type: "toggle",
+                content: () => settings.uni.sort,
+                handle(elements) {
+                    settings.uni.sort = !settings.uni.sort;
+                    externalSearchUnicodeElements();
+                }
+            },
+            {
+                label: "Show Unicode Info in Recipe Menu",
+                description: "e.g. U+0069 - LATIN SMALL LETTER I",
                 type: "toggle",
                 content: () => settings.uni.infoInRecipeModal,
                 handle(elements) {
@@ -599,132 +650,181 @@ document.head.appendChild(css);
         {
             name: "Misc",
             description: "",
-            toggle: false,
             inputs: [{
                 label: "Copy Paste Elements: ",
                 description: "Ctrl + C   to copy the text of a hovered Element\nCtrl + Shift + V   to paste Element(s)\nAlso works on Selections!\nYou can also paste in gigantic lists, for example all countries (just seperate each \"Word\" with a new line)",
                 type: "toggle",
                 content: () => settings.misc.copyHoveredElement,
                 handle(elements) {
-                    settings.misc.copyHoveredElement = !settings.misc.copyHoveredElement
+                    settings.misc.copyHoveredElement = !settings.misc.copyHoveredElement;
+                }
+            },
+            {
+                label: "Spawn not found Elements as Ghosts: ",
+                description: "Works with Alphabet Spawning and Copy Paste Elements",
+                type: "toggle",
+                content: () => settings.misc.spawnUndiscovered,
+                handle(elements) {
+                    settings.misc.spawnUndiscovered = !settings.misc.spawnUndiscovered;
                 }
             }]
         }
     ];
 
     function initUtilsSettingsMenu() {
-        settingsModal.classList.add('modal');
-        document.querySelector(".container").appendChild(settingsModal);
-        const settingsHeader = document.createElement('div');
-        settingsHeader.classList.add('modal-header');
-        settingsTitle.classList.add('modal-title');
-        settingsTitle.appendChild(document.createTextNode('Utils Settings'));
-        settingsHeader.appendChild(settingsTitle);
-        const closeButtonContainer = document.createElement('div');
-        closeButtonContainer.classList.add('close-button-container');
-        const closeButton = document.createElement('img');
-        closeButton.src = closeIcon.trim();
-        closeButton.classList.add('close-button');
-        closeButtonContainer.appendChild(closeButton);
-        closeButton.addEventListener('click', () => settingsModal.close());
-        settingsHeader.appendChild(closeButtonContainer);
-        settingsModal.appendChild(settingsHeader);
-        settingsContainer.classList.add('utils-settings-container');
-        settingsModal.appendChild(settingsContainer);
+    settingsModal.classList.add('modal');
+    document.querySelector(".container").appendChild(settingsModal);
 
-        settingsEntries.forEach(entry => {
-            const block = document.createElement("div");
-            block.classList.add("utils-setting-block");
-            const name = document.createElement("h1");
-            name.appendChild(document.createTextNode(entry.name));
-            block.appendChild(name);
-            if (entry.toggle) {
-                const checkboxContainer = document.createElement("label");
-                checkboxContainer.classList.add("checkbox-container");
-                const toggleCheckbox = document.createElement("input");
-                toggleCheckbox.classList.add("checkbox");
-                toggleCheckbox.setAttribute("type", "checkbox");
-                checkboxContainer.appendChild(toggleCheckbox);
-                toggleCheckbox.checked = entry.toggleState();
-                toggleCheckbox.addEventListener("change", function() {
-                    return entry.toggleHandle.call(this);
-                });
-                const slider = document.createElement("span");
-                slider.classList.add("checkbox-slider");
-                checkboxContainer.appendChild(slider);
-                name.appendChild(checkboxContainer);
-            }
-            const description = document.createElement("p");
-            description.classList.add("utils-input-description");
-            description.innerHTML = entry.description.replaceAll("\n", "<br>");
-            block.appendChild(description);
+    const settingsHeader = document.createElement('div');
+    settingsHeader.classList.add('modal-header');
 
-            // Handle inputs
-            if (entry.inputs) {
-                entry.inputs.forEach(input => {
-                    const inputWrapper = document.createElement("div");
-                    inputWrapper.classList.add("input-wrapper");
+    settingsTitle.classList.add('modal-title');
+    settingsTitle.appendChild(document.createTextNode('Utils Settings'));
+    settingsHeader.appendChild(settingsTitle);
 
-                    // Create label element
-                    const label = document.createElement("label");
-                    label.textContent = input.label;
-                    inputWrapper.appendChild(label);
+    const closeButtonContainer = document.createElement('div');
+    closeButtonContainer.classList.add('close-button-container');
 
-                    // Handle different input types
-                    if (input.type === "colorPicker") {
-                        const colorInput = document.createElement("input");
-                        colorInput.classList.add('utils-color-input');
-                        colorInput.setAttribute("type", "color");
-                        colorInput.value = input.content();
-                        colorInput.addEventListener("input", function() {
-                            input.handle(this);
-                        });
-                        inputWrapper.appendChild(colorInput);
-                    }
+    const closeButton = document.createElement('img');
+    closeButton.src = closeIcon.trim();
+    closeButton.classList.add('close-button');
+    closeButtonContainer.appendChild(closeButton);
 
-                    if (input.type === "toggle") {
-                        const toggleContainer = document.createElement("label");
-                        toggleContainer.classList.add("checkbox-container");
-                        const toggleCheckbox = document.createElement("input");
-                        toggleCheckbox.classList.add("checkbox");
-                        toggleCheckbox.setAttribute("type", "checkbox");
-                        toggleContainer.appendChild(toggleCheckbox);
-                        toggleCheckbox.checked = input.content();
-                        toggleCheckbox.addEventListener("input", function() {
-                            input.handle(this);
-                        });
-                        const toggleSlider = document.createElement("span");
-                        toggleSlider.classList.add("checkbox-slider");
-                        toggleContainer.appendChild(toggleSlider);
-                        inputWrapper.appendChild(toggleContainer);
-                    }
+    closeButton.addEventListener('click', () => settingsModal.close());
+    settingsHeader.appendChild(closeButtonContainer);
 
-                    if (input.type === "number") {
-                        const numberInput = document.createElement("input");
-                        numberInput.classList.add('utils-number-input');
-                        numberInput.setAttribute("type", "number");
-                        numberInput.value = input.content();
-                        numberInput.addEventListener("input", function() {
-                            input.handle(this);
-                        });
-                        inputWrapper.appendChild(numberInput);
-                    }
+    settingsModal.appendChild(settingsHeader);
 
-                    // Add description if it exists
-                    if (input.description) {
-                        const subDescription = document.createElement("p");
-                        subDescription.classList.add("utils-input-description");
-                        subDescription.innerHTML = input.description.replaceAll("\n", "<br>");
-                        inputWrapper.appendChild(subDescription);
-                    }
+    settingsContainer.classList.add('utils-settings-container');
+    settingsModal.appendChild(settingsContainer);
 
-                    block.appendChild(inputWrapper);
-                });
-            }
+    settingsEntries.forEach(entry => {
+        const block = document.createElement("div");
+        block.classList.add("utils-setting-block");
 
-            settingsContainer.appendChild(block);
-        });
-    }
+        const name = document.createElement("h1");
+        name.appendChild(document.createTextNode(entry.name));
+        block.appendChild(name);
+
+        if (entry.toggle) {
+            const checkboxContainer = document.createElement("label");
+            checkboxContainer.classList.add("checkbox-container");
+
+            const toggleCheckbox = document.createElement("input");
+            toggleCheckbox.classList.add("checkbox");
+            toggleCheckbox.setAttribute("type", "checkbox");
+
+            checkboxContainer.appendChild(toggleCheckbox);
+            toggleCheckbox.checked = entry.toggleState();
+
+            toggleCheckbox.addEventListener("change", function () {
+                return entry.toggleHandle.call(this);
+            });
+
+            const slider = document.createElement("span");
+            slider.classList.add("checkbox-slider");
+            checkboxContainer.appendChild(slider);
+
+            name.appendChild(checkboxContainer);
+        }
+
+        const description = document.createElement("p");
+        description.classList.add("utils-input-description");
+        description.innerHTML = entry.description.replaceAll("\n", "<br>");
+        block.appendChild(description);
+
+        // Handle inputs
+        if (entry.inputs) {
+            entry.inputs.forEach(input => {
+                const inputWrapper = document.createElement("div");
+                inputWrapper.classList.add("utils-input-wrapper");
+
+                // Create label and toggle container
+                const labelToggleContainer = document.createElement("div");
+                labelToggleContainer.classList.add("label-toggle-container");
+
+                const label = document.createElement("label");
+                label.textContent = input.label;
+                labelToggleContainer.appendChild(label);
+
+                // Handle different input types
+                if (input.type === "colorPicker") {
+                    const colorInput = document.createElement("input");
+                    colorInput.classList.add('utils-color-input');
+                    colorInput.setAttribute("type", "color");
+                    colorInput.value = input.content();
+                    colorInput.addEventListener("input", function () {
+                        input.handle(this);
+                    });
+                    labelToggleContainer.appendChild(colorInput);
+                }
+
+                if (input.type === "toggle") {
+                    const toggleContainer = document.createElement("label");
+                    toggleContainer.classList.add("checkbox-container");
+
+                    const toggleCheckbox = document.createElement("input");
+                    toggleCheckbox.classList.add("checkbox");
+                    toggleCheckbox.setAttribute("type", "checkbox");
+                    toggleContainer.appendChild(toggleCheckbox);
+
+                    toggleCheckbox.checked = input.content();
+                    toggleCheckbox.addEventListener("input", function () {
+                        input.handle(this);
+                    });
+
+                    const toggleSlider = document.createElement("span");
+                    toggleSlider.classList.add("checkbox-slider");
+                    toggleContainer.appendChild(toggleSlider);
+                    labelToggleContainer.appendChild(toggleContainer);
+                }
+
+                if (input.type === "number") {
+                    const numberInput = document.createElement("input");
+                    numberInput.classList.add('utils-number-input');
+                    numberInput.setAttribute("type", "number");
+                    numberInput.value = input.content();
+                    numberInput.addEventListener("input", function () {
+                        input.handle(this);
+                    });
+                    labelToggleContainer.appendChild(numberInput);
+                }
+
+                if (input.type === "dropdown") {
+                    const dropdown = document.createElement("select");
+                    dropdown.classList.add('utils-dropdown');
+                    input.options.forEach(option => {
+                        const optionElement = document.createElement("option");
+                        optionElement.value = option;
+                        optionElement.textContent = option.charAt(0).toUpperCase() + option.slice(1);
+                        if (option === input.content()) optionElement.selected = true;
+                        dropdown.appendChild(optionElement);
+                    });
+                    dropdown.addEventListener("change", function () {
+                        input.handle(this.value);
+                    });
+                    labelToggleContainer.appendChild(dropdown);
+                }
+
+                // Append label and toggle to inputWrapper
+                inputWrapper.appendChild(labelToggleContainer);
+
+                // Add description if it exists
+                if (input.description) {
+                    const subDescription = document.createElement("p");
+                    subDescription.classList.add("utils-input-description");
+                    subDescription.innerHTML = input.description.replaceAll("\n", "<br>");
+                    inputWrapper.appendChild(subDescription);
+                }
+
+                block.appendChild(inputWrapper);
+            });
+        }
+
+        settingsContainer.appendChild(block);
+    });
+}
+
 
 
 
@@ -775,7 +875,6 @@ function showUtilsSettingsMenu() {
             // Create the Selection Box
             selectionBox.classList.add('selectionbox')
             selectionBox.style.display = 'none';
-            if (settings.sel.borderWidth === 30) selectionBox.classList.add('border-30');
             document.querySelector('.container.dark-mode').insertBefore(selectionBox, document.querySelector('.instances'));
             saveSettings();
 
@@ -786,7 +885,7 @@ function showUtilsSettingsMenu() {
                 const duplicatedInstance = originalDuplicateInstance.call(this, originalInstance, leftOffset, topOffset);
                 if (originalInstance.utilsSelected) {
                     getSelectedInstances().forEach(instance => {
-                        if (instance != originalInstance && instance != duplicatedInstance) {
+                        if (instance != originalInstance && instance != duplicatedInstance && !instance.disabled) {
                             deselectInstance(instance);
                             const instanceCopy = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].duplicateInstance(instance, 0, 0);
                             selectInstance(instanceCopy);
@@ -927,7 +1026,7 @@ function showUtilsSettingsMenu() {
     function selectInstance(instance) {
         setTimeout(() => {
             instance.utilsSelected = true;
-            instance.elem.style.animation = 'chromaCycleOutline var(--chroma-speed) infinite linear, chromaCycleBackground var(--chroma-speed) infinite linear';
+            instance.elem.style.animation = instance.elem.style.animation ? instance.elem.style.animation + ', ' + chromaAnimation : chromaAnimation;
             instance.elem.style.outline = 'var(--custom-outline)';
             instance.elem.style.background = 'var(--custom-background)';
             instance.elem.style.borderColor = 'transparent';
@@ -935,7 +1034,14 @@ function showUtilsSettingsMenu() {
     }
     function deselectInstance(instance) {
         instance.utilsSelected = false;
-        instance.elem.style.animation = '';
+        instance.elem.style.animation = instance.elem.style.animation
+            .split(',')
+            .filter(anim =>
+                !anim.includes('chromaCycleOutline') &&
+                !anim.includes('chromaCycleBackground') &&
+                !anim.includes('rotateBorder')
+            )
+            .join(', ');
         instance.elem.style.outline = '';
         instance.elem.style.background = '';
         instance.elem.style.borderColor = '';
@@ -1455,7 +1561,6 @@ function showUtilsSettingsMenu() {
     function initUnicodeSearch() {
         const unicodeMap = {};
         fetchUnicodeData();
-        const checkboxState = GM_getValue('unicodeCheckboxState', true);
 
         const unicodeContainer = document.createElement("div");
         const header = document.createElement('div');
@@ -1465,11 +1570,12 @@ function showUtilsSettingsMenu() {
         init();
         unicodeInit = true;
         externalUpdateUnicodeSearch = updateUnicodeSearch;
+        externalSearchUnicodeElements = searchUnicodeElements;
 
         function init() {
             unicodeCheckbox.type = 'checkbox';
             unicodeCheckbox.id = 'unicode-checkbox';
-            unicodeCheckbox.checked = checkboxState;
+            unicodeCheckbox.checked = unicodeCheckbox.checked;
             unicodeCheckbox.addEventListener('change', toggleUnicodeSearch);
 
             unicodeContainer.classList.add('unicode-container');
@@ -1488,9 +1594,7 @@ function showUtilsSettingsMenu() {
             // Event listener on search
             const search = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$refs.search;
             search.addEventListener("input", function(e) {
-                if (unicodeCheckbox.checked) {
-                    searchUnicodeElements(e.target.value);
-                }
+                searchUnicodeElements(e.target.value);
             });
 
 
@@ -1502,7 +1606,7 @@ function showUtilsSettingsMenu() {
                     const titleElement = recipeModal.querySelector('.modal-title');
                     const titleText = titleElement.childNodes[1].nodeValue.trim()
 
-                    if (titleText.length === 1) {
+                    if (isSingleUnicodeCharacter(titleText)) {
                         // Remove any existing subtitle
                         let existingSubtitle = recipeModal.querySelector('.subtitle');
                         if (existingSubtitle) existingSubtitle.remove();
@@ -1517,15 +1621,29 @@ function showUtilsSettingsMenu() {
                 }
             }
             const observer = new MutationObserver(checkModalOpen);
-            observer.observe(recipeModal, { attributes: true });
+            observer.observe(recipeModal, { attributes: true, subtree: true });
+
+            // Patch getCraftResponse
+            const getCraftResponse = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse;
+		        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse = exportFunction((...args) => new window.Promise(async (resolve) => {
+		        	  const response = await getCraftResponse(...args);
+                if (unicodeCheckbox.checked && isSingleUnicodeCharacter(response.result)) setTimeout(() => searchUnicodeElements(), 0);
+                return resolve(response);
+            }));
+
+            // Watch for changes in showDiscoveredOnly using $watch method
+            unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$watch('showDiscoveredOnly', function(newVal, oldVal) {
+                searchUnicodeElements();
+            });
         }
 
+        const isSingleUnicodeCharacter = (char) => Array.from(char).length === 1;
+
         function toggleUnicodeSearch() {
-            GM_setValue('unicodeCheckboxState', unicodeCheckbox.checked);
             // Hide search results and disable search
             if (!unicodeCheckbox.checked) updateUnicodeSearch([]);
             // Search with current Searchquery
-            else searchUnicodeElements(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].searchQuery);
+            else searchUnicodeElements();
         }
 
         function fetchUnicodeData() {
@@ -1560,19 +1678,6 @@ function showUtilsSettingsMenu() {
             return unicodeMap;
         }
 
-        function fetchEmojiAndDiscovery(texts) {
-            const elementsMap = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.reduce((map, elem) => {
-                map[elem.text] = elem;
-                return map;
-            }, {});
-
-            return texts.map(text => {
-                const element = elementsMap[text];
-                return element ? { text, emoji: element.emoji, discovered: element.discovered, name: element.name }
-                               : { text, emoji: '⬜', discovered: false, name: '' };
-            });
-        }
-
         function updateUnicodeSearch(elements = []) {
             unicodeContainer.innerHTML = ""; // Clear container content
             unicodeContainer.appendChild(header);
@@ -1580,7 +1685,7 @@ function showUtilsSettingsMenu() {
             const sidebarUnicodeElements = fetchEmojiAndDiscovery(elements);
             unicodeTitle.textContent = "Unicode Search - " + sidebarUnicodeElements.length;
 
-            for (const unicodeElement of sidebarUnicodeElements) {
+            for (const unicodeElement of sidebarUnicodeElements.slice(0, settings.uni.maxShown)) {
                 const elementDiv = document.createElement('div');
                 elementDiv.classList.add('item');
                 if (unicodeElement.discovered) elementDiv.classList.add("item-discovered");
@@ -1596,15 +1701,20 @@ function showUtilsSettingsMenu() {
             }
         }
 
-        function searchUnicodeElements(query) {
+        function searchUnicodeElements(query = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].searchQuery) {
+            if (!unicodeCheckbox.checked) return;
+            const showDiscoveredOnly = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].showDiscoveredOnly;
             const filteredElements = Object.values(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements)
-                .filter(elem => elem.text.length === 1)
-                .filter(elem => {
-                    const codePoint = elem.text.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
+                .filter(element => {
+                    if (!isSingleUnicodeCharacter(element.text) || (showDiscoveredOnly && !element.discovered)) return false;
+
+                    const codePoint = element.text.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
                     const name = unicodeMap[codePoint] || "";
                     return ("U+" + codePoint).includes(query.toUpperCase()) || name.includes(query.toUpperCase()); // Match code point or name
-                });
-            updateUnicodeSearch(filteredElements.map(el => el.text));
+                })
+                .map(el => el.text);
+            if (settings.uni.sort) filteredElements.sort((a, b) => a.codePointAt(0) - b.codePointAt(0));
+            updateUnicodeSearch(filteredElements);
         }
     }
 
@@ -1680,8 +1790,10 @@ function showUtilsSettingsMenu() {
 
 
     // Copy Elements On Hover
+    let ctrlCHandled = false;
+    let ctrlShiftVHandled = false;
     document.addEventListener('keydown', function(e) {
-        if (settings.misc.copyHoveredElement && e.ctrlKey && e.key.toLowerCase() === 'c') {
+        if (settings.misc.copyHoveredElement && e.ctrlKey && e.key.toLowerCase() === 'c' && !ctrlCHandled) {
             const hoveredElement = document.elementFromPoint(mouseData.x, mouseData.y);
 
             if (hoveredElement.classList.contains('item')) {
@@ -1699,12 +1811,13 @@ function showUtilsSettingsMenu() {
                     copyText = hoveredElement.childNodes[1].nodeValue.trim();
                 }
                 navigator.clipboard.writeText(copyText);
-                console.log('Copied to clipboard:', copyText);
+                console.log('Copied to clipboard:\n', copyText);
             }
+            ctrlCHandled = true;
         }
 
 
-        if (settings.misc.copyHoveredElement && e.ctrlKey && e.shiftKey && e.key === 'V' && mouseData.x < window.innerWidth - document.getElementsByClassName('sidebar')[0].getBoundingClientRect().width) {
+        if (settings.misc.copyHoveredElement && e.ctrlKey && e.shiftKey && e.key === 'V' && !ctrlShiftVHandled && mouseData.x < window.innerWidth - document.getElementsByClassName('sidebar')[0].getBoundingClientRect().width) {
             e.preventDefault();
             navigator.clipboard.readText().then(text => {
                 const elements = parsePastedText(text);
@@ -1712,6 +1825,16 @@ function showUtilsSettingsMenu() {
             }).catch(err => {
                 console.error('Failed to read clipboard contents:', err);
             });
+            ctrlShiftVHandled = true;
+        }
+    });
+    document.addEventListener('keyup', function(e) {
+        // Reset the flags when keys are released
+        if (e.key.toLowerCase() === 'c' && e.ctrlKey) {
+            ctrlCHandled = false;
+        }
+        if (e.key === 'V' && e.ctrlKey && e.shiftKey) {
+            ctrlShiftVHandled = false;
         }
     });
 
@@ -1799,22 +1922,30 @@ function showUtilsSettingsMenu() {
         getAllInstances().forEach(instance => deleteInstance(instance));
     }
 
-
-    function spawnElements(elements) {
-        // Create a lookup map for elements
+    function fetchEmojiAndDiscovery(texts) {
         const elementsMap = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.reduce((map, elem) => {
             map[elem.text] = elem;
             return map;
         }, {});
 
-        // Spawn elements from the tab using the lookup map
+        return texts.map(text => elementsMap[text] ? elementsMap[text] : false);
+    }
+
+    function spawnElements(elements) {
+        const fetchedDataMap = fetchEmojiAndDiscovery(elements.map(e => e.name))
+            .reduce((map, item) => {
+                map[item.text] = item;
+                return map;
+            }, {});
+
         elements.forEach(savedElem => {
-            const elem = elementsMap[savedElem.name];
-            if (elem) spawnElement(elem, savedElem.x, savedElem.y);
+            const data = fetchedDataMap[savedElem.name];
+            if (data) spawnElement(data, savedElem.x, savedElem.y);
+            else if (settings.misc.spawnUndiscovered && savedElem.name.length <= 320) spawnElement({text: savedElem.name, emoji: "​"}, savedElem.x, savedElem.y, true);
         });
     }
 
-    function spawnElement(element, x = 0, y = 0) {
+    function spawnElement(element, x = 0, y = 0, disabled = false) {
         const data = {
             id: unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instanceId++,
             text: element.text,
@@ -1837,6 +1968,12 @@ function showUtilsSettingsMenu() {
                 );
                 unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setInstanceZIndex(instance, 0);
                 unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].calcInstanceSize(instance);
+                if (disabled) { // Ghost Elements, SPOOKYY!!!
+                    instance.disabled = disabled;
+                    instance.elem.style.animation = 'none';
+                    instance.elem.style.border = 'none'
+                    instance.elem.style.color = 'rgba(255, 255, 255, 0.3)'
+                }
             }, unsafeWindow)
         );
     }

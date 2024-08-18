@@ -1,18 +1,28 @@
 // ==UserScript==
-// @name        Lineage Creator
+// @name        Lineage Visualizer Choose Your Own Story
 // @namespace   Violentmonkey Scripts
-// @match        https://neal.fun/infinite-craft/*
-// @require      https://cdn.jsdelivr.net/npm/html2canvas@1.0.0-rc.5/dist/html2canvas.min.js
+// @match       https://neal.fun/infinite-craft/*
 // @grant       none
 // @version     1.0
 // @author      -
-// @description 8/7/2024, 2:00:08 PM
+// @description 8/17/2024, 9:51:15 PM
 // ==/UserScript==
-const delay = (delayInms) => {
+
+
+
+
+(function(){
+
+
+  const delay = (delayInms) => {
   return new Promise(resolve => setTimeout(resolve, delayInms));
 };
 
-(function(){
+let Recipes=null;
+let binaryTree=[];
+let tree=[];
+let connectionBoard={}
+
 function getSave() {
     return new Promise((resolve, reject) => {
         const handleClick = HTMLElement.prototype.click;
@@ -32,6 +42,241 @@ function getSave() {
         }, 1500);
     });
 }
+
+
+
+
+
+  function addToTree(element,index,child)
+  {
+    binaryTree.push({text:element,index:index,child:child});
+    tree=[];
+    connectionBoard={};
+    binaryTree=binaryTree.sort((a,b)=>a.index-b.index);
+
+
+   let binaryTreeCopy=[...binaryTree];
+
+     console.log("BT:",binaryTreeCopy);
+
+
+
+    let nrGen=-1;
+    let generation=[binaryTreeCopy[0]]
+    //rebuild tree to be drawned as before also build connectom
+    tree.push(generation)
+
+
+    do{
+
+      nrGen++;
+      let newGeneration=[]
+      let j=-1;
+      let addedIndex=0;
+      for(let el of generation)
+      {  j++;
+
+        let indexp1=(2*el.index);
+        let indexp2=(2*el.index+1);
+
+        console.log("indexes ps:",indexp1,indexp2)
+
+
+
+        let p1=binaryTreeCopy.find(x=>{
+            console.log(x,x.index);
+           return indexp1==x.index;}
+
+
+          );
+        let p2=binaryTreeCopy.find(x=>{
+           console.log(x,x.index);
+           return indexp2==x.index;
+
+        }
+                                  );
+        console.log("data:",el,p1,p2);
+
+
+
+        if(p1!=null)
+          {
+
+
+                   newGeneration.push(p1);
+                   binaryTreeCopy=binaryTreeCopy.filter(x=>x!=p1);
+                   connectionBoard[[nrGen,j]]==null?(connectionBoard[[nrGen,j]]=[[nrGen+1,addedIndex]]):connectionBoard[[nrGen,j]].push([nrGen+1,addedIndex]);
+                   addedIndex++;
+          }
+
+        if(p2!=null)
+          {
+               binaryTreeCopy=binaryTreeCopy.filter(x=>x!=p2)
+               newGeneration.push(p2);
+               connectionBoard[[nrGen,j]]==null?(connectionBoard[[nrGen,j]]=[[nrGen+1,addedIndex]]):connectionBoard[[nrGen,j]].push([nrGen+1,addedIndex]);
+               addedIndex++;
+          }
+
+
+
+
+      }
+      if(newGeneration.length>0)
+      {
+        tree.push(newGeneration);
+        generation=newGeneration;
+      }
+      else
+        break;
+
+
+
+    }while(binaryTreeCopy.length>0);
+
+
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+  function makeRecipeModal(elementText,index)
+  {
+
+    let myRecipes=Recipes[elementText];
+    let dialog=document.createElement("dialog");
+    dialog.style.backgroundColor="var(--background-color)";
+    dialog.style.color="var(--text-color)";
+    let cancelButton= document.createElement("button");
+    cancelButton.addEventListener("click",()=>{dialog.close()})
+    cancelButton.textContent="❌";
+    cancelButton.style.float="right";
+    cancelButton.style.backgroundColor="white";
+    cancelButton.style.position="sticky";
+    cancelButton.style.top="0";
+    cancelButton.addEventListener("mouseover",()=>{
+      cancelButton.style.backgroundColor="red";
+
+    })
+    cancelButton.addEventListener("mouseleave",()=>{
+      cancelButton.style.backgroundColor="white";
+
+    })
+     dialog.appendChild(cancelButton);
+
+
+    document.querySelector(".container").appendChild(dialog);
+    for(let recipe of myRecipes)
+    {
+      let RecipeDiv=document.createElement("div");
+      let createFirstElementDiv=document.createElement("div");
+      let plusText=document.createTextNode("  +  ");
+      let createSecondElementDiv=document.createElement("div");
+
+       let firstElement=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find(x=>x.text==recipe[0].text);
+       let secondElement=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find(x=>x.text==recipe[1].text);
+
+
+        let emojiSpan1=document.createElement("span");
+        emojiSpan1.textContent=firstElement.emoji;
+        let emojiSpan2=document.createElement("span");
+        emojiSpan2.textContent=secondElement.emoji;
+
+        let textNode1=document.createTextNode(firstElement.text);
+        let textNode2=document.createTextNode(secondElement.text);
+        let textNodeCount=document.createTextNode(myRecipes.indexOf(recipe).toString()+". ");
+        RecipeDiv.style.backgroundColor="var(--background-color)";
+
+
+        createFirstElementDiv.appendChild(emojiSpan1);
+        createFirstElementDiv.appendChild(textNode1);
+        createSecondElementDiv.appendChild(emojiSpan2);
+        createSecondElementDiv.appendChild(textNode2);
+        createFirstElementDiv.style.display="inline";
+        createSecondElementDiv.style.display="inline";
+
+        RecipeDiv.appendChild(textNodeCount);
+        RecipeDiv.appendChild(createFirstElementDiv);
+        RecipeDiv.appendChild(plusText);
+        RecipeDiv.appendChild(createSecondElementDiv);
+        dialog.appendChild(RecipeDiv);
+        RecipeDiv.addEventListener("click",()=>
+                                   {
+                                    addToTree(firstElement.text,2*index,elementText);
+                                    addToTree(secondElement.text,2*index+1,elementText);
+                                    dialog.close();
+                                    console.log("Tree:",tree,connectionBoard);
+
+
+
+                                    document.querySelector(".container").removeChild(dialog);
+                                    document.querySelector(".clear").click();
+                                    let waitClear=setInterval(()=>{
+
+                                      if(document.querySelectorAll(".instance").length<=1)
+                                        {
+                                             drawTree();
+                                             clearInterval(waitClear);
+
+                                        }
+
+
+                                    },1);
+
+
+
+
+
+
+                                   }
+
+
+
+                                   );
+        let beforeHover= RecipeDiv.style.backgroundColor;
+        RecipeDiv.addEventListener("mouseover",()=>
+                                   {
+                                     RecipeDiv.style.backgroundColor="gray";
+
+                                   }
+
+
+
+                                   );
+              RecipeDiv.addEventListener("mouseleave",()=>
+                                   {
+                                     RecipeDiv.style.backgroundColor=beforeHover;
+
+                                   }
+
+
+
+                                   );
+
+
+
+
+    }
+    dialog.showModal();
+
+  }
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -77,7 +322,7 @@ function deleteInstance(t)
 
 function makeLine(x1,y1,x2,y2,otherCanvas=null)
 {
-
+     console.log("MAKE LINE",x1,y1,x2,y2,lineColor);
   let myCanvas=canvas;
   if(otherCanvas!=null)
    myCanvas=otherCanvas;
@@ -173,7 +418,7 @@ for(let i=0;i<tree.length;i++)
 }
 let lastAvailableX={};
 
-   function spawnElement(element, x, y,id,callback,textColor=null) {
+   function spawnElement(element, x, y,id,index,callback,textColor=null) {
        console.log("spawning",element)
        if(lastAvailableX[y])
          {
@@ -216,7 +461,20 @@ let lastAvailableX={};
                        console.log("it was spawned",id,lastAvailableX,lastAvailableX[y])
                         let instanceDiv=document.querySelector("#instance-"+id)
                         console.log("inst=",instanceDiv.textContent)
+                         instanceDiv.addEventListener("click",(e)=>{
 
+                        if(e.which==1)
+                         {
+                                //display a modal with recipes , choose a recipe spawn the elements
+                                makeRecipeModal(element.text,index);
+
+
+
+
+                         }
+
+
+                         });
 
 
 
@@ -244,6 +502,9 @@ let lastAvailableX={};
                         lastAvailableX[y]=Math.max(x+size+spacing,lastAvailableX[y]);
                       else
                          lastAvailableX[y]=x+size+spacing;
+
+
+
                         callback(y,x,size,instanceDiv);
 
                       clearInterval(interval);
@@ -402,38 +663,6 @@ let indexJ=0;
 
                           translateLines(-distanceTomove,-distanceY);
                       }
-                       else
-                         {
-
-                        let distanceTomove=marginElement==1?((minx<0)?minx:0):(marginElement==2?((maxx>document.querySelector(".sidebar").getBoundingClientRect().left)?(maxx-document.querySelector(".sidebar").getBoundingClientRect().left):0):rootx-centerX);
-
-                         let distanceY=0;
-
-
-		                       for (const instance of unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances) {
-			                             if (!instance.elem) continue;
-
-			                            const translate = instance.elem.style.getPropertyValue("translate").split(" ").map((x) => parseInt(x));
-
-
-                             if (translate.length === 1) translate.push(0);
-
-			                        translate[0] -= distanceTomove;
-			                        translate[1] -=distanceY;
-		                        	instance.elem.style.translate = translate.map((x) => x + "px").join(" ");
-		                 	        instance.top -=  distanceY;
-		                          instance.left -=  distanceTomove ;
-
-	                               }
-
-                          translateLines(-distanceTomove,-distanceY);
-
-
-
-
-
-
-                         }
 
 
 
@@ -442,7 +671,8 @@ let indexJ=0;
 
 
 
-                                makeOneScreenshot(marginElement);
+
+                                //makeOneScreenshot(marginElement);
 
   }
 
@@ -475,12 +705,13 @@ function nextSpawn(tree,fathers,y_start)
                     tree[indexI][indexJ].size=size;
                     tree[indexI][indexJ].id=htmlElm.id;
 
+
                   let children=fathers[[indexI,indexJ]];
                    if(children)
                    {
                      var lineChildren=[]
                   for(let child of children)
-                  {
+                  {  console.log("CHILDREN:",child);
                       makeLine( tree[child[0]][child[1]].x+tree[child[0]][child[1]].size/2,
                                 tree[child[0]][child[1]].y+20,
                                 tree[indexI][indexJ].x+tree[indexI][indexJ].size/2,
@@ -563,7 +794,8 @@ function nextSpawn(tree,fathers,y_start)
 
                     })
 
-
+              console.log("LINE POINTS:",linePoints);
+              console.log(tree);
 
                   }
 
@@ -640,7 +872,7 @@ function nextSpawn(tree,fathers,y_start)
     let id=  unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instanceId++;
 
 
-      return spawnElement(trueNode,node.x,y_newStart,id,nextSpawn(tree,fathers,y_newStart));
+      return spawnElement(trueNode,node.x,y_newStart,id,node.index,nextSpawn(tree,fathers,y_newStart));
 
       }
 
@@ -649,522 +881,12 @@ function nextSpawn(tree,fathers,y_start)
    ;}
 
 
-function fallbackBuilder(finalWord,AllRecipes,finished)
-{
-let tree=[[{text:finalWord}]];
-let baseRecipes=AllRecipes[finalWord];
-let nrGen=0;
-let stack=[];
-let expandedInTree=[];
-  if(baseRecipes)
-    {
 
-       let choosenRecipe=baseRecipes[0];
-          let  generation=[{"child":finalWord,"text": choosenRecipe[0].text,"recipe":choosenRecipe[0]},
-                           {"child":finalWord,"text": choosenRecipe[1].text,"recipe":choosenRecipe[1]}
+function drawTree()
+  { let fathers=connectionBoard;
+ lastAvailableX={};
+ linePoints=[];
 
-                          ];
-
-
-
-            tree.push(generation);
-
-            nrGen++;
-        do{
-              nrGen++;
-              if(nrGen>=maximumGenerations)
-                break;
-          let newGeneration=[];
-
-           for(let ancestor of generation)
-         {
-            if(base.includes(ancestor.text))
-              continue;
-             if(repeatingRecipes || (!repeatingRecipes && !expandedInTree.includes(ancestor.text))){
-               expandedInTree.push(ancestor.text)
-             let recipes= AllRecipes[ancestor.text];
-              if(recipes)
-                {
-                  let findAProperRecipe=recipes.filter(x=>finished.includes(x[0].text) &&  finished.includes(x[1].text));
-                  if(findAProperRecipe && findAProperRecipe.length>0)
-                   {
-                     choosenRecipe=findAProperRecipe[0];
-                   }
-                     else
-                     {
-                        let findAImProperRecipe=recipes.filter(x=>finished.includes(x[0].text) ||  finished.includes(x[1].text));
-                       if(findAImProperRecipe && findAImProperRecipe.length>0)
-                      {
-                         choosenRecipe=findAImProperRecipe[0];
-                      }else
-                       choosenRecipe=recipes[0];
-                     }
-
-                    newGeneration.push({"child":ancestor.text,"text": choosenRecipe[0].text,"recipe":choosenRecipe[0]})
-                    newGeneration.push({"child":ancestor.text,"text": choosenRecipe[1].text,"recipe":choosenRecipe[1]})
-
-                }
-             }
-         }
-         generation=newGeneration;
-          if(newGeneration.length==0)
-               break;
-
-             tree.push(newGeneration);
-        }while(1);
-
-    }
-
-
-
-
-
-return tree;
-
-}
-
-
-
-async function makeLineageRaw(finalWord,saveFileObj)
-{  saveFileObj["save"]=await getSave().then(x=>x.json());
-
-  let saveFile=saveFileObj["save"];
-  let elements=saveFile["elements"];
-  let AllRecipes=saveFile["recipes"];
-  let stackRecipes=[];
-
-  let nodeWithRecipe=[];
-  let finished=[...base];
-  let visited=[finalWord];
-
-  let StackElements=[finalWord];
-
-  let recipesInLineage=[];
-  let unseriousNodes=[];
-  let finalRecipes=[];
-
-
-   let pool=[];
-   let partitonedRecipes=[]
-  //Part1 partition all the recipes and elements given by root , add all the recipes in the partitioned recipes and all the elements in pool
-  while(StackElements.length>0)
-    { //console.log("stack");
-       let node=StackElements.pop();
-
-      if(!pool.includes(node))
-        {
-          pool.push(node);
-
-        let recipes=AllRecipes[node];
-
-          //find all elemenmts without recipes early;
-          if(recipes==null || recipes.length==0)
-           {
-             if(!finished.includes(node))
-             finished.push(node);
-             unseriousNodes.push(node);
-
-             pool=pool.filter(x=>x!=node);
-             continue;
-           }
-
-
-       for(let recipe of recipes)
-          {
-           if(!pool.includes(recipe[0].text))
-              StackElements.push(recipe[0].text)
-
-            if(!pool.includes(recipe[1].text))
-                StackElements.push(recipe[1].text);
-          }
-        }
-
-
-    }
-  let earlyFinish=false;
-  let oneElementFinished=true
-
-  console.log("before finishing base elements:",[...finished]);
-  console.log("pool:",[...pool]);
-
-//&& oneElementFinished
-
-  while(!finished.includes(finalWord) && pool.length>0 && oneElementFinished)
-  {  console.log("pool",[...pool]);
-     console.log("finished",[...finished]);
-     oneElementFinished=false;
-
-    // console.log("Ah");
-    if(earlyFinish)
-       break;
-    for(let name of pool)
-    {
-
-      if(finished.includes(finalWord))
-        {  earlyFinish=true;
-           break;
-        }
-
-      if(finished.includes(name))
-        {
-          // pool=pool.filter(x=>x!=name);
-          continue;
-        }
-
-
-       let oneHasFinished=false;
-        recipes=AllRecipes[name];
-       let hasSeriousParent=false;
-       let potentialRecipe={};
-      //first pass to see if you can find recipe where elements are base or have parents
-        for(let recipe of recipes)
-      {
-         if(finished.includes(recipe[0].text) &&  finished.includes(recipe[1].text)   )
-           {
-             oneHasFinished=true;
-             potentialRecipe=recipe;
-             oneElementFinished=true;
-
-          if(!(unseriousNodes.includes(recipe[0].text)) &&   (!unseriousNodes.includes(recipe[1].text)))
-            {
-                hasSeriousParent=true;
-                break;
-            }
-
-           }
-
-
-
-      }
-
-      if(oneHasFinished )
-      { if(!(finished.includes(name)))
-        {
-
-          console.log("has finished:",name,potentialRecipe)
-         finished.push(name);
-         finalRecipes.push({"child":name,"recipe":potentialRecipe});
-
-
-
-         if(!hasSeriousParent)
-           unseriousNodes.push(name);
-
-         //pool=pool.filter(x=>x!=name);
-        }
-
-       }
-
-    }
-
-  }
-  finalRecipes.sort((a,b)=>a.child.localeCompare(b.child));
-  console.log("finished:",finished,finalRecipes);
-  //build the tree ground up
- let tree=[];
- let firstRecipe=finalRecipes.find(x=>x.child==finalWord);
-
-  console.log(firstRecipe);
-
- if(firstRecipe)
- {
-
-
-let genNr=0;
-tree.push([{text:finalWord}])
-  let generation=[{child:finalWord,text:firstRecipe["recipe"][0].text,recipe:firstRecipe["recipe"][0]},
-                  {child:finalWord,text:firstRecipe["recipe"][1].text,recipe:firstRecipe["recipe"][1]}
-
-
-                  ];
-    tree.push(generation)
-    genNr++;
-
-
-
-  let stop=false;
-  do{
-    genNr++;
-
-    if(genNr>=maximumGenerations)
-      {  stop=true;
-         break;
-      }
-
-
-    console.log("new generation")
-   let newGeneration=[]
-   let expandedInTree=[];
-
-   for(let ancestor of generation)
-     {
-       //expand only if
-       if(repeatingRecipes || (!repeatingRecipes && !expandedInTree.includes(ancestor.text)))
-          {
-        let NowRecipe=finalRecipes.find(x=>x.child==ancestor.text);
-
-       if(NowRecipe!=null){
-             expandedInTree.push(ancestor.text);
-             newGeneration.push({child:ancestor.text,text:NowRecipe["recipe"][0].text,recipe:NowRecipe["recipe"][0]});
-
-
-             newGeneration.push({child:ancestor.text,text:NowRecipe["recipe"][1].text,recipe:NowRecipe["recipe"][1]});
-
-         }
-         }
-     }
-   console.log("newnewGeneration:",newGeneration,newGeneration.length);
-    generation=newGeneration;
-
-
-
-     if(newGeneration.length==0)
-       {
-         stop=true;
-         break;
-
-       }
-
-
-   tree.push(newGeneration);
-  }while(!stop);
-
-
-  console.log("Tree:",tree);
-
-
-
-   ;}else
-     {
-
-       tree=fallbackBuilder(finalWord,AllRecipes,finished,pool);
-
-     }
-
-
-
-
-  let genNr=0;
- let fathers={};
- for(let generation of tree)
-  {
-    genNr++;
-    if(genNr>tree.length-1)
-      break;
-     let nextGen=tree[genNr];
-    let nr_in_Gen=0;
-  let indexNextGen=0;
-     console.log("next gen:",nextGen)
-    for(let node of generation)
-      {
-         console.log("node text:",node.text)
-         nr_in_Gen++;
-
-         let nrChildren=0;
-
-          fathers[[genNr-1,nr_in_Gen-1]]=[];
-
-          while(indexNextGen<nextGen.length && nextGen[indexNextGen].child==node.text && nrChildren<2 )
-            {
-              fathers[[genNr-1,nr_in_Gen-1]].push([genNr,indexNextGen]);
-              indexNextGen++;
-              nrChildren++;
-
-            }
-
-      }
-
-  }
-console.log("fathers:",fathers)
-
-return [tree,fathers]
-
-
-
-
-}
-
-
-async function descendantsTree(target,saveFileObj)
-  {
-       saveFileObj["save"]=await getSave().then(x=>x.json());
-
-       let saveFile=saveFileObj["save"];
-
-
-    //need to build an inverse recipe object ,go trough all recipes and build for each element the direct descendants list
-     let descendants={}
-
-     let AllRecipes=saveFile["recipes"];
-    for(let key in AllRecipes)
-      {
-
-        let recipes= AllRecipes[key];
-         for(let recipe of recipes)
-          {
-            let p1=recipe[0];
-            let p2=recipe[1];
-               if( descendants[p1.text]==null)
-                descendants[p1.text]=[];
-
-              if( descendants[p2.text]==null)
-                descendants[p2.text]=[];
-
-             if(!descendants[p1.text].includes(key))
-            descendants[p1.text].push(key);
-
-            if(!descendants[p2.text].includes(key))
-            descendants[p2.text].push(key);
-
-          }
-
-
-      }
-
-    let tree=[]
-    tree.push([{text:target,child:target}]);
-
-
-
-
-
-
-    let generation=descendants[target].map(x=>{return {parent:target,child:x}});
-    let nrGen=1;
-    console.log("generation:",generation)
-    tree.push(generation);
-    do{
-       nrGen++;
-       if(nrGen>maximumGenerations)
-          break;
-        let newGeneration=[];
-
-   console.log("generation",nrGen,generation.length);
-      let in_gen=0;
-     for(let descendant of generation)
-       {   in_gen++;
-           console.log("the descendant",nrGen,in_gen,generation.length,descendant);
-            if(descendant["child"]!=null &&  descendants[descendant["child"]]!=null){
-          //all the kids of a descendant
-         // console.log("des:",descendants[descendant["child"]])
-         let myDescendants=[...descendants[descendant["child"]]];
-              //console.log("mydesc:",myDescendants);
-
-
-
-          for(let myDescendant of myDescendants)
-            {    if(newGeneration.find(x=>x["parent"]==descendant["child"] && x["child"]==myDescendant)==null)
-                  newGeneration.push({parent:descendant["child"],child:myDescendant});
-            }
-            }
-
-
-
-       }
-       console.log("new generation:",newGeneration)
-      if(newGeneration.length==0)
-         break;
-
-
-      tree.push(newGeneration);
-      generation=newGeneration;
-
-
-
-    }while(1);console.log(tree);
-   let connectdom={};
-     for(let i=0;i<tree.length-1;i++)
-
-       {
-                 let indexInGeneration=0;
-         console.log("line=",tree[i])
-              for(let j=0;j<tree[i].length;j++)
-          {
-                console.log("trr ij:",tree[i][j])
-             connectdom[[i,j]]=[];
-               if(indexInGeneration<tree[i+1].length)
-               while(tree[i+1][indexInGeneration]["parent"]==tree[i][j]["child"])
-                 {
-                   connectdom[[i,j]].push([i+1,indexInGeneration]);
-                   indexInGeneration++;
-                   if(indexInGeneration>=tree[i+1].length)
-                      break;
-                   console.log( indexInGeneration,tree[i+1][indexInGeneration])
-
-                 }
-
-
-
-          }
-
-
-
-
-
-       }
-    //map tree to elements from the inventory
-     tree.forEach(x=>x.forEach(y=>{y["text"]=y["child"],y["child"]=saveFile["elements"].find(z=>z.text==y["child"]) ;y["parent"]=saveFile["elements"].find(z=>z.text==y["parent"]);  }));
-    console.log(tree);
-
-    console.log(connectdom);
-  return [tree,connectdom];
-
-  }
-let direction="a";
-async function makeVisualLineage(finalWord)
-{
-
-
-
-
-    try{
-     document.querySelector(".choose-target-lineage").style.backgroundColor="green";
-     document.querySelector(".choose-target-lineage").style.borderColor="pink";
-  }catch(e){}
-   await delay(3000);
-
-    let settings=null;
-
-
-
-
-   if(localStorage.getItem("vizualizer-settings"))
-    settings=JSON.parse(localStorage.getItem("vizualizer-settings"));
-    if(settings==null)
-    settings={
-                spacing:spacing,
-                initialVerticalGap:initialVerticalGap,
-                maximumGenerations:maximumGenerations,
-                lineColor:lineColor,
-                repeatingRecipes:repeatingRecipes,
-                progressiveVerticalGap:progressiveVerticalGap,
-
-
-
-
-    };
-
-                spacing=Number(settings["spacing"]);
-                initialVerticalGap=Number(settings["initialVerticalGap"]);
-                maximumGenerations=Number(settings["maximumGenerations"]);
-                lineColor=settings["lineColor"];
-                repeatingRecipes=settings["repeatingRecipes"];
-                progressiveVerticalGap=settings["progressiveVerticalGap"];
-console.log("settings:",spacing,initialVerticalGap,maximumGenerations, lineColor,repeatingRecipes,progressiveVerticalGap)
-
-
-  lastAvailableX={};
- let savefile={save:"hello"}
- let [tree,fathers]=direction=="a"?await makeLineageRaw(finalWord,savefile):await descendantsTree(finalWord,savefile);
-
-
-     try{
-     document.querySelector(".choose-target-lineage").style.backgroundColor="#6B492B";
-     document.querySelector(".choose-target-lineage").style.borderColor="green";
-  }catch(e){}
- await delay(2000);
-
- console.log(savefile);
   console.log(tree);
 let bottom=window.innerHeight-50;
 let leftmost=document.querySelector(".items").getBoundingClientRect().left;
@@ -1244,6 +966,101 @@ Tree={
 
 
  nextSpawn(tree,fathers,y_start,initialVerticalGap+distance)(y_start);
+
+
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+async function makeVisualLineage(finalWord)
+{
+    try{
+     document.querySelector(".choose-target-lineage").style.backgroundColor="green";
+     document.querySelector(".choose-target-lineage").style.borderColor="pink";
+  }catch(e){}
+   await delay(3000);
+
+    let settings=null;
+
+
+   if(localStorage.getItem("vizualizer-settings"))
+    settings=JSON.parse(localStorage.getItem("vizualizer-settings"));
+    if(settings==null)
+    settings={
+                spacing:spacing,
+                initialVerticalGap:initialVerticalGap,
+                maximumGenerations:maximumGenerations,
+                lineColor:lineColor,
+                repeatingRecipes:repeatingRecipes,
+                progressiveVerticalGap:progressiveVerticalGap,
+
+
+
+
+    };
+
+                spacing=Number(settings["spacing"]);
+                initialVerticalGap=Number(settings["initialVerticalGap"]);
+                maximumGenerations=Number(settings["maximumGenerations"]);
+                lineColor=settings["lineColor"];
+                repeatingRecipes=settings["repeatingRecipes"];
+                progressiveVerticalGap=settings["progressiveVerticalGap"];
+console.log("settings:",spacing,initialVerticalGap,maximumGenerations, lineColor,repeatingRecipes,progressiveVerticalGap)
+
+
+  lastAvailableX={};
+     let savefile={save:"hello"};
+     savefile=await getSave().then(x=>x.json());
+      Recipes=savefile["recipes"];
+      binaryTree.push({text:finalWord,index:1})
+
+
+
+
+  try{
+     document.querySelector(".choose-target-lineage").style.backgroundColor="#6B492B";
+     document.querySelector(".choose-target-lineage").style.borderColor="green";
+  }catch(e){}
+ await delay(2000);
+
+//drawTree();
+  let bottom=window.innerHeight-50;
+  let leftmost=document.querySelector(".items").getBoundingClientRect().left;
+  let x_start=leftmost/2;
+  let y_start=bottom-50;
+  let trueRoot= unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find(x=>x.text==finalWord)
+
+    try{
+     document.querySelector(".choose-target-lineage").parentNode.removeChild( document.querySelector(".choose-target-lineage"));
+
+  }catch(e){}
+
+
+ let id=  unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instanceId++;
+
+  spawnElement(trueRoot,x_start,y_start,id,1,()=>{});
+
+
+
+
 }
 
 
@@ -1463,38 +1280,6 @@ Tree={
         item.appendChild(document.createTextNode(` ${element.text} `));
         item.style.display="inline-block";
         item.addEventListener('mousedown', (e) => {
-
-
-
-
-
-//                if(modal)
-//                  {
-//                          let instances=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances;
-//                          console.log(instances[instances.length-1])
-//                        let waitForInstance=  setInterval(()=>{
-//                                if(instances[instances.length-1].elem)
-//                                  {
-//                                          modal.appendChild(instances[instances.length-1].elem);
-//                                          clearInterval( waitForInstance);
-
-//                                  }
-
-
-
-//                          },
-
-
-
-//                          200)
-
-
-
-
-
-//                  }
-
-
 
 
                unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].playInstanceSound();
@@ -1727,41 +1512,6 @@ function startingModal(){
 
   document.querySelector(".container").appendChild(startingDiv);
 
-  let fileInput=document.createElement("input");
-    fileInput.style.position="absolute";
-    fileInput.style.bottom="0";
-    fileInput.type="file";
-    fileInput.addEventListener("change",()=>{
-
-                               var file = fileInput.files[0];
-
-                             if (file) {
-                         var reader = new FileReader();
-                         reader.readAsText(file, "UTF-8");
-                         reader.onload = function (evt) {
-                         let text=evt.target.result;
-                         var lines = text.split('\n');
-
-
-
-                           for (var line of lines) {
-                                       console.log(line);
-                                      batch.push(line.trim())
-                                   }
-                                  console.log("batch:",batch)
-                                  makeVisualLineage(batch[0]);
-
-
-                                   }
-
-
-                               }});
-    startingDiv.appendChild(fileInput);
-
-
-
-
-
 
 
 
@@ -1797,16 +1547,6 @@ function startingModal(){
                     rect1.x,
                     rect2.y-100
                 );
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1933,10 +1673,13 @@ let mouseData={
 
 
     canvas=document.createElement("canvas");
+    canvas.classList.add("Lines-canvas");
     canvas.width=window.innerWidth;
     canvas.height=window.innerHeight;
     canvas.style.zIndex="-5";
-    canvas.style.position="relative"
+    canvas.style.position="absolute"
+    canvas.style.top="0";
+    canvas.style.left="0";
     const context = canvas.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);
     document.querySelector(".container").appendChild(canvas);

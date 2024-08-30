@@ -5,7 +5,7 @@
 // @grant       GM.xmlHttpRequest
 // @grant       GM_getValue
 // @grant       GM_setValue
-// @version     1.3
+// @version     1.4
 // @author      Catstone
 // @license     MIT
 // @description Combines Infinite Craft Selection Utils, Tab Utils, Unicode Utils and more misc stuff!
@@ -16,7 +16,7 @@
 (function() {
     'use strict';
 
-    const closeIcon = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJhIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MDAgNjAwIj48cGF0aCBkPSJNMzAwLjAwMDAyLDM0OS44MzIzM0w2MC4xMDc4Miw1ODkuNzIzMzJjLTYuNTQ2ODksNi41NDc2OS0xNC43NzY0Myw5Ljg5NzE4LTI0LjY4ODYsMTAuMDQ4NTEtOS45MTEzOCwuMTUyMS0xOC4yOTIyNC0zLjE5NzQtMjUuMTQyNTYtMTAuMDQ4NTFDMy40MjU1Nyw1ODIuODcyOTgsLjAwMDAyLDU3NC41Njc4LDAsNTY0LjgwNzc0Yy4wMDAwMi05Ljc2MDA3LDMuNDI1NTctMTguMDY1MjYsMTAuMjc2NjYtMjQuOTE1NTZsMjM5Ljg5MTAxLTIzOS44OTIyTDEwLjI3NjY4LDYwLjEwNzc4QzMuNzI4OTksNTMuNTYwOTIsLjM3OTUsNDUuMzMxMzYsLjIyODE3LDM1LjQxOTIyLC4wNzYwNywyNS41MDc4OCwzLjQyNTU3LDE3LjEyNywxMC4yNzY2OCwxMC4yNzY2NiwxNy4xMjcwMiwzLjQyNTUzLDI1LjQzMjIsMCwzNS4xOTIyNiwwczE4LjA2NTI2LDMuNDI1NTMsMjQuOTE1NTYsMTAuMjc2NjZsMjM5Ljg5MjIsMjM5Ljg5MDk3TDUzOS44OTIyMiwxMC4yNzY1OWM2LjU0Njg2LTYuNTQ3NzIsMTQuNzc2NDMtOS44OTcyLDI0LjY4ODU2LTEwLjA0ODUxLDkuOTExMzQtLjE1MjE3LDE4LjI5MjIyLDMuMTk3MzgsMjUuMTQyNTYsMTAuMDQ4NTEsNi44NTExMyw2Ljg1MDI3LDEwLjI3NjY2LDE1LjE1NTUyLDEwLjI3NjY2LDI0LjkxNTU2cy0zLjQyNTUzLDE4LjA2NTIyLTEwLjI3NjY2LDI0LjkxNTU2bC0yMzkuODkwOTcsMjM5Ljg5MjI3LDIzOS44OTEwNSwyMzkuODkyMmM2LjU0NzcyLDYuNTQ2ODksOS44OTcyLDE0Ljc3NjQzLDEwLjA0ODUxLDI0LjY4ODYsLjE1MjE3LDkuOTExMzgtMy4xOTczOCwxOC4yOTIyNC0xMC4wNDg1MSwyNS4xNDI1Ni02Ljg1MDI3LDYuODUxMS0xNS4xNTU1MiwxMC4yNzY2NC0yNC45MTU1NiwxMC4yNzY2Ni05Ljc2MDA0LS4wMDAwMi0xOC4wNjUyMi0zLjQyNTU3LTI0LjkxNTU2LTEwLjI3NjY2bC0yMzkuODkyMjctMjM5Ljg5MTAxWiIvPjwvc3ZnPg==';
+    const spawnIcon = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pg0KPCEtLSBVcGxvYWRlZCB0bzogU1ZHIFJlcG8sIHd3dy5zdmdyZXBvLmNvbSwgR2VuZXJhdG9yOiBTVkcgUmVwbyBNaXhlciBUb29scyAtLT4NCjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+DQo8c3ZnIGZpbGw9IiMwMDAwMDAiIHZlcnNpb249IjEuMSIgaWQ9IkNhcGFfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgDQoJIHdpZHRoPSI4MDBweCIgaGVpZ2h0PSI4MDBweCIgdmlld0JveD0iMCAwIDQ1LjQwMiA0NS40MDIiDQoJIHhtbDpzcGFjZT0icHJlc2VydmUiPg0KPGc+DQoJPHBhdGggZD0iTTQxLjI2NywxOC41NTdIMjYuODMyVjQuMTM0QzI2LjgzMiwxLjg1MSwyNC45OSwwLDIyLjcwNywwYy0yLjI4MywwLTQuMTI0LDEuODUxLTQuMTI0LDQuMTM1djE0LjQzMkg0LjE0MQ0KCQljLTIuMjgzLDAtNC4xMzksMS44NTEtNC4xMzgsNC4xMzVjLTAuMDAxLDEuMTQxLDAuNDYsMi4xODcsMS4yMDcsMi45MzRjMC43NDgsMC43NDksMS43OCwxLjIyMiwyLjkyLDEuMjIyaDE0LjQ1M1Y0MS4yNw0KCQljMCwxLjE0MiwwLjQ1MywyLjE3NiwxLjIwMSwyLjkyMmMwLjc0OCwwLjc0OCwxLjc3NywxLjIxMSwyLjkxOSwxLjIxMWMyLjI4MiwwLDQuMTI5LTEuODUxLDQuMTI5LTQuMTMzVjI2Ljg1N2gxNC40MzUNCgkJYzIuMjgzLDAsNC4xMzQtMS44NjcsNC4xMzMtNC4xNUM0NS4zOTksMjAuNDI1LDQzLjU0OCwxOC41NTcsNDEuMjY3LDE4LjU1N3oiLz4NCjwvZz4NCjwvc3ZnPg=='
     const css = document.createElement('style');
     css.textContent = `
 .utils-settings-overlay {
@@ -393,11 +393,22 @@ input:checked + .checkbox-slider:before {
 }
 
 
-.subtitle {
+.modal-subtitle {
     font-size: 14px;
     color: #fff;
     margin-top: 4px;
     font: caption;
+    user-select: text;
+}
+
+.modal-subtitle a {
+	  opacity: 0.7;
+	  cursor: pointer;
+	  text-decoration: underline dotted;
+    user-select: none;
+}
+.modal-subtitle a:hover, .modal-subtitle a:focus {
+	  opacity: 1;
 }
 `
 document.head.appendChild(css);
@@ -407,8 +418,17 @@ document.head.appendChild(css);
     let selectionUtilsInit = false;
     let tabUtilsInit = false;
     let unicodeInit = false;
+    let spawnInit = false;
 
     let chromaAnimation;
+    const mouseData = {
+	  	  down: false,
+        button: 0,
+	  	  x: null,
+	  	  y: null,
+	  	  deltaX: null,
+	  	  deltaY: null
+	  }
 
     const defaultSettings = {
         sel: {
@@ -425,11 +445,18 @@ document.head.appendChild(css);
             search : false,
             maxShown: 250,
             sort: true,
-            infoInRecipeModal: true,
+            showMultiCharacterEmojis: false,
+            infoInRecipeModal: true
+        },
+        copy: {
+            enabled: false
+        },
+        spawn: {
+            enabled: false,
+            ghosts: true
         },
         misc: {
-            copyHoveredElement: false,
-            spawnUndiscovered: false
+
         }
     };
 
@@ -487,6 +514,7 @@ document.head.appendChild(css);
     }
 
     let externalSaveCurrentTab;
+    let externalAddTab;
     function toggleTabUtils() {
         if (settings.tabs.enabled) {
             externalSaveCurrentTab();
@@ -515,6 +543,24 @@ document.head.appendChild(css);
         }
 
         settings.uni.search = !settings.uni.search;
+    }
+
+    function toggleCopyPasteUtils() {
+        settings.copy.enabled = !settings.copy.enabled;
+    }
+
+
+    let externalSpawnImage;
+    function toggleSpawnUtils() {
+        if (settings.spawn.enabled) {
+            externalSpawnImage.style.display = 'none';
+        }
+        else {
+            if (!spawnInit) initSpawnUtils();
+            else externalSpawnImage.style.display = 'block';
+        }
+
+        settings.spawn.enabled = !settings.spawn.enabled;
     }
 
 
@@ -550,6 +596,8 @@ document.head.appendChild(css);
         if (settings.sel.enabled) initSelectionUtils();
         if (settings.tabs.enabled) initTabUtils();
         if (settings.uni.search) initUnicodeSearch();
+        if (settings.spawn.enabled) initSpawnUtils();
+        patchGhostElements();
     });
 
 
@@ -638,6 +686,15 @@ document.head.appendChild(css);
                 }
             },
             {
+                label: "Show Multi-character Emojis",
+                type: "toggle",
+                content: () => settings.uni.showMultiCharacterEmojis,
+                handle(elements) {
+                    settings.uni.showMultiCharacterEmojis = !settings.uni.showMultiCharacterEmojis;
+                    externalSearchUnicodeElements();
+                }
+            },
+            {
                 label: "Show Unicode Info in Recipe Menu",
                 description: "e.g. U+0069 - LATIN SMALL LETTER I",
                 type: "toggle",
@@ -648,24 +705,30 @@ document.head.appendChild(css);
             }]
         },
         {
+            name: "Copy Paste Utils",
+            description: "Ctrl + C   to copy the text of a hovered Element\nCtrl + Shift + V   to paste Element(s)\nCopy works on Selections!\nPaste works on gigantic lists, for example all countries (just seperate each \"Word\" with a new line)",
+            toggle: true,
+            toggleState: () => settings.copy.enabled,
+            toggleHandle: (elements) => toggleCopyPasteUtils()
+        },
+        {
+            name: "Spawn Utils",
+            description: "Adds a Spawn Button to the bottom!\n- Spawn Alphabets easily!\n- Spawn Unicodes easily!",
+            toggle: true,
+            toggleState: () => settings.spawn.enabled,
+            toggleHandle: (elements) => toggleSpawnUtils(),
+            inputs: []
+        },
+        {
             name: "Misc",
             description: "",
             inputs: [{
-                label: "Copy Paste Elements: ",
-                description: "Ctrl + C   to copy the text of a hovered Element\nCtrl + Shift + V   to paste Element(s)\nAlso works on Selections!\nYou can also paste in gigantic lists, for example all countries (just seperate each \"Word\" with a new line)",
+                label: "Spawn non-crafted Elements as Ghosts: ",
+                description: "Works with Copy Paste Utils and Spawn Utils",
                 type: "toggle",
-                content: () => settings.misc.copyHoveredElement,
+                content: () => settings.spawn.ghosts,
                 handle(elements) {
-                    settings.misc.copyHoveredElement = !settings.misc.copyHoveredElement;
-                }
-            },
-            {
-                label: "Spawn not found Elements as Ghosts: ",
-                description: "Works with Alphabet Spawning and Copy Paste Elements",
-                type: "toggle",
-                content: () => settings.misc.spawnUndiscovered,
-                handle(elements) {
-                    settings.misc.spawnUndiscovered = !settings.misc.spawnUndiscovered;
+                    settings.spawn.ghosts = !settings.spawn.ghosts;
                 }
             }]
         }
@@ -1105,6 +1168,7 @@ function showUtilsSettingsMenu() {
             if (elementsData && elementsData.length > 0) {
                 tabUtilsInit = true;
                 externalSaveCurrentTab = saveCurrentTab;
+                externalAddTab = addTab;
                 init();
                 return true;
             }
@@ -1423,12 +1487,6 @@ function showUtilsSettingsMenu() {
                 uploadOption.textContent = 'Upload Tab';
                 uploadOption.onclick = uploadTab;
                 contextMenu.appendChild(uploadOption);
-
-                const spawnAlphabetOption = document.createElement('div');
-                spawnAlphabetOption.classList.add('contextMenuOption');
-                spawnAlphabetOption.textContent = 'Spawn Alphabet';
-                spawnAlphabetOption.onclick = () => promptAlphabets();
-                contextMenu.appendChild(spawnAlphabetOption);
             }
 
 
@@ -1467,55 +1525,6 @@ function showUtilsSettingsMenu() {
                 refreshTabButtons();
             }
             draggedIndex = null;
-        }
-
-
-        function getAllAlphabets() {
-            const counters = {};
-            JSON.parse(localStorage.getItem("infinite-craft-data")).elements.map(e => e.text.toLowerCase()).forEach(e => {
-                const letters = e.match(/[a-zA-Z]/g);
-                if (letters && letters.length === 1) (counters[e.replace(letters[0], 'x')] ||= new Set()).add(letters[0]);
-                });
-            const alphabets = Object.entries(counters)
-                .map(([key, set]) => ({ alphabet: key, completeness: set.size }))
-                .filter(e => e.completeness >= 3)
-                .sort((a, b) => b.completeness - a.completeness);
-
-            return alphabets;
-        }
-
-        function promptAlphabets() {
-            const userInput = prompt("Enter Alphabet(s) separated by Double Spaces:\nFor Example: 'x   .x   _x   x!'\n\n- only spawns 'correctly' capitalized elements\n- use a capital X to not replace it\n- Type 'E' to spawn all your E's\n- Type 'all' to spawn all YOUR Alphabets!");
-            if (!userInput) return [];
-            if (userInput.toLowerCase() === "all") {
-                const alphabets = getAllAlphabets();
-                console.table(alphabets);
-                addTab(-1, {elements: [], name: `All Alphabets (${alphabets.filter(a => a.completeness === 26).length}/${alphabets.length})`});
-                spawnAlphabets(alphabets.map(e => e.alphabet), 'abcdefghijklmnopqrstuvwxyz'.split(''));
-                return;
-            }
-            addTab(-1, {elements: [], name: userInput});
-            if (/^[A-Z]$/.test(userInput)) {  // 1 Letter
-                const alphabets = getAllAlphabets();
-                spawnAlphabets(alphabets.map(e => e.alphabet), [userInput], true);
-            }
-            else spawnAlphabets(userInput.split(/  /), 'abcdefghijklmnopqrstuvwxyz'.split(''));
-        }
-
-        function spawnAlphabets(patterns, letters, flip = false) {
-            const elements = [];
-
-            patterns.forEach((pattern, rowIndex) => {
-                letters.forEach((char, colIndex) => {
-                    const newElement = {
-                        name: icCasing(pattern.replace('x', char)),
-                        x: flip ? (100 + colIndex * 100) : (100 + rowIndex * 100),
-                        y: flip ? (50 + rowIndex * 50) : (50 + colIndex * 50)
-                    };
-                    elements.push(newElement);
-                });
-            });
-            spawnElements(elements);
         }
     }
 
@@ -1605,17 +1614,37 @@ function showUtilsSettingsMenu() {
                 if (settings.uni.infoInRecipeModal && recipeModal.hasAttribute('open')) {
                     const titleElement = recipeModal.querySelector('.modal-title');
                     const titleText = titleElement.childNodes[1].nodeValue.trim()
+                    let existingSubtitle = recipeModal.querySelector('.modal-subtitle');
 
-                    if (isSingleUnicodeCharacter(titleText)) {
-                        // Remove any existing subtitle
-                        let existingSubtitle = recipeModal.querySelector('.subtitle');
-                        if (existingSubtitle) existingSubtitle.remove();
+                    if (!existingSubtitle) {
+                        if (isSingleUnicodeCharacter(titleText)) addUnicodeInfoToModal();
+                        else {
+                            const showUnicodeInfo = document.createElement("a");
+			                      showUnicodeInfo.textContent = "Show Unicode Info";
+                            const unicodeInfoContainer = document.createElement('div');
+                            unicodeInfoContainer.classList.add('modal-subtitle');
+                            titleElement.appendChild(unicodeInfoContainer);
+                            unicodeInfoContainer.appendChild(showUnicodeInfo);
+                            showUnicodeInfo.addEventListener("click", () => {
+                                addUnicodeInfoToModal();
+                            });
+                        }
+                    }
+                    function addUnicodeInfoToModal() {
+                        const existingSubtitles = recipeModal.querySelectorAll('.modal-subtitle')
+                        existingSubtitles.forEach(subtitle => subtitle.remove());
 
-                        const codePoint = titleText.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
-                        const unicodeName = unicodeMap[codePoint] || '';
+                        const subtitleHTML = Array.from(titleText)
+                            .map(char => {
+                                const codePoint = char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
+                                const unicodeName = unicodeMap[codePoint] || '';
+                                return `U+${codePoint.padStart(4, '0')} - ${unicodeName || "no name found"} - ${char}`;
+                            })
+                            .join('<br>');
+
                         const subtitle = document.createElement('div');
-                        subtitle.textContent = `U+${codePoint.padStart(4, '0') || "no codepoint found"} - ${unicodeName || "no name found"}`;
-                        subtitle.classList.add('subtitle');
+                        subtitle.innerHTML = subtitleHTML.trim();
+                        subtitle.classList.add('modal-subtitle');
                         titleElement.appendChild(subtitle);
                     }
                 }
@@ -1637,7 +1666,14 @@ function showUtilsSettingsMenu() {
             });
         }
 
-        const isSingleUnicodeCharacter = (char) => Array.from(char).length === 1;
+        function isSingleUnicodeCharacter (char, bothChecks=false) {
+            if (!settings.uni.showMultiCharacterEmojis) return Array.from(char).length === 1;
+            if (settings.uni.showMultiCharacterEmojis || bothChecks) {
+                if (/^[🇦-🇿]{2}$/u.test(char)) return true; // 2 of REGIONAL INDICATOR SYMBOL LETTER -> Flag Emojis
+                if (/^.(\p{Emoji_Modifier}|[\uFE00-\uFE0F])*(\u200D.(\p{Emoji_Modifier}|[\uFE00-\uFE0F])*)+$/u.test(char)) return true; // Zero Width Joiner + Skin Tone Modifier + Variants Stuff
+                if (/^.(\p{Emoji_Modifier}|[\uFE00-\uFE0F])$/u.test(char)) return true; // Skin Tone Modifier + Variants Stuff
+            }
+        }
 
         function toggleUnicodeSearch() {
             // Hide search results and disable search
@@ -1754,6 +1790,202 @@ function showUtilsSettingsMenu() {
 
 
 
+//              ___           ___         ___           ___           ___                    ___                                                 ___
+//             /  /\         /  /\       /  /\         /__/\         /__/\                  /__/\          ___       ___                        /  /\
+//            /  /:/_       /  /::\     /  /::\       _\_ \:\        \  \:\                 \  \:\        /  /\     /  /\                      /  /:/_
+//           /  /:/ /\     /  /:/\:\   /  /:/\:\     /__/\ \:\        \  \:\                 \  \:\      /  /:/    /  /:/      ___     ___    /  /:/ /\
+//          /  /:/ /::\   /  /:/~/:/  /  /:/~/::\   _\_ \:\ \:\   _____\__\:\            ___  \  \:\    /  /:/    /__/::\     /__/\   /  /\  /  /:/ /::\
+//         /__/:/ /:/\:\ /__/:/ /:/  /__/:/ /:/\:\ /__/\ \:\ \:\ /__/::::::::\          /__/\  \__\:\  /  /::\    \__\/\:\__  \  \:\ /  /:/ /__/:/ /:/\:\
+//         \  \:\/:/~/:/ \  \:\/:/   \  \:\/:/__\/ \  \:\ \:\/:/ \  \:\~~\~~\/          \  \:\ /  /:/ /__/:/\:\      \  \:\/\  \  \:\  /:/  \  \:\/:/~/:/
+//          \  \::/ /:/   \  \::/     \  \::/       \  \:\ \::/   \  \:\  ~~~            \  \:\  /:/  \__\/  \:\      \__\::/   \  \:\/:/    \  \::/ /:/
+//           \__\/ /:/     \  \:\      \  \:\        \  \:\/:/     \  \:\                 \  \:\/:/        \  \:\     /__/:/     \  \::/      \__\/ /:/
+//             /__/:/       \  \:\      \  \:\        \  \::/       \  \:\                 \  \::/          \__\/     \__\/       \__\/         /__/:/
+//             \__\/         \__\/       \__\/         \__\/         \__\/                  \__\/                                               \__\/
+  function initSpawnUtils() {
+      spawnInit = true;
+      const spawnImage = document.createElement('img');
+      const menu = document.createElement('div');
+      externalSpawnImage = spawnImage;
+      init();
+
+      function init() {
+          spawnImage.src = spawnIcon.trim();
+	        spawnImage.classList.add('random');
+          document.querySelector('.side-controls').appendChild(spawnImage);
+          spawnImage.addEventListener('click', (e) => {
+              showMenu();
+          });
+
+      }
+
+      function showMenu() {
+
+          menu.id = 'contextMenu';
+          menu.innerHTML = '';
+
+          if (settings.sel.enabled) {
+              const spawnFromSelected = document.createElement('div');
+              spawnFromSelected.classList.add('contextMenuOption');
+              spawnFromSelected.textContent = 'Spawn From Selected';
+              spawnFromSelected.onclick = () => spawnFromSelectedElement();
+              menu.appendChild(spawnFromSelected);
+          }
+
+          const spawnAlphabets = document.createElement('div');
+          spawnAlphabets.classList.add('contextMenuOption');
+          spawnAlphabets.textContent = 'Spawn Alphabets';
+          spawnAlphabets.onclick = () => promptAlphabets();
+          menu.appendChild(spawnAlphabets);
+
+          const spawnUnicodes = document.createElement('div');
+          spawnUnicodes.classList.add('contextMenuOption');
+          spawnUnicodes.textContent = 'Spawn Unicodes';
+          spawnUnicodes.onclick = () => promptUnicodes();
+          menu.appendChild(spawnUnicodes);
+
+          setTimeout(() => {
+              document.body.appendChild(menu);
+              menu.style.right = `${window.innerWidth - spawnImage.getBoundingClientRect().right}px`;
+              menu.style.bottom = `${window.innerHeight - spawnImage.getBoundingClientRect().top}px`;
+
+              document.addEventListener('click', () => {
+                  if (document.body.contains(menu)) {
+                      document.body.removeChild(menu);
+                  }
+              }, { once: true });
+          }, 0);
+      }
+
+
+      function spawnFromSelectedElement() {
+          const selectedInstances = getAllInstances().filter(x => x.utilsSelected);
+          if (selectedInstances.length > 1) alert(`More than 1 Element is selected: ${selectedInstances.length}`);
+          else if (selectedInstances.length < 1) alert("0 Elements are selected");
+          else { // Unicode Spawn
+              const selected = selectedInstances[0];
+              const x = selected.left;
+              const y = selected.top;
+              if (Array.from(selected.text).length === 1) {
+                  const codepoint = selected.text.codePointAt(0);
+                  const rows = Number(prompt(`Unicode Spawn: U+${codepoint.toString(16)}\nHow many rows should it spawn?`));
+                  if (rows) {
+                      deleteInstance(selected);
+                      spawnUnicodes(codepoint, rows, x, y);
+                  }
+              }
+              else { // Alphabet Spawn
+                  const text = selected.text;
+                  const letters = [...text].reduce((map, char, index) => {
+                      if (/[a-zA-Z]/.test(char)) map.push({char, index});
+                      return map;
+                  }, []);
+                  let positionChoice
+                  if (letters.length === 0) {
+                      alert(`i dont know what to do with your element...`);
+                      positionChoice = -1;
+                  }
+                  else if (letters.length === 1) positionChoice = 0;
+                  else {
+                      const positionsMessage = letters.map((item, i) => `${i + 1} - ${item.char}`).join('\n');
+                      positionChoice = Number(prompt(`Alphabet Spawn: ${selected.text}\nWhich letter do you want to select?\n${positionsMessage}`)) - 1;
+                  }
+
+                  if (letters[positionChoice]) {
+                      const selectedIndex = letters[positionChoice].index;
+                      const pattern = text.substring(0, selectedIndex).toUpperCase() + 'x' + text.substring(selectedIndex + 1).toUpperCase();
+                      deleteInstance(selected);
+                      spawnAlphabets([pattern], 'abcdefghijklmnopqrstuvwxyz'.split(''), x, y);
+                  }
+                  else if (positionChoice != -1) alert(`${positionChoice + 1} was not one of the options :(`)
+              }
+          }
+      }
+
+      function getAllAlphabets() {
+            const counters = {};
+            JSON.parse(localStorage.getItem("infinite-craft-data")).elements.map(e => e.text.toLowerCase()).forEach(e => {
+                const letters = e.match(/[a-zA-Z]/g);
+                if (letters && letters.length === 1) (counters[e.replace(letters[0], 'x')] ||= new Set()).add(letters[0]);
+            });
+            const alphabets = Object.entries(counters)
+                .map(([key, set]) => ({ alphabet: key, completeness: set.size }))
+                .filter(e => e.completeness >= 3)
+                .sort((a, b) => b.completeness - a.completeness);
+
+            return alphabets;
+        }
+
+        function promptAlphabets() {
+            const userInput = prompt("Enter Alphabet(s) separated by Double Spaces:\nFor Example: 'x   .x   _x   x!'\n\n- only spawns 'correctly' capitalized elements\n- use a capital X to not replace it\n- Type E to spawn all your E's\n- Type 'all' to spawn all YOUR Alphabets!");
+            if (!userInput) return [];
+            if (userInput.toLowerCase() === "all") {
+                const alphabets = getAllAlphabets();
+                console.table(alphabets);
+                if (settings.tabs.enabled) externalAddTab(-1, {elements: [], name: `All your Alphabets (${alphabets.filter(a => a.completeness === 26).length}/${alphabets.length})`});
+                spawnAlphabets(alphabets.map(e => e.alphabet));
+                return;
+            }
+            if (/^[A-Z]$/.test(userInput)) {  // 1 Letter
+                const alphabets = getAllAlphabets();
+                spawnAlphabets(alphabets.map(e => e.alphabet), [userInput], 100, 50, true);
+            }
+            else spawnAlphabets(userInput.split(/  /));
+        }
+
+        function spawnAlphabets(patterns, letters='abcdefghijklmnopqrstuvwxyz'.split(''), x=100, y=50, flip = false) {
+            const elements = [];
+            patterns.forEach((pattern, rowIndex) => {
+                if (pattern) letters.forEach((char, colIndex) => {
+                    elements.push({
+                        name: icCasing(pattern.replace('x', char)),
+                        x: flip ? (x + colIndex * 100) : (x + rowIndex * 100),
+                        y: flip ? (y + rowIndex * 50) : (y + colIndex * 50)
+                    });
+                });
+            });
+            spawnElements(elements);
+        }
+
+      function promptUnicodes() {
+          const userInput = prompt("Enter a Unicode Codepoint followed by the number of rows it should spawn!\nFor Example: U+0020 2");
+          const [codepoint, rows] = userInput.split(' ', 2).map(x => x.trim());
+          // Remove the "U+" prefix if present
+          spawnUnicodes(parseInt(codepoint.replace(/^[Uu]\+/, ''), 16), rows);
+      }
+
+      function spawnUnicodes(codepoint, rows = 1, x=100, y=50) {
+          const elements = [];
+          const baseCode = codepoint & 0xFFF0;
+
+          for (let row = 0; row < rows; row++) {
+              for (let step = 0; step < 16; step++) {
+                  const charCode = baseCode + step + (row * 16);
+                  const char = String.fromCodePoint(charCode);
+
+                  elements.push({
+                      name: char,
+                      x: x + (step * 100),
+                      y: y + (row * 50)
+                  });
+              }
+          }
+          spawnElements(elements);
+      }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1793,11 +2025,11 @@ function showUtilsSettingsMenu() {
     let ctrlCHandled = false;
     let ctrlShiftVHandled = false;
     document.addEventListener('keydown', function(e) {
-        if (settings.misc.copyHoveredElement && e.ctrlKey && e.key.toLowerCase() === 'c' && !ctrlCHandled) {
-            const hoveredElement = document.elementFromPoint(mouseData.x, mouseData.y);
-
-            if (hoveredElement.classList.contains('item')) {
-                let copyText;
+        if (settings.copy.enabled && e.ctrlKey && e.key.toLowerCase() === 'c' && !ctrlCHandled) {
+            let hoveredElement = document.elementFromPoint(mouseData.x, mouseData.y);
+            let copyText;
+            if (hoveredElement.classList.contains('item-emoji')) copyText = hoveredElement.nextSibling.nodeValue.trim();
+            if (hoveredElement.classList.contains('item') || hoveredElement.classList.contains('item-emoji')) {
 
                 if (hoveredElement.classList.contains('instance')) {
                     getAllInstances().forEach(instance => {
@@ -1811,17 +2043,16 @@ function showUtilsSettingsMenu() {
                     copyText = hoveredElement.childNodes[1].nodeValue.trim();
                 }
                 navigator.clipboard.writeText(copyText);
-                console.log('Copied to clipboard:\n', copyText);
+                console.log('Copied to clipboard:\n' + copyText);
             }
             ctrlCHandled = true;
         }
 
 
-        if (settings.misc.copyHoveredElement && e.ctrlKey && e.shiftKey && e.key === 'V' && !ctrlShiftVHandled && mouseData.x < window.innerWidth - document.getElementsByClassName('sidebar')[0].getBoundingClientRect().width) {
+        if (settings.copy.enabled && e.ctrlKey && e.shiftKey && e.key === 'V' && !ctrlShiftVHandled && mouseData.x < window.innerWidth - document.getElementsByClassName('sidebar')[0].getBoundingClientRect().width) {
             e.preventDefault();
             navigator.clipboard.readText().then(text => {
-                const elements = parsePastedText(text);
-                spawnElements(elements);
+                spawnElements(parsePastedText(text));
             }).catch(err => {
                 console.error('Failed to read clipboard contents:', err);
             });
@@ -1848,22 +2079,68 @@ function showUtilsSettingsMenu() {
 
     function parsePastedText(text) {
         let coordLessCounter = 0;
-        return text.trim().split('\n').map(line => {
-            const parts = line.split('  '); // Double space separator
-            if (parts.length < 1) return null; // Skip malformed lines
+        let columnSplit = 25;
 
-            let xSkips = Math.floor(coordLessCounter / 25);
-            let xOffset = -25 + (xSkips * 200), yOffset = -25 + ((coordLessCounter - (xSkips * 25)) * 50);
-            if (parts.length >= 2) {
-                [xOffset, yOffset] = parts[1].split(' ').map(Number);
+        const results = [];
+        text.trim().split('\n').forEach(line => {
+            const parts = line.split('  '); // Double space separator
+            if (parts.length < 1) return; // Skip malformed lines
+
+            let column = -25 + (parseInt(coordLessCounter / columnSplit) * 200);
+            let row = -25 + (coordLessCounter % columnSplit * 50);
+
+            // Check if there's a coordinate part
+            if (parts[1] && parts[1].split(' ', 2).every(num => !isNaN(num))) {
+                [column, row] = parts[1].split(' ', 2).map(Number);
+            } else {
+                coordLessCounter++;
             }
-            else coordLessCounter += 1;
-            return {
-                name: parts[0].trim(),
-                x: mouseData.x + xOffset || mouseData.x,
-                y: mouseData.y + yOffset || mouseData.y
-            };
-        }).filter(Boolean);
+
+            // Determine elements to push
+            let elements;
+            if (parts[0].includes(' = ')) {
+                columnSplit = 69420;
+                const [firstPart, result] = parts[0].split(' = ', 2);
+                const ingredients = firstPart.split(' + ', 2);
+                elements = [...ingredients, result.split(/ \/\/| ::/)[0].trim()].map(x => x.trim());
+            } else {
+                elements = [parts[0].trim()];
+            }
+
+            // Push results
+            elements.forEach((name, i) => {
+                results.push({
+                    name: name,
+                    x: mouseData.x + column + (i * 200) || mouseData.x,
+                    y: mouseData.y + row || mouseData.y
+                });
+            });
+        });
+
+        return results;
+    }
+
+
+    // Unlock Ghost Element when crafted
+    function patchGhostElements () {
+        const getCraftResponse = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse;
+		    unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse = exportFunction((...args) => new window.Promise(async (resolve) => {
+            const response = await getCraftResponse(...args);
+            if (settings.spawn.ghosts) {
+                const ghostInstances = getAllInstances().filter(instance => instance.disabled && instance.text === response.result);
+                ghostInstances.forEach(instance => {
+                    // spawnElement({text: response.result, emoji: response.emoji, discovered: response.isNew}, instance.left, instance.top);
+                    // deleteInstance(instance);
+                    instance.disabled = false;
+                    instance.emoji = response.emoji;
+                    instance.discovered = response.isNew;
+                    instance.elem.style.animation = '';
+                    instance.elem.style.border = '';
+                    instance.elem.style.color = '';
+                });
+            }
+            return resolve(response);
+        }));
     }
 
 
@@ -1896,17 +2173,6 @@ function showUtilsSettingsMenu() {
 //            \._____.' |_________|_____|\____|_________|____| |___|____|  |____|________|   |_____|       \.__.'   |_____|\____|\._____.' |_____| |_____|\.____.'|_____|\____|_______.'
 
 
-
-    const mouseData = {
-	  	  down: false,
-        button: 0,
-	  	  x: null,
-	  	  y: null,
-	  	  deltaX: null,
-	  	  deltaY: null
-	  }
-
-
     function getAllInstances() {
         return unsafeWindow.$nuxt._route.matched[0].instances.default._data.instances.filter(x => !x.hide);
     }
@@ -1937,12 +2203,13 @@ function showUtilsSettingsMenu() {
                 map[item.text] = item;
                 return map;
             }, {});
-
-        elements.forEach(savedElem => {
-            const data = fetchedDataMap[savedElem.name];
-            if (data) spawnElement(data, savedElem.x, savedElem.y);
-            else if (settings.misc.spawnUndiscovered && savedElem.name.length <= 320) spawnElement({text: savedElem.name, emoji: "​"}, savedElem.x, savedElem.y, true);
-        });
+        if (elements.length < 500 || confirm(`You are about to spawn ${elements.length} Elements.`)) {
+            elements.forEach(savedElem => {
+                const data = fetchedDataMap[savedElem.name];
+                if (data) spawnElement(data, savedElem.x, savedElem.y);
+                else if (settings.spawn.ghosts && savedElem.name.length <= 320) spawnElement({text: savedElem.name, emoji: "​"}, savedElem.x, savedElem.y, true);
+            });
+        }
     }
 
     function spawnElement(element, x = 0, y = 0, disabled = false) {
@@ -1971,8 +2238,8 @@ function showUtilsSettingsMenu() {
                 if (disabled) { // Ghost Elements, SPOOKYY!!!
                     instance.disabled = disabled;
                     instance.elem.style.animation = 'none';
-                    instance.elem.style.border = 'none'
-                    instance.elem.style.color = 'rgba(255, 255, 255, 0.3)'
+                    instance.elem.style.border = 'none';
+                    instance.elem.style.color = 'rgba(255, 255, 255, 0.3)';
                 }
             }, unsafeWindow)
         );

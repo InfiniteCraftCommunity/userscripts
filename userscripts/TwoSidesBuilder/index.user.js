@@ -192,6 +192,7 @@
   
     let regexUseDiv=document.createElement("div")
      let regexInput=document.createElement("input")
+     regexInput.style.width= regexInput.style.height="20px";
       regexInput.type="checkbox";
      let regexSpan=document.createElement("span")
       regexSpan.textContent="Regex";
@@ -396,6 +397,118 @@
      rightPlus.style.borderRadius="100%";
      rightPlus.style.border="2px solid white";
   
+  
+        let leftPlusFile=document.createElement("button");
+     leftPlusFile.textContent="📄"
+     leftPlusFile.addEventListener("click",()=>
+                               {
+  
+         let uploadFile=document.createElement("input")
+          uploadFile.type="file";
+          document.documentElement.appendChild(uploadFile);
+          uploadFile.addEventListener("change",(event)=>{
+                                       var fileReader=new FileReader();
+  
+                                     fileReader.onload=function(){
+                                     fileReader.result;
+                                       let lines=fileReader.result.split('\n')
+                                       for(let line of lines)
+                                         {
+  
+                                            let elem=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find(x=>x.text==line.trim())
+                                            if(elem){
+  
+                                                leftSide.push(elem);
+                                                leftDiv.appendChild(elementToItem(elem,leftDiv,leftSide,null));
+  
+                                            }
+  
+                                         }
+  
+  
+  
+                                                }
+  
+                                      fileReader.readAsText(event.target.files[0]);
+                                       document.documentElement.removeChild(uploadFile);
+  
+  
+                                      })
+  
+  
+  
+           uploadFile.click();
+  
+  
+  
+     });
+     leftPlusFile.style.borderRadius="100%";
+     leftPlusFile.style.border="2px solid white";
+     leftPlusFile.style.width="50px"
+        let rightPlusFile=document.createElement("button");
+     rightPlusFile.textContent="📄"
+     rightPlusFile.style.width="50px"
+     rightPlusFile.addEventListener("click",()=>
+                               {
+  
+         let uploadFile=document.createElement("input")
+          uploadFile.type="file";
+          document.documentElement.appendChild(uploadFile);
+          uploadFile.addEventListener("change",(event)=>{
+                                       var fileReader=new FileReader();
+  
+                                     fileReader.onload=function(){
+                                     fileReader.result;
+                                       let lines=fileReader.result.split('\n')
+                                       for(let line of lines)
+                                         {
+  
+                                            let elem=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find(x=>x.text==line.trim())
+                                            if(elem){
+  
+                                                rightSide.push(elem);
+                                                rightDiv.appendChild(elementToItem(elem,rightDiv,null,rightSide));
+  
+                                            }
+  
+                                         }
+  
+  
+                                         document.documentElement.removeChild(uploadFile);
+                                                }
+  
+                                      fileReader.readAsText(event.target.files[0]);
+  
+  
+  
+                                      })
+  
+  
+  
+           uploadFile.click();
+  
+  
+  
+     });
+  
+  
+  
+  
+     rightPlusFile.style.borderRadius="100%";
+     rightPlusFile.style.border="2px solid white";
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
      ActionsDiv.style.display="flex";
      ActionsDiv.style.justifyContent="space-between";
   
@@ -408,8 +521,10 @@
   
   
      ActionsDiv.appendChild(leftPlus);
+     ActionsDiv.appendChild(leftPlusFile);
      ActionsDiv.appendChild(searchCountSpanLeft);
      ActionsDiv.appendChild(searchCountSpanRight);
+     ActionsDiv.appendChild(rightPlusFile);
      ActionsDiv.appendChild(rightPlus);
   
   

@@ -11,7 +11,7 @@
        // @author      Alexander_Andercou
        // @description 4/29/2024, 7:40:08 AM
        // ==/UserScript==
-      (function() {
+       (function() {
         var EMOJIS      = {}
 
 
@@ -216,7 +216,7 @@
 
                }
 
-            console.log("code of emiji:",EMOJIS[code]);
+           // console.log("code of emiji:",EMOJIS[code]);
             return  EMOJIS[code];
 
           }

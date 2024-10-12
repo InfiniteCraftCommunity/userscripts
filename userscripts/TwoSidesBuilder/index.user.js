@@ -18,17 +18,17 @@
   let unique=false;
   let crafted=[];
   function triggerEvent( elem ) {
-  
+
   const event = new MouseEvent('contextmenu', {
   // bubbles: true,
   // cancelable: true, // choose what you need
   // view: window,
   });
-  
+
   elem.dispatchEvent(event);
   }
-  
-  
+
+
   function sleep(ms = 0) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
@@ -51,66 +51,66 @@
           }, 1500);
       });
   }
-  
-  
-  
+
+
+
     function AtIntersection(element1, element2,callback,array1=null,array2=null) {
          // console.log("intersection happends");
           const rect1 = element1.getBoundingClientRect();
           const rect2 = element2.getBoundingClientRect();
-  
+
           if (
               rect1.x < rect2.x + rect2.width &&
               rect1.x + rect1.width > rect2.x &&
               rect1.y < rect2.y + rect2.height &&
               rect1.y + rect1.height > rect2.y) {
-  
+
             if(element1.classList.contains("instance"))
               {
-  
+
                  console.log("element1:",element1);
                 let instance=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances.find(x=>x.elem!=null?x.elem.id==element1.id:false);
-  
+
                 if(instance){
                  unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances.filter(x=>x.id!=instance.id);
-  
-  
+
+
                 element2.appendChild(elementToItem(instance,element2,array1,array2));
-  
+
                 callback(instance);}
-  
+
               }
-  
+
           }
-  
-  
-  
+
+
+
     }
-  
+
    function elementToItem(element,modal=null,array1ToRemove=null,array2ToRemove=null) {
-  
+
           let item = document.createElement("div");
-  
+
           item.classList.add('item');
           const itemEmoji = document.createElement('span');
           itemEmoji.classList.add('item-emoji');
           itemEmoji.appendChild(document.createTextNode(element.emoji ?? '⬜'));
-  
-  
-  
-  
+
+
+
+
           item.appendChild(itemEmoji);
           item.appendChild(document.createTextNode(` ${element.text} `));
           item.style.display="inline-block";
-  
-  
-  
-  
-  
+
+
+
+
+
           item.addEventListener('mousedown', (e) => {
                   if(e.which==3)
                     {
-  
+
                            modal.removeChild(item);
                       console.log("deletes:",array1ToRemove)
                          if(array1ToRemove){
@@ -118,41 +118,41 @@
                            searchCountSpanLeft.textContent=leftSide.length.toString()+" elements";
                             console.log("deleted:",array1ToRemove,leftSide);
                          }
-  
-  
-  
+
+
+
                         if(array2ToRemove)
                           {  rightSide=rightSide.filter(x=>x.text!=element.text);
                              searchCountSpanRight.textContent=rightSide.length.toString()+" elements";
                              console.log("deleted:",array2ToRemove,rightSide);
                           }
-  
-  
-  
+
+
+
                    }
                  unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].playInstanceSound();
-  
+
           });
           return item;
-  
+
       }
-  
-  
-  
-  
+
+
+
+
   let searchCountSpanLeft=null,searchCountSpanRight=null;
-  
+
   function addBulk(target,side="left")
     {
        let query=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].searchQuery;
       if(query && query.trim()!="")
         {
             console.log("query:",query)
-  
-  
-  
-  
-  
+
+
+
+
+
        let simplefilter=null;
           if(!useRegex)
            {console.log("NOT regex");
@@ -160,19 +160,19 @@
             simplefilter=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.filter(x=>x.text.toLowerCase().includes(query));
              else
             simplefilter=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.filter(x=>x.text.includes(query));
-  
-  
+
+
            }
           else{
-  
+
            console.log("Use regex for search");
            var re = new RegExp(query,"u");
-  
+
             if(!caseSensitive)
              re = new RegExp(query,"ui");
-  
+
             simplefilter=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.filter(e=>e.text.match(re));
-  
+
           }
           if(unique)
           {
@@ -182,31 +182,31 @@
                 {
                   newSimple.push(x);
                 }
-  
-  
-  
-  
+
+
+
+
             });
             console.log("ns",newSimple)
           simplefilter=newSimple;
-  
-  
-  
+
+
+
           }
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
        console.log("qr:",simplefilter);
         let count=simplefilter.length;
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
       for(let elm of simplefilter)
         {
         if(side=="left"){
@@ -214,7 +214,7 @@
              target.appendChild(elementToItem(elm,target,leftSide,null))
              searchCountSpanLeft.textContent=count.toString()+" elements"
         }
-  
+
          if(side=="right"){
           rightSide.push(elm);
           target.appendChild(elementToItem(elm,target,null,rightSide));
@@ -226,31 +226,31 @@
             rightSide.push(elm);
               target.appendChild(elementToItem(elm,target,leftSide,rightSide))
           }
-  
-  
-  
-  
+
+
+
+
         }
-  
-  
-  
+
+
+
            if(side=="left"){
              searchCountSpanRight.textContent=leftSide.length.toString()+" elements"
-  
+
            }
            if(side=="right"){
              searchCountSpanRight.textContent=rightSide.length.toString()+" elements"
-  
+
            }
-  
+
         }
-  
-  
+
+
     }
   function isInsideRecipes(text1,text2,recips)
   {
-  
-  
+
+
   for(let recip of recips)
     {
          for(let r of recip[1])
@@ -258,16 +258,16 @@
              if((r[0].text==text1 && r[1].text==text2) || (r[1].text==text1 && r[0].text==text2) )
                return recip[0];
          }
-  
-  
+
+
     }
-  
+
     return false;
-  
+
   }
-  
+
   let saveCrafts=false;
-  
+
     async function mockCraft(a,b)
     { if(!saveCrafts){
       setTimeout(()=>{
@@ -276,18 +276,18 @@
        let instanceToDelete=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances.findIndex(x=>x.id==craftid)
        if(instanceToDelete>=0)
        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances.splice(instanceToDelete,1);
-  
+
       }},300);
       }
-  
+
        let response=await unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse(a,b);
       if(response.result=="Nothing"){
           unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].errorSound.play();
           return;
       }
-  
-  
-  
+
+
+
        let center=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCenterOfCraft(a, b);
        let id =   unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].instanceId++;
        crafted.push(id);
@@ -303,7 +303,7 @@
       if(existingElement!=null)
        {
         unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].playInstanceSound();
-  
+
        }else
          {
            unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.push({
@@ -311,7 +311,7 @@
                                       emoji: newInstance.emoji,
                                       discovered: newInstance.isNew
                                   });
-  
+
            unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].saveItems();
            unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$nextTick((function() {
                                        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setPinwheelCoords(center)
@@ -324,26 +324,26 @@
            unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].rewardSound.play();
              }
            unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances.push(newInstance);
-  
+
           unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$nextTick((function() {
-  
+
                                       unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].calcInstanceSize(newInstance),
                                       unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setInstancePosition(newInstance, center.x - newInstance.width / 2, center.y - newInstance.height / 2),
                                       unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setInstanceZIndex(newInstance, id);
-  
+
                                   }));
-  
-  
-  
+
+
+
     }
-  
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
+
+
    async  function makeTwoSidedDiv(){
         leftSide=[];
         rightSide=[];
@@ -352,12 +352,12 @@
         caseSensitive=true;
         unique=false;
         saveCrafts=false;
-  
+
         let startingDiv=document.createElement("div");
-  
+
       if(document.querySelector(".two-sided"))
         document.querySelector(".two-sided").parentNode.removeChild(document.querySelector(".two-sided"));
-  
+
     startingDiv.classList.add("two-sided")
     startingDiv.style.position="absolute";
    // startingDiv.style.cursor="move"
@@ -368,8 +368,8 @@
     startingDiv.style.zIndex="1";
       startingDiv.style.width="500px";
       startingDiv.style.minHeight="500px";
-  
-  
+
+
      let caseingUseDiv=document.createElement("div")
      let caseingUseInput=document.createElement("input")
     caseingUseInput.style.width= caseingUseInput.style.height="20px";
@@ -378,15 +378,15 @@
       caseingUseSpan.textContent="Case";
      let caseingUseSpan2=document.createElement("span")
       caseingUseSpan2.textContent="insensitive";
-  
-  
-  
+
+
+
       caseingUseInput.style.opacity="1";
-  
+
       caseingUseInput.addEventListener("change",()=>{
       caseSensitive=!(caseingUseInput.checked);
-  
-  
+
+
        })
   caseingUseDiv.style.border="2px white solid";
   caseingUseDiv.appendChild(caseingUseSpan);
@@ -397,9 +397,9 @@
   caseingUseDiv.style.height="50px";
   caseingUseDiv.style.zIndex="2";
   caseingUseDiv.style.position="relative";
-  
-  
-  
+
+
+
      let uniqueDiv=document.createElement("div")
      let uniqueInput=document.createElement("input")
      uniqueInput.style.width= uniqueInput.style.height="20px";
@@ -407,13 +407,13 @@
      let uniqueSpan=document.createElement("span")
       uniqueSpan.textContent="Unique";
       uniqueInput.style.opacity="1";
-  
+
       uniqueInput.addEventListener("change",()=>{
       unique=(uniqueInput.checked);
-  
-  
+
+
        });
-  
+
   uniqueDiv.style.border="2px white solid";
   uniqueDiv.appendChild(uniqueSpan);
   uniqueDiv.appendChild(uniqueInput);
@@ -422,9 +422,9 @@
   uniqueDiv.style.height="50px";
   uniqueDiv.style.zIndex="2";
   uniqueDiv.style.position="relative";
-  
-  
-  
+
+
+
   let saveCraftsDiv=document.createElement("div")
     saveCraftsDiv.style.border="2px white solid";
      let saveCraftsInput=document.createElement("input")
@@ -433,11 +433,11 @@
      let saveCraftsSpan=document.createElement("span")
       saveCraftsSpan.textContent="Save crafts on board";
       saveCraftsInput.style.opacity="1";
-  
+
       saveCraftsInput.addEventListener("change",()=>{
       saveCrafts=saveCraftsInput.checked;
-  
-  
+
+
        })
   saveCraftsDiv.appendChild(saveCraftsSpan);
   saveCraftsDiv.appendChild(saveCraftsInput);
@@ -446,10 +446,10 @@
   saveCraftsDiv.style.height="50px";
   saveCraftsDiv.style.zIndex="2";
   saveCraftsDiv.style.position="relative";
-  
-  
-  
-  
+
+
+
+
     let regexUseDiv=document.createElement("div")
     regexUseDiv.style.border="2px white solid";
      let regexInput=document.createElement("input")
@@ -458,11 +458,11 @@
      let regexSpan=document.createElement("span")
       regexSpan.textContent="Regex";
       regexInput.style.opacity="1";
-  
+
       regexInput.addEventListener("change",()=>{
       useRegex=regexInput.checked;
-  
-  
+
+
        })
   regexUseDiv.appendChild(regexSpan);
   regexUseDiv.appendChild(regexInput);
@@ -473,53 +473,53 @@
   regexUseDiv.style.height="50px";
   regexUseDiv.style.zIndex="2";
   regexUseDiv.style.position="relative";
-  
-  
+
+
       let combineButton=document.createElement("img");
-  
-  
+
+
      combineButton.src="data:image/png;base64,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"
      combineButton.style.float="right";
      combineButton.style.width=combineButton.style.height="50px";
      combineButton.style.position="relative";
      combineButton.style.zIndex="2";
      combineButton.style.borderRadius="100%";
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
+
      combineButton.addEventListener("click",async ()=>{
-  
-  
-  
-  
-  
+
+
+
+
+
              if(document.querySelector(".two-sided"))
                document.querySelector(".two-sided").parentNode.removeChild(document.querySelector(".two-sided"));
-  
+
            let fileString=""
            console.log(leftSide,rightSide)
         const getCraftResponse = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse;
-  
+
         unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse = exportFunction((...args) => new window.Promise(async (resolve) => {
             const response = await getCraftResponse(...args);
-  
+
           fileString+=args[0].text+" + "+args[1].text+" = "+response.result+"\n";
-  
-  
-  
-  
-  
+
+
+
+
+
              resolve(response)
             }),unsafeWindow);
-  
+
           let saveFile=await getSave().then(x=>x.json());
              let recips=Object.entries(saveFile["recipes"])
-  
-  
+
+
            let doneOne=false
            let index=0;
            let left=document.querySelector(".sidebar").getBoundingClientRect().left/2;
@@ -531,20 +531,20 @@
           for(let rinst2 of rightSide)
             combinations.push([inst2,rinst2]);
           console.log("combinations",combinations);
-  
-  
+
+
      for(let combination of combinations){
         index++;
         rinst=combination[1];
         inst=combination[0];
-  
+
         if(combinations.slice(0,index-1).find(x=>(x[0]==inst.text && x[1]==rinst.text) || (x[1]==inst.text && x[0]==rinst.text) )!=null)
           {  console.log("bypass as done already");
                continue;
-  
+
           }
-  
-  
+
+
                    key=isInsideRecipes(inst.text,rinst.text,recips)
                    if(key!=false)
                      {    console.log("already has:",inst.text," ",rinst.text)
@@ -552,47 +552,47 @@
                             doneOne=true;
                       console.log("number of combinations done from total: "+index+" / "+combinations.length)
                         continue;
-  
+
                      }
                      console.log("combines:",inst.text," ",rinst.text)
                  doneOne=true;
-  
-  
-  
+
+
+
                await mockCraft({emoji:inst.emoji,text:inst.text,top:window.innerHeight/2,left:left,height:41,width:100},
                                                                                      {emoji:rinst.emoji,text:rinst.text,top:window.innerHeight/2,left:left,height:41,width:100});
-  
+
                 console.log("number of combinations done from total: "+index+" / "+combinations.length)
                 await sleep(500);
-  
-  
+
+
          };
-  
-  
+
+
               unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse=getCraftResponse;
-  
+
              if(doneOne){
               const link = document.createElement("a");
-  
+
   // Create a blog object with the file content which you want to add to the file
                const file = new Blob([fileString], { type: 'text/plain' });
-  
+
   // Add file content in the object URL
                 link.href = URL.createObjectURL(file);
-  
+
   // Add file name
                  link.download = "result.txt";
-  
+
   // Add click event to <a> tag to save file.
                 link.click();
                 URL.revokeObjectURL(link.href);
              }
-  
-  
-  
-  
+
+
+
+
        })
-  
+
    let closeButton=document.createElement("button");
        closeButton.textContent="❌";
        closeButton.style.float="right";
@@ -605,38 +605,38 @@
                document.querySelector(".two-sided").parentNode.removeChild(document.querySelector(".two-sided"));
               leftSide=[];
               rightSide=[];
-  
-  
+
+
        })
    closeButton.addEventListener("mouseover",()=>{
      closeButton.style.backgroundColor="red";
-  
+
    })
    closeButton.addEventListener("mouseleave",()=>{
      closeButton.style.backgroundColor="#6B6B6B";
-  
+
    })
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
      let titleDiv=document.createElement("div");
       titleDiv.style.height="50px";
       titleDiv.style.position="relative";
-  
-  
-  
-  
-  
+
+
+
+
+
        let headerDiv=document.createElement("div");
       headerDiv.style.height="70px";
       headerDiv.style.position="relative";
-  
-  
-  
-  
+
+
+
+
      let leftText=document.createElement("span");
       leftText.textContent="Left Side";
       leftText.style.left="20%";
@@ -645,17 +645,17 @@
       rightText.textContent="Right Side";
       rightText.style.left="66%";
       rightText.style.position="absolute"
-  
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
+
+
       titleDiv.appendChild(leftText);
       titleDiv.appendChild(rightText);
-  
+
     startingDiv.style.resize="both";
     startingDiv.style.border="solid 3px var(--border-color)";
     startingDiv.style.transition="background-color 1000ms linear";
@@ -664,18 +664,18 @@
     startingDiv.style.resize="both";
     let leftDiv=document.createElement("div");
        leftDiv.style.overflowY="scroll";
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
+
     let rightDiv=document.createElement("div");
          rightDiv.style.overflowY="scroll";
-  
-  
-  
+
+
+
      let ActionsDiv= document.createElement("div");
      ActionsDiv.style.height="50px";
      ActionsDiv.style.position="relative";
@@ -689,51 +689,51 @@
      rightPlus.addEventListener("click",()=>addBulk(rightDiv,"right"))
      rightPlus.style.borderRadius="100%";
      rightPlus.style.border="2px solid white";
-  
-  
+
+
         let leftPlusFile=document.createElement("button");
      leftPlusFile.textContent="📄"
      leftPlusFile.addEventListener("click",()=>
                                {
-  
+
          let uploadFile=document.createElement("input")
           uploadFile.type="file";
           document.documentElement.appendChild(uploadFile);
           uploadFile.addEventListener("change",(event)=>{
                                        var fileReader=new FileReader();
-  
+
                                      fileReader.onload=function(){
                                      fileReader.result;
                                        let lines=fileReader.result.split('\n')
                                        for(let line of lines)
                                          {
-  
+
                                             let elem=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find(x=>x.text==line.trim())
                                             if(elem){
-  
+
                                                 leftSide.push(elem);
                                                 leftDiv.appendChild(elementToItem(elem,leftDiv,leftSide,null));
-  
+
                                             }
-  
+
                                          }
-  
-  
-  
+
+
+
                                                 }
-  
+
                                       fileReader.readAsText(event.target.files[0]);
                                        document.documentElement.removeChild(uploadFile);
-  
-  
+
+
                                       })
-  
-  
-  
+
+
+
            uploadFile.click();
-  
-  
-  
+
+
+
      });
      leftPlusFile.style.borderRadius="100%";
      leftPlusFile.style.border="2px solid white";
@@ -743,50 +743,50 @@
      rightPlusFile.style.width="50px"
      rightPlusFile.addEventListener("click",()=>
                                {
-  
+
          let uploadFile=document.createElement("input")
           uploadFile.type="file";
           document.documentElement.appendChild(uploadFile);
           uploadFile.addEventListener("change",(event)=>{
                                        var fileReader=new FileReader();
-  
+
                                      fileReader.onload=function(){
                                      fileReader.result;
                                        let lines=fileReader.result.split('\n')
                                        for(let line of lines)
                                          {
-  
+
                                             let elem=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find(x=>x.text==line.trim())
                                             if(elem){
-  
+
                                                 rightSide.push(elem);
                                                 rightDiv.appendChild(elementToItem(elem,rightDiv,null,rightSide));
-  
+
                                             }
-  
+
                                          }
-  
-  
+
+
                                          document.documentElement.removeChild(uploadFile);
                                                 }
-  
+
                                       fileReader.readAsText(event.target.files[0]);
-  
-  
-  
+
+
+
                                       })
-  
-  
-  
+
+
+
            uploadFile.click();
-  
-  
-  
+
+
+
      });
-  
-  
-  
-  
+
+
+
+
      rightPlusFile.style.borderRadius="100%";
      rightPlusFile.style.border="2px solid white";
      let leftExportButton=document.createElement("button")
@@ -800,9 +800,9 @@
      leftExportButton.addEventListener("click",()=>{
       let fileString=""
        leftSide.forEach(el=>{
-  
+
          fileString+=el.text+"\n";
-  
+
        });
                 const link = document.createElement("a");
                 const file = new Blob([fileString], { type: 'text/plain' });
@@ -810,17 +810,17 @@
                 link.download = "leftSide.txt";
                 link.click();
                 URL.revokeObjectURL(link.href);
-  
-  
-  
+
+
+
      })
-  
+
    rightExportButton.addEventListener("click",()=>{
       let fileString=""
        rightSide.forEach(el=>{
-  
+
          fileString+=el.text+"\n";
-  
+
        });
                 const link = document.createElement("a");
                 const file = new Blob([fileString], { type: 'text/plain' });
@@ -828,27 +828,27 @@
                 link.download = "rightSide.txt";
                 link.click();
                 URL.revokeObjectURL(link.href);
-  
-  
-  
+
+
+
      })
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
      ActionsDiv.style.display="flex";
      ActionsDiv.style.justifyContent="space-between";
-  
-  
+
+
      searchCountSpanLeft=document.createElement("span");
      searchCountSpanRight=document.createElement("span");
      searchCountSpanLeft.textContent="";
      searchCountSpanRight.textContent="";
-  
-  
-  
+
+
+
      ActionsDiv.appendChild(leftPlus);
      ActionsDiv.appendChild(leftPlusFile);
      ActionsDiv.appendChild(leftExportButton);
@@ -857,21 +857,21 @@
      ActionsDiv.appendChild(rightExportButton);
      ActionsDiv.appendChild(rightPlusFile);
      ActionsDiv.appendChild(rightPlus);
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
+
+
+
      rightPlus.style.width=rightPlus.style.height= leftPlus.style.width=leftPlus.style.height="50px";
-  
+
     leftDiv.style.float="left";
     leftDiv.style.scrollbarWidth="none";
     rightDiv.style.scrollbarWidth="none";
-  
+
     leftDiv.style.width="50%";
     leftDiv.style.height="500px";
     leftDiv.style.minHeight="500px";
@@ -879,19 +879,19 @@
     leftDiv.style.borderTop="none";
     leftDiv.style.borderLeft="none";
     rightDiv.style.float="right";
-  
-  
-  
-  
+
+
+
+
     rightDiv.style.width="50%";
     rightDiv.style.height="500px";
     rightDiv.style.border="solid 3px var(--border-color)";
     rightDiv.style.borderTop="none";
     rightDiv.style.borderRight="none";
     rightDiv.style.minHeight="100%";
-  
-  
-  
+
+
+
        let bothPlus=document.createElement("button");
       bothPlus.textContent="2➕"
       bothPlus.addEventListener("click",()=>{addBulk(leftDiv,"left");addBulk(rightDiv,"right");})
@@ -901,9 +901,9 @@
       bothPlus.style.width=  bothPlus.style.height="50px";
       bothPlus.style.position="relative";
       bothPlus.style.zIndex="2";
-  
-  
-  
+
+
+
     startingDiv.appendChild(closeButton);
     startingDiv.appendChild(combineButton);
     startingDiv.appendChild(bothPlus);
@@ -916,100 +916,100 @@
     startingDiv.appendChild(ActionsDiv);
     startingDiv.appendChild(leftDiv);
     startingDiv.appendChild(rightDiv);
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
   console.log("fine before observer")
-  
+
     let instancesObserver=new MutationObserver( (mutations) => {
-  
+
                           for(let mutation of mutations){
-  
+
       //  console.log("removedNodes:",mutation.removedNodes);
                             for(let node of mutation.addedNodes)
                             {
                               node.addEventListener("mouseup", (event) => {
-  
+
                                   console.log(event.clientX, event.clientY);
-  
+
                                       AtIntersection(node,leftDiv,(elm)=>{
                                          console.log("leftside",elm);
                                          leftSide.push(elm);
                                         searchCountSpanLeft.textContent=leftSide.length.toString()+" elements";
-  
+
                                       },leftSide,null);
                                       AtIntersection(node,rightDiv,(elm)=>{
                                             console.log("rightside",elm);
                                            rightSide.push(elm);
                                              searchCountSpanRight.textContent=rightSide.length.toString()+" elements";
-  
+
                                       },null,rightSide);
-  
+
                               });
                             }
-  
-  
+
+
                          }})
-  
-  
+
+
                        instancesObserver.observe(document.querySelector(".instances"),{
-  
+
                       childList        : true,
                       subtree          : true,
                       attributeOldValue: true,
-  
+
                       })
-  
+
   console.log("fine after observer")
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
+
+
+
+
+
     }
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
+
+
+
+
     window.addEventListener("load",async ()=>{
    let img=document.createElement("img");
-  
+
       img.src=imngsrc;
       img.style.cssText=csstext;
-  
+
       img.addEventListener("click",async ()=>{
                makeTwoSidedDiv()
-  
+
                                  })
-  
+
     document.querySelector(".side-controls").appendChild(img);
-  
-  
-  
-  
+
+
+
+
     },false);
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
+
+
+
   })()

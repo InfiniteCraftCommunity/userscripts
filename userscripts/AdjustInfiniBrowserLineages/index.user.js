@@ -106,7 +106,7 @@ function $initIBItemView() {
 /** Initialize on InfiniBrowser at /search */
 function $initIBSearch() {
   if (!document.getElementById("recipes")) return;
-  
+
   new MutationObserver(() => {
     adjustLineage("#recipes li", false);
   }).observe(

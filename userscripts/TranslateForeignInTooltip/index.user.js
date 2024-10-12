@@ -7,6 +7,7 @@
 // @author      Alexander_Andercou
 // @description 6/10/2024, 7:19:51 AM
 // ==/UserScript==
+
 (async function () {
   const isNumeric = (string) => /^[+-]?\d+(\.\d+)?$/.test(string)
   function getFlagEmoji(countryCode) {

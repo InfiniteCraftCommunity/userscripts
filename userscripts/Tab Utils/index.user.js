@@ -8,8 +8,8 @@
 // @author      Catstone
 // @license     MIT
 // @description Adds tab functionality! Also comes with Saving Tabs on reload/close window and downloading/importing tabs!
-// @downloadURL	https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/Tab%20Utils/index.js
-// @updateURL	  https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/Tab%20Utils/index.js
+// @downloadURL https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/Tab%20Utils/index.user.js
+// @updateURL   https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/Tab%20Utils/index.user.js
 // ==/UserScript==
 
 (function() {

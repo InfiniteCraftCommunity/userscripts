@@ -2,6 +2,6 @@
 
 A visual tree auto builder from IC savefile
 API: window.RawLineageMaker("Waffle")
-now with UI 
+now with UI
 It has a settings button in the settings button made by the IC helper
 ### by [Alexander_Andercou](https://github.com/24sanduAlexandru)

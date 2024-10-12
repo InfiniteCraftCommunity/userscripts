@@ -4,7 +4,7 @@ Adds a ton of utility functionality including:
 - Multi-selecting,
 - Tabs and
 - more Misc stuff
-  
+
 and yes, everything can be turned On/Off!
 
 

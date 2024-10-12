@@ -5,9 +5,10 @@
 // @require      https://cdn.jsdelivr.net/npm/html2canvas@1.0.0-rc.5/dist/html2canvas.min.js
 // @grant       none
 // @version     1.0
-// @author      -
+// @author      Alexander_Andercou
 // @description 8/7/2024, 2:00:08 PM
 // ==/UserScript==
+
 const delay = (delayInms) => {
   return new Promise(resolve => setTimeout(resolve, delayInms));
 };
@@ -1968,13 +1969,3 @@ let mouseData={
 
 
 })()
-
-
-
-
-
-
-
-
-
-

@@ -2,14 +2,14 @@
 // @name        Infinite Craft Selection Utils
 // @namespace   Catstone
 // @match       https://neal.fun/infinite-craft/
-// @grant			  GM_getValue
-// @grant			  GM_setValue
+// @grant       GM_getValue
+// @grant       GM_setValue
 // @version     1.2
 // @author      Catstone
 // @license     MIT
 // @description Adds multiselect utilities for deleting, duplicating and moving!
-// @downloadURL	https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/Selection%20Utils/index.js
-// @updateURL	  https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/Selection%20Utils/index.js
+// @downloadURL https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/Selection%20Utils/index.user.js
+// @updateURL   https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/Selection%20Utils/index.user.js
 // ==/UserScript==
 
 (function() {

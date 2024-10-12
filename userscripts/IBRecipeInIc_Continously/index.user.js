@@ -2,15 +2,16 @@
 // @name        Make infinibrowser lineage in IC
 // @namespace   infinityCommunity
 // @match       https://neal.fun/infinite-craft/*
-// @match       https://infinibrowser.zptr.cc/item/*
+// @match       https://infinibrowser.wiki/*
 // @grant       unsafeWindow
 // @grant       GM.getValue
 // @grant       GM.setValue
 // @run-at      document-end
 // @version     1.0
-// @author      -
+// @author      Alexander_Andercou
 // @description 8/5/2024, 12:32:42 AM
 // ==/UserScript==
+
 window.addEventListener("load", async () => {
   if (window.location.host == "neal.fun") {
 
@@ -44,7 +45,11 @@ window.addEventListener("load", async () => {
 
 
         console.log("this ones:",elm,elm1);
-       await unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].craft({text:recipe[0],emoji:elm1?.emoji,discovered:elm1?.discovered}, {text:recipe[1],emoji:elm?.emoji,discovered:elm?.discovered});
+       await unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].craft(
+         {text:recipe[0],emoji:elm1?.emoji,discovered:elm1?.discovered,top:window.innerHeight/2,
+          left:document.querySelector(".sidebar").getBoundingClientRect().left/2,height:41,width:100},
+         {text:recipe[1],emoji:elm?.emoji,discovered:elm?.discovered,top:window.innerHeight/2,left:
+          document.querySelector(".sidebar").getBoundingClientRect().left/2,height:41,width:100});
 
 
           }catch(err)

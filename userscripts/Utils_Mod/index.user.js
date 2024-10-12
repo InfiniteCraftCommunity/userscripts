@@ -1956,7 +1956,7 @@ function showUtilsSettingsMenu() {
 
       function spawnUnicodes(codepoint, rows = 1, x=100, y=50) {
           const elements = [];
-          const baseCode = codepoint & 0xFFFF0;
+          const baseCode = codepoint & 0xFFF0;
 
           for (let row = 0; row < rows; row++) {
               for (let step = 0; step < 16; step++) {

@@ -7,10 +7,11 @@
 // @grant       GM.xmlHttpRequest
 // @grant       unsafeWindow
 // @version     1.0
-// @author      -
+// @author      Alexander_Andercou
 // @require  https://www.unpkg.com/csv-parse@4.15.4/lib/browser/index.js
 // @description 8/18/2024, 4:55:14 PM
 // ==/UserScript==
+
 (function(){
 
   let sheetApi="https://docs.google.com/spreadsheets/d/"+"1iTUL4yuJsVAOA5wplbBb27CK_FY1lCie5wX9CH3geVk"+"/export?format=csv";

@@ -5,7 +5,7 @@
 // @grant       none
 // @require	https://unpkg.com/wanakana
 // @version     1.0
-// @author      -
+// @author      Alexander_Andercou
 // @description 8/28/2024, 10:45:04 PM
 // ==/UserScript==
 (function(){

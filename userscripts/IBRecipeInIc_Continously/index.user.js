@@ -8,7 +8,7 @@
 // @grant       GM.setValue
 // @run-at      document-end
 // @version     1.0
-// @author      -
+// @author      Alexander_Andercou
 // @description 8/5/2024, 12:32:42 AM
 // ==/UserScript==
 window.addEventListener("load", async () => {

@@ -5,7 +5,7 @@
 // @grant       unsafeWindow
 // @grant       GM.xmlHttpRequest
 // @version     1.0
-// @author      -
+// @author      Alexander_Andercou
 // @require  https://www.unpkg.com/csv-parse@4.15.4/lib/browser/index.js
 // @description 8/27/2024, 12:24:30 PM
 // ==/UserScript==

@@ -17,6 +17,14 @@
   let caseSensitive=true;
   let unique=false;
   let crafted=[];
+  let running=0;
+  let stopProcesses=false;
+  
+  let xOffset = 0;
+  let yOffset = 0;
+  let initialX;
+  let initialY;
+  
   function triggerEvent( elem ) {
   
   const event = new MouseEvent('contextmenu', {
@@ -340,11 +348,46 @@
   
   
   
+  function makeProgressionBar(parent)
+    { let wrapperDiv=document.createElement("div");
+      let barDiv=document.createElement("div");
+      let doneDiv=document.createElement("div");
+      let infoText=document.createElement("p");
+      barDiv.style.margin="auto";
+      barDiv.style.width="90%";
+      barDiv.style.backgroundColor="gray";
+      barDiv.style.height="30px";
+  
+      doneDiv.style.width="0%"
+      doneDiv.style.height="100%";
+      doneDiv.style.backgroundColor="#67ff67";
+  
+      wrapperDiv.style.display="flex";
+      wrapperDiv.style.justifyContent="center";
+      wrapperDiv.style.flexDirection="column";
+     // wrapperDiv.style.alignItems="center";
+  
+      barDiv.appendChild(doneDiv);
+      wrapperDiv.appendChild(barDiv);
+      wrapperDiv.appendChild(document.createElement("br"));
+      wrapperDiv.appendChild(infoText);
+      infoText.style.textAlign="center";
+      wrapperDiv.marginTop="5px";
+      wrapperDiv.marginBotom="15px";
+      parent.appendChild(wrapperDiv);
+      return [doneDiv,infoText,wrapperDiv];
+  
+  
+    }
+  function updateProgressionBar(bar,info,procent,current,total)
+  {
+   bar.style.width=Math.ceil(procent).toString()+"%";
+   info.textContent=procent.toFixed(3)+"%"+" ("+current.toString()+" / "+total.toString()+")";
+  }
   
   
   
-  
-   async  function makeTwoSidedDiv(){
+   async  function makeTwoSidedDiv(initial=null){
         leftSide=[];
         rightSide=[];
         crafted=[];
@@ -492,8 +535,14 @@
   
   
      combineButton.addEventListener("click",async ()=>{
+          running+=1;
   
+            let bardata=null;
+              if(initial)
+                {
+                   bardata=makeProgressionBar(initial)
   
+                }
   
   
   
@@ -534,7 +583,25 @@
   
   
      for(let combination of combinations){
+  
+       if(stopProcesses)
+         {
+           console.log("Builder forcefully stopped");
+  
+  
+             break;
+  
+         }
+  
+  
+  
         index++;
+       if(bardata)
+         {  //console.log("WE HAVE BAR")
+            updateProgressionBar(bardata[0],bardata[1],(index/combinations.length)*100,index,combinations.length);
+  
+         }
+  
         rinst=combination[1];
         inst=combination[0];
   
@@ -571,6 +638,12 @@
   
               unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse=getCraftResponse;
   
+  
+        running-=running>0?1:0;
+        if(bardata && initial)
+             {
+               initial.removeChild(bardata[2]);
+             }
              if(doneOne){
               const link = document.createElement("a");
   
@@ -977,10 +1050,157 @@
   
     }
   
+  let onPopUp=false;
+  let currentX=null;
+  let currentY=null;
+  function initialModal()
+    {
+  
+       let chooseToStartStopMenu=document.querySelector(".initial-choice-builder");
+      if(chooseToStartStopMenu==null)
+      {
+         document.addEventListener("mousedown",(e)=>{
+           let x=e.clientX;
+           let y=e.clientY;
+           initialX = x - xOffset;
+           initialY = y - yOffset;
+           e.target==chooseToStartStopMenu?onPopUp=true:onPopUp=false;
+           chooseToStartStopMenu.style.cursor="move";
+  
+         });
+         document.addEventListener("mousemove",(e)=>{
+           let x=e.clientX;
+           let y=e.clientY;
+           if(onPopUp)
+           {
+            currentX = x - initialX;
+            currentY = y - initialY;
+  
+             xOffset = currentX;
+             yOffset = currentY;
+             chooseToStartStopMenu.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`
+  
+  
+           }
+         });
+           document.addEventListener("mouseup",(e)=>{
+           let x=e.clientX;
+           let y=e.clientY;
+              chooseToStartStopMenu.style.cursor="default";
+           if(onPopUp)
+           {
+  
+           onPopUp=false;
+  
+           }
+         });
+  
+  
+  
+        chooseToStartStopMenu=document.createElement("dialog");
+       chooseToStartStopMenu.classList.add("initial-choice-builder");
+       chooseToStartStopMenu.style.position="absolute";
+  
+       chooseToStartStopMenu.style.top="20%";
+       chooseToStartStopMenu.style.width="300px";
+       chooseToStartStopMenu.style.padding="0px";
+          chooseToStartStopMenu.style.left=(document.querySelector(".sidebar").getBoundingClientRect().left/2).toString()+"px";
+          chooseToStartStopMenu.style.transform="translate(-50%, -50%)";
+  
+          let closebutton=document.createElement("div");
+          closebutton.appendChild(document.createTextNode("❌"));
+  
+  
+         closebutton.addEventListener("click",()=>{
+         chooseToStartStopMenu.close();
+       })
+     let stopDiv=document.createElement("div");
+          stopDiv.addEventListener("click",()=>{
+            stopProcesses=true;
+            chooseToStartStopMenu.close();
+          });
+  
+         let buttonDiv=document.createElement("div");
+          buttonDiv.appendChild(closebutton);
+          closebutton.style.float="right";
+  
+          buttonDiv.style.width="100%"   ;
+  
+          let stopButtonText=document.createElement("p");
+          stopButtonText.textContent="Stop all builders";
+  
+          stopButtonText.style.textAlign="center";
+          stopDiv.appendChild(stopButtonText);
+  
+          stopDiv.style.display="flex";
+          stopDiv.style.justifyContent="center";
+          stopDiv.style.alignItems="center";
+  
+  
+          stopDiv.style.width="99%"
+          stopDiv.style.marginBottom="5px";
+          stopDiv.style.height="50px";
+          stopDiv.style.border="2px solid red" ;
+          stopDiv.addEventListener("mouseover",()=>{
+           stopButtonText.style.color="red";
+         });
+         stopDiv.addEventListener("mouseout",()=>{
+           stopButtonText.style.color="var(--text-color)";
+         });
+         stopDiv.style.borderRadius="10px";
+  
+          let startDiv=document.createElement("div");
+            startDiv.addEventListener("click",()=>{
+            stopProcesses=false;
+            chooseToStartStopMenu.close();
+            makeTwoSidedDiv(chooseToStartStopMenu);
+          });
+          let startButtonText=document.createElement("p");
+          startButtonText.textContent="Start a new builder";
+          startButtonText.style.textAlign="center";
+          startDiv.style.borderRadius="10px";
+          startDiv.appendChild(startButtonText);
+          startDiv.style.height="50px";
+          startDiv.style.border="2px solid green";
+          startDiv.style.display="flex";
+          startDiv.style.justifyContent="center";
+          startDiv.style.alignItems="center";
+          startDiv.style.marginBottom="50px";
   
   
   
   
+  
+  
+          startDiv.addEventListener("mouseover",()=>{
+           startButtonText.style.color="green";
+         })
+         startDiv.addEventListener("mouseout",()=>{
+           startButtonText.style.color="var(--text-color)";
+         })
+  
+          chooseToStartStopMenu.appendChild(buttonDiv);
+          chooseToStartStopMenu.appendChild(document.createElement("br"));
+          chooseToStartStopMenu.appendChild(stopDiv);
+          chooseToStartStopMenu.appendChild(startDiv);
+          document.querySelector(".container").appendChild(chooseToStartStopMenu);
+      }
+  
+  
+  
+      if(running<=0)
+      {  stopProcesses=false;
+         makeTwoSidedDiv(chooseToStartStopMenu);
+  
+      }else
+        { console.log("no problem here");
+          chooseToStartStopMenu.showModal();
+        }
+  
+  
+  
+  
+    }
   
   
   
@@ -993,7 +1213,7 @@
       img.style.cssText=csstext;
   
       img.addEventListener("click",async ()=>{
-               makeTwoSidedDiv()
+              initialModal();
   
                                  })
   

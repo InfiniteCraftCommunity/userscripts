@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Find usefull tools
+// @name         Find useful tools
 // @namespace
 // @match       https://neal.fun/infinite-craft/*
 // @grant       none
@@ -61,10 +61,10 @@
       }
   async function countUsefulTools(){
      let modal=document.createElement("dialog");
-      modal.classList.add("tools-usefull");
+      modal.classList.add("tools-useful");
 
-    if(document.querySelector(".tools-usefull"))
-    document.querySelector(".container").removeChild(document.querySelector(".tools-usefull"));
+    if(document.querySelector(".tools-useful"))
+    document.querySelector(".container").removeChild(document.querySelector(".tools-useful"));
 
 
      let firstDiv=document.createElement("div");
@@ -80,16 +80,16 @@
      let json1=await getSave().then(x=>x.json())
 
      let elements=json1["elements"]
-     let usefullCount=0
-     let usefull=[]
+     let usefulCount=0
+     let useful=[]
      for(let elem of elements){
       let lowElm=elem["text"].toLowerCase()
-      let notUsefull=true
+      let notUseful=true
       let hashtagTool=false
       for(let key of keywords){
        if( lowElm.includes(key)){
 
-        notUsefull=false
+        notUseful=false
         if(key=="#")
          hashtagTool=true;
 
@@ -97,38 +97,38 @@
 
       }}
 
-      if(notUsefull)
+      if(notUseful)
        for(let regex of regexes){
          let  p=new RegExp(regex)
          if(lowElm.match(p)){
-           notUsefull=false;
+           notUseful=false;
            break;}
        }
 
 
 
-       if(notUsefull)
+       if(notUseful)
        if (wanakana.isKana(lowElm) || wanakana.isHiragana(lowElm) || wanakana.isKatakana(lowElm) || wanakana.isKanji(lowElm))
-          notUsefull=false
+          notUseful=false
 
 
       if (elem["text"].length>=30){
-         notUsefull=true
+         notUseful=true
       }
-      if(!notUsefull){
+      if(!notUseful){
        if(!hashtagTool)
-        usefullCount+=1
+        usefulCount+=1
        else
-        usefullCount+=0.5
+        usefulCount+=0.5
 
-       usefull.push(elem["text"])
+       useful.push(elem["text"])
       }
      }
 
 
-     usefull.sort((a,b)=>a.localeCompare(b))
-     countSpan.textContent="You have :"+usefullCount.toString()+" usefull tools"
-      tools.textContent=usefull.toString();
+     useful.sort((a,b)=>a.localeCompare(b))
+     countSpan.textContent="You have :"+usefulCount.toString()+" useful tools"
+      tools.textContent=useful.toString();
       let closeButton=document.createElement("button");
       closeButton.textContent="❌";
       closeButton.addEventListener("click",()=>modal.close());
@@ -140,7 +140,7 @@
 
 
 
-      usefull.forEach(
+      useful.forEach(
        (x,i)=>{
           let pDiv=document.createElement("div")
            let p=document.createElement("p")
@@ -176,8 +176,8 @@
      document.querySelector(".container").appendChild(modal);
      modal.showModal();
 
-     console.log(usefullCount)
-     console.log(usefull)
+     console.log(usefulCount)
+     console.log(useful)
 
    }
 

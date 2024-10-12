@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name        Delete unused and lenght zombies
+// @name        Delete unused and length zombies
 // @namespace   Violentmonkey Scripts
 // @match       https://neal.fun/infinite-craft/*
 // @grant       unsafeWindow
@@ -71,7 +71,7 @@
 
 
 
-      window.alert("We are gonna delete all the dead (lenght>=30 chars) or unused elements");
+      window.alert("We are gonna delete all the dead (length>=30 chars) or unused elements");
 
          let savefile=await getSave().then(x=>x.json());
          FindUsageCountForAllElement(savefile);

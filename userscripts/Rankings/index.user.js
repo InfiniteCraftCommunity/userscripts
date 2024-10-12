@@ -170,10 +170,10 @@
  let pages=[0,0,0,0]
 
 
- function buildPagination(pageNr,totalLenght,index,sourceDiv,callback)
+ function buildPagination(pageNr,totalLength,index,sourceDiv,callback)
    {
 
-     let totalPages=Math.ceil(totalLenght/1000);
+     let totalPages=Math.ceil(totalLength/1000);
      sourceDiv.innerHTML="";
 
 

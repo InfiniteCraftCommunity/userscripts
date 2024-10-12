@@ -14,6 +14,7 @@
 // @author      Alexander_Andercou
 // @description 4/29/2024, 7:40:08 AM
 // ==/UserScript==
+
 (function () {
     let folders = ["alphabets", "diverse"];
     let currentFolder = null;

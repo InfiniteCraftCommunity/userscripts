@@ -4,9 +4,10 @@
 // @match       https://neal.fun/infinite-craft/*
 // @grant       none
 // @version     1.0
-// @author      -
+// @author      Alexander_Andercou
 // @description 8/11/2024, 2:10:20 PM
 // ==/UserScript==
+
 (function(){
 
   let baseColor=[[255,0,0,0],[0,255,0,0],[0,0,255,0],[255,255,255,1]]

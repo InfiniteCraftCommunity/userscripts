@@ -9,8 +9,8 @@
 // @author      Catstone
 // @license     MIT
 // @description Combines Infinite Craft Selection Utils, Tab Utils, Unicode Utils and more misc stuff!
-// @downloadURL https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/Utils_Mod/index.user.js
-// @updateURL   https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/Utils_Mod/index.user.js
+// @downloadURL https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/Utils_Mod/index.user.js
+// @updateURL   https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/Utils_Mod/index.user.js
 // ==/UserScript==
 
 (function() {

@@ -7,8 +7,8 @@
 // @version	1.1.1
 // @author	Natasquare
 // @description	Adds input debouncing to the search bar and implements some other optimizations.
-// @downloadURL	https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/dbounce/index.user.js
-// @updateURL	https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/dbounce/index.user.js
+// @downloadURL	https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/dbounce/index.user.js
+// @updateURL	https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/dbounce/index.user.js
 // ==/UserScript==
 
 /**

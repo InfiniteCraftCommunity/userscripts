@@ -11,6 +11,7 @@
        // @author      Alexander_Andercou
        // @description 4/29/2024, 7:40:08 AM
        // ==/UserScript==
+
        (function() {
         var EMOJIS      = {}
 

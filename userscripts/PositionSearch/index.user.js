@@ -7,15 +7,7 @@
 // @author      Alexander_Andercou
 // @description 8/15/2024, 4:32:48 PM
 // ==/UserScript==
-// ==UserScript==
-// @name        Emoji search
-// @namespace   Violentmonkey Scripts
-// @match       https://neal.fun/infinite-craft/*
-// @grant       none
-// @version     1.0
-// @author      -
-// @description 8/14/2024, 8:19:36 PM
-// ==/UserScript==
+
 (function(){
     let complexFilter=null;
     let beforeFilter=null;

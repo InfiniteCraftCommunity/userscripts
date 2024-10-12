@@ -8,6 +8,7 @@
 // @author      Alexander_Andercou
 // @description 8/7/2024, 2:00:08 PM
 // ==/UserScript==
+
 const delay = (delayInms) => {
   return new Promise(resolve => setTimeout(resolve, delayInms));
 };
@@ -1968,13 +1969,3 @@ let mouseData={
 
 
 })()
-
-
-
-
-
-
-
-
-
-

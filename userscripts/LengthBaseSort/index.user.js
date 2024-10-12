@@ -7,6 +7,7 @@
 // @author      Alexander_Andercou
 // @description 5/23/2024, 7:54:23 PM
 // ==/UserScript==
+
 (function () {
   window.addEventListener('load', async () => {
     console.log("Welcome to hijack sorting length");

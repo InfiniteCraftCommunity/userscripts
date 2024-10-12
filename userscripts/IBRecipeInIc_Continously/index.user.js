@@ -11,6 +11,7 @@
 // @author      Alexander_Andercou
 // @description 8/5/2024, 12:32:42 AM
 // ==/UserScript==
+
 window.addEventListener("load", async () => {
   if (window.location.host == "neal.fun") {
 

@@ -1,13 +1,14 @@
 // ==UserScript==
-// @name         Find useful tools
-// @namespace
+// @name        Find useful tools
+// @namespace   find-useful-tools
 // @match       https://neal.fun/infinite-craft/*
 // @grant       none
-// @require	https://unpkg.com/wanakana
+// @require     https://unpkg.com/wanakana
 // @version     1.0
 // @author      Alexander_Andercou
 // @description 8/28/2024, 10:45:04 PM
 // ==/UserScript==
+
 (function(){
 
 

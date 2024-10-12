@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         AutoIncrement Builder
+// @name        AutoIncrement Builder
 // @namespace   AutoIncrement Builder
 // @match       https://neal.fun/infinite-craft/*
 // @grant       unsafeWindow
@@ -7,6 +7,7 @@
 // @author      Alexander_Andercou
 // @description 9/20/2024, 8:46:11 PM
 // ==/UserScript==
+
 (function(){
     let inFocus=null;
     let saveCrafts=false;

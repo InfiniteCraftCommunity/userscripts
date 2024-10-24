@@ -4,8 +4,8 @@
 // @match       https://neal.fun/infinite-craft/*
 // @grant       unsafeWindow
 // @grant       GM.xmlHttpRequest
-// @version     1.0
-// @author      Alexander_Andercou
+// @version     1.1
+// @author      Alexander_Andercou, Mikarific
 // @require  https://www.unpkg.com/csv-parse@4.15.4/lib/browser/index.js
 // @description 8/27/2024, 12:24:30 PM
 // ==/UserScript==
@@ -150,8 +150,8 @@
          item.style.display="inline-block";
          item.addEventListener('mousedown', (e) => {
 
-                unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].selectElement(e, element) ;
-                unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].playInstanceSound();
+                unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].selectElement(e, element) ;
+                unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].playInstanceSound();
 
          });
          return item;
@@ -326,7 +326,7 @@
    document.querySelector(".rank-modal").parentNode.removeChild(document.querySelector(".rank-modal"))
    let source=await getSave().then(x=>x.json())
    computeUsageCount(source);
-   let augmentedElements=augmentElements(source,unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements)
+   let augmentedElements=augmentElements(source,unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements)
    let rankings=makeRawRanking(augmentedElements)
 
 

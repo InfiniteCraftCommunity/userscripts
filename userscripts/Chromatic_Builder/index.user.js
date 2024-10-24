@@ -4,8 +4,8 @@
 // @namespace   Violentmonkey Scripts
 // @match       https://neal.fun/infinite-craft/*
 // @grant       none
-// @version     1.0
-// @author      Alexander_Andercou
+// @version     1.1
+// @author      Alexander_Andercou, Mikarific
 // @description 7/31/2024, 10:29:11 PM
 // ==/UserScript==
 
@@ -23,7 +23,7 @@
 
 
 
-     return unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == element);
+     return unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.find((e) => e.text == element);
 
 
   }
@@ -36,7 +36,7 @@
   {
 
 
-     unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == foo) && unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.forEach(
+     unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.find((e) => e.text == foo) && unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.forEach(
      e=>{
        cache[e.text]=e;
      }
@@ -140,7 +140,7 @@
 
            if(!visitedC.find(x=>x[0]==bar && x[1]==element)){}
               visitedC.push([bar,element])
-               let response2= await unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse({text:bar,emoji:barElement.emoji}, { text:element,
+               let response2= await unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].getCraftResponse({text:bar,emoji:barElement.emoji}, { text:element,
                emoji:checkInInventory(element)?.emoji});
 
                 let isFine=expectedResultsSecond[0].includes(response2.result);
@@ -153,7 +153,7 @@
                   console.log("[passed by first]");
                  toCombineText[3].push(response2.result);
                  if(checkInInventory(response2.result)==undefined)
-                    unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.push( {text: response2.result,
+                    unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.push( {text: response2.result,
                                     emoji: response2.emoji,
                                     disabled: !1,
                                     discovered: response2.isNew});
@@ -176,7 +176,7 @@
                   let  response3={result:response2.result,emoji:response2.emoji};
 
                     if(element2!="nothing")
-                       response3= await unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse({text:response2.result,emoji:response2.emoji}, { text:element2,
+                       response3= await unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].getCraftResponse({text:response2.result,emoji:response2.emoji}, { text:element2,
                           emoji:checkInInventory(element2)?.emoji
 
                      });
@@ -190,7 +190,7 @@
 
                    toCombineText[3].push(response3.result);
                  if(checkInInventory(response3.result)==undefined)
-                    unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.push( {text: response3.result,
+                    unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.push( {text: response3.result,
                                     emoji: response3.emoji,
                                     disabled: !1,
                                     discovered: response3.isNew});
@@ -208,7 +208,7 @@
                   let response4={result:response3.result,emoji:response3.emoji};
 
                     if(element3!="nothing")
-                       response4= await unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse({text:response3.result,emoji:response3.emoji}, { text:element3,
+                       response4= await unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].getCraftResponse({text:response3.result,emoji:response3.emoji}, { text:element3,
                           emoji:checkInInventory(element3)?.emoji
 
                      });
@@ -222,7 +222,7 @@
 
                    toCombineText[3].push(response4.result);
                  if(checkInInventory(response4.result)==undefined)
-                    unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.push( {text: response4.result,
+                    unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.push( {text: response4.result,
                                     emoji: response4.emoji,
                                     disabled: !1,
                                     discovered: response4.isNew});
@@ -284,7 +284,7 @@
 
          visited.push({first:stage,second:toCombineText[step][indexInStep]});
 
-           response= await unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse({text:stage,emoji:checkInInventory(stage)?.emoji
+           response= await unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].getCraftResponse({text:stage,emoji:checkInInventory(stage)?.emoji
 
 
                                                                                                             }, { text:toCombineText[step][indexInStep],
@@ -322,12 +322,12 @@
               checkInInventory(toCombineText[step][indexInStep]))
            {
 
-                    unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.push( {text: response.result,
+                    unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.push( {text: response.result,
                                     emoji: response.emoji,
                                     disabled: !1,
                                     discovered: response.isNew});
 
-                      unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].saveItems();
+                      unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].saveItems();
            }
 
 

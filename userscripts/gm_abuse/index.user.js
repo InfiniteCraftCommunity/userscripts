@@ -6,8 +6,8 @@
 // @grant	GM.setValue
 // @grant	unsafeWindow
 // @run-at	document-start
-// @version	1.1.1
-// @author	Natasquare
+// @version	1.1.2
+// @author	Natasquare, Mikarific
 // @description	Store elements in GM storage instead of localStorage, allowing bigger save files to be used. Optional encoding functions can be supplied.
 // @downloadURL	https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/gm_abuse/index.user.js
 // @updateURL	https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/gm_abuse/index.user.js
@@ -159,7 +159,7 @@ function decodeElements(raw) {
 		}, unsafeWindow);
 
 		setTimeout(() => {
-			unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements = JSON.parse(JSON.stringify(elements));
+			unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements = JSON.parse(JSON.stringify(elements));
 			initialized = true;
 		}, 0);
 

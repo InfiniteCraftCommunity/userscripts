@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name	DBounce
-// @namespace	nat.is-a.dev
+// @namespace	nat.is-a.dev, Mikarific
 // @match	https://neal.fun/infinite-craft/*
 // @grant	unsafeWindow
 // @run-at	document-start
-// @version	1.1.1
+// @version	1.1.2
 // @author	Natasquare
 // @description	Adds input debouncing to the search bar and implements some other optimizations.
 // @downloadURL	https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/dbounce/index.user.js
@@ -77,7 +77,7 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 		if (raw) {
 			try {
 				const data = JSON.parse(raw);
-				unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements = data.elements;
+				unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements = data.elements;
 			} catch {}
 		}
 		loaded = true;
@@ -88,33 +88,33 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 	let patchedDeps = false;
 	function limitDeps() {
 		if (patchedDeps) return;
-		const addDep = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.sortedElements.addDep;
-		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.sortedElements.addDep = exportFunction(function(...a) {
+		const addDep = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._computedWatchers.sortedElements.addDep;
+		unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._computedWatchers.sortedElements.addDep = exportFunction(function(...a) {
 			if (this.newDepIds.size < 10) return addDep.apply(this, a);
 		}, unsafeWindow);
-		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.searchResults.addDep = exportFunction(function(...a) {
+		unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._computedWatchers.searchResults.addDep = exportFunction(function(...a) {
 			if (this.newDepIds.size < 20) return addDep.apply(this, a);
 		}, unsafeWindow);
 		patchedDeps = true;
 	}
 
 	async function init() {
-		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.searchQuery = "=";
+		unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.searchQuery = "=";
 
-		const _filteredElements = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.filteredElements.getter;
-		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.filteredElements.getter = exportFunction(function(notSearching = true) {
+		const _filteredElements = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._computedWatchers.filteredElements.getter;
+		unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._computedWatchers.filteredElements.getter = exportFunction(function(notSearching = true) {
 			const filtered = _filteredElements.call(this);
-			unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$refs.search.placeholder = `Search (${filtered.length.toLocaleString()}) items...`;
+			unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].$refs.search.placeholder = `Search (${filtered.length.toLocaleString()}) items...`;
 			if ((hideItemsWhenNoQuery && !this.searchQuery) || (this.searchQuery && notSearching)) return [];
 			return filtered;
 		}, unsafeWindow);
 
-		const _sortedElements = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.sortedElements.getter;
-		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.sortedElements.getter = exportFunction(function() {
+		const _sortedElements = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._computedWatchers.sortedElements.getter;
+		unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._computedWatchers.sortedElements.getter = exportFunction(function() {
 			return (sortAfterFilter && this.searchQuery) || (hideItemsWhenNoQuery && !this.searchQuery) ? this.elements : _sortedElements.call(this);
 		}, unsafeWindow);
 
-		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.searchResults.getter = exportFunction(function() {
+		unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._computedWatchers.searchResults.getter = exportFunction(function() {
 			if (!this.searchQuery) return [];
 			const t = [],
 				o = this.searchQuery.toLowerCase(),
@@ -144,18 +144,18 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 			return sorted.slice(0, resultLimit);
 		}, unsafeWindow);
 
-		const search = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$refs.search.cloneNode(true);
-		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$refs.search.replaceWith(search);
-		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$refs.search = search;
+		const search = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].$refs.search.cloneNode(true);
+		unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].$refs.search.replaceWith(search);
+		unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].$refs.search = search;
 
 		let timeout = null;
 		search.addEventListener("input", function(e) {
 			limitDeps();
-			if (!e.target.value) return unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.searchQuery = "";
+			if (!e.target.value) return unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.searchQuery = "";
 			if (timeout) clearTimeout(timeout);
 			timeout = setTimeout(() => {
 				timeout = null;
-				unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.searchQuery = e.target.value;
+				unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.searchQuery = e.target.value;
 			}, delay);
 		});
 
@@ -165,13 +165,13 @@ const characterMap={"À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Ấ":
 		});
 
 		if (useCustomRenderer) {
-			const renderer = new Renderer(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0], {});
+			const renderer = new Renderer(unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0], {});
 			renderer.init();
 		}
 
 		if (delayElementLoading) loadElements();
 
-		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.searchQuery = "";
+		unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.searchQuery = "";
 	}
 
 	window.addEventListener("load", init, false);

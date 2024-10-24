@@ -3,8 +3,8 @@
 // @namespace   Violentmonkey Scripts
 // @match       https://neal.fun/infinite-craft/*
 // @grant       none
-// @version     1.0
-// @author      Alexander_Andercou
+// @version     1.1
+// @author      Alexander_Andercou, Mikarific
 // @description 8/11/2024, 2:10:20 PM
 // ==/UserScript==
 
@@ -36,7 +36,7 @@
 async function generateColors()
 {    Table={"Fire":[1,0,0,0],"Earth":[0,1,0,0],"Water":[0,0,1,0],"Wind":[0,0,0,1]}
       let save=await getSave().then(x=>x.json());
-      let elements=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements;
+      let elements=unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements;
     //for each element build to baseElements and
     //do this whike no more update
    let update=false;

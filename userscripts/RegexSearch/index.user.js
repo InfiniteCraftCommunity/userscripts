@@ -3,8 +3,8 @@
 // @namespace   Violentmonkey Scripts
 // @match       https://neal.fun/infinite-craft/*
 // @grant       unsafeWindow
-// @version     1.0
-// @author      Alexander_Andercou
+// @version     1.1
+// @author      Alexander_Andercou, Mikarific
 // @description 6/21/2024, 5:35:29 PM
 // ==/UserScript==
 
@@ -36,9 +36,9 @@
     checkbox.type="checkbox";
     checkbox.addEventListener("change",()=>{
       useRegex=checkbox.checked;
-      let sq=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].searchQuery;
-      unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].searchQuery+="a";
-      unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].searchQuery=sq;
+      let sq=unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].searchQuery;
+      unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].searchQuery+="a";
+      unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].searchQuery=sq;
       console.log("use regex");
 
     });
@@ -66,7 +66,7 @@
 
 
       if(complexFilter==null)
-      {    complexFilter=  unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.searchResults.getter;
+      {    complexFilter=  unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._computedWatchers.searchResults.getter;
 
       }
 
@@ -75,15 +75,15 @@
 
 
 
-       unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.searchResults.getter=
+       unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._computedWatchers.searchResults.getter=
                exportFunction(() => {
 
-         let returnedByComplexFilter= unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements;
+         let returnedByComplexFilter= unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements;
 
 
 
 
-          let query= unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].searchQuery;
+          let query= unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].searchQuery;
            // console.log("what filter returns",returnedByComplexFilter);
 
 
@@ -100,7 +100,7 @@
           return cloneInto(dummy,unsafeWindow);
          }
          else
-         return cloneInto(complexFilter.call(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]),unsafeWindow);
+         return cloneInto(complexFilter.call(unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]),unsafeWindow);
 
 
 

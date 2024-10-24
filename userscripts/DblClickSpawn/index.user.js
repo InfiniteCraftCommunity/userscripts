@@ -3,8 +3,8 @@
 // @namespace   Double Click Spawn
 // @match       https://neal.fun/infinite-craft/*
 // @grant       unsafeWindow
-// @version     1.0
-// @author      Margen67
+// @version     1.1
+// @author      Margen67, Mikarific
 // @description Creates the first search result on double click.
 // ==/UserScript==
 

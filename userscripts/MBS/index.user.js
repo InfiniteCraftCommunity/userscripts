@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name	Mongolian Beef Script
-// @namespace	nat.is-a.dev
+// @namespace	nat.is-a.dev, Mikarific
 // @match	https://neal.fun/infinite-craft/*
 // @grant	unsafeWindow
 // @run-at	document-end
-// @version	1.5
+// @version	1.6
 // @author	Natasquare
 // @require	https://unpkg.com/wanakana
 // @description	Adds even more useful features to Infinite Craft.
@@ -328,7 +328,7 @@ let tooltipHandlers = [{
 	}
 
 	function moveInstances() {
-		for (const instance of unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances) {
+		for (const instance of unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instances) {
 			if (!instance.elem) continue;
 			// won't matter since the z-index is reset upon picking up
 			instance.elem.style.setProperty("z-index", -1);
@@ -372,7 +372,7 @@ let tooltipHandlers = [{
 		unsafeWindow.addEventListener("resize", function(e) {
 			if (settings.pannableBoard) {
 				e.stopImmediatePropagation();
-				for (const instance of unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances) {
+				for (const instance of unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instances) {
 					if (!instance.elem) continue;
 					instance.elem.style.setProperty("z-index", -1);
 				}
@@ -412,7 +412,7 @@ let tooltipHandlers = [{
 			elementDiv.appendChild(elementEmoji);
 			elementDiv.appendChild(document.createTextNode(` ${recentElement.text} `));
 			elementDiv.addEventListener('mousedown', (e) => {
-				unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].selectElement(e, cloneInto(recentElement, unsafeWindow));
+				unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].selectElement(e, cloneInto(recentElement, unsafeWindow));
 			});
 			recentContainer.appendChild(elementDiv);
 		}
@@ -420,8 +420,8 @@ let tooltipHandlers = [{
 	}
 
 	function logCrafts() {
-		const getCraftResponse = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse;
-		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse = exportFunction((...args) => new window.Promise(async (resolve) => {
+		const getCraftResponse = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].getCraftResponse;
+		unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].getCraftResponse = exportFunction((...args) => new window.Promise(async (resolve) => {
 			const response = await getCraftResponse(...args);
 			const args0 = args[0].wrappedJSObject === undefined ? args[0] : args[0].wrappedJSObject;
 			const args1 = args[1].wrappedJSObject === undefined ? args[1] : args[1].wrappedJSObject;
@@ -446,9 +446,9 @@ let tooltipHandlers = [{
 				let all = ingredients.concat(result).map((e) => ({
 					text: e.text,
 					emoji: e.emoji,
-					discovered: e.discovered || unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((x) => x.text === e.text)?.discovered
+					discovered: e.discovered || unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.find((x) => x.text === e.text)?.discovered
 				}));
-				if (!settings.allowVariations) all = all.map((e) => unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((x) => x.text.toLowerCase() === e.text.toLowerCase()) || e);
+				if (!settings.allowVariations) all = all.map((e) => unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.find((x) => x.text.toLowerCase() === e.text.toLowerCase()) || e);
 				for (const element of all) {
 					const index = recentElements.findIndex((e) => e.text === element.text);
 					if (index !== -1) recentElements.splice(index, 1);
@@ -460,10 +460,10 @@ let tooltipHandlers = [{
 
 			if (
 				settings.allowVariations &&
-				unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.findIndex((e) => e.text === result.text) === -1 &&
-				unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text.toLowerCase() === result.text.toLowerCase())
+				unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.findIndex((e) => e.text === result.text) === -1 &&
+				unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.find((e) => e.text.toLowerCase() === result.text.toLowerCase())
 			) {
-				unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.push(result);
+				unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.push(result);
 				localStorage.setItem("infinite-craft-data", JSON.stringify({
 					elements: JSON.parse(localStorage.getItem("infinite-craft-data")).elements.concat(result)
 				}));
@@ -548,12 +548,12 @@ let tooltipHandlers = [{
 		if (settings.pannableBoard) makePannable(elements);
 
 		if (settings.snapping && !patchedSIP) {
-			$nuxt.$root.$children[2].$children[0].$children[0].setInstancePosition = exportFunction(function(e, left, top) {
+			$nuxt.$root.$children[1].$children[0].$children[0].setInstancePosition = exportFunction(function(e, left, top) {
 				if (settings.snapping) {
 					const eBottom = top + e.height,
 						eRight = left + e.width;
 
-					const instances = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances.map((x) => [x, Math.abs(x.top - top)]).sort((a, b) => a[1] - b[1]);
+					const instances = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instances.map((x) => [x, Math.abs(x.top - top)]).sort((a, b) => a[1] - b[1]);
 
 					for (let i = instances.length; i-- > 0;) {
 						const instance = instances[i][0];
@@ -861,7 +861,7 @@ let tooltipHandlers = [{
 		observeInstances(elements);
 		logContainerHeights(elements);
 		logCrafts();
-    unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].removeCurrentHover = function() {
+    unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].removeCurrentHover = function() {
     if (-1 !== this.hoverId) {
         const hovered = document.getElementById("instance-" + this.hoverId);
         if (hovered) hovered.classList.remove("instance-hover");

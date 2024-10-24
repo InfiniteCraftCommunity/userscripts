@@ -2,7 +2,7 @@
 // @name			Infinite Craft Helper
 // @namespace		mikarific.com
 // @match			https://neal.fun/infinite-craft/*
-// @version			2.1.3
+// @version			2.1.4
 // @author			Mikarific
 // @description		A script that adds various useful features to Infinite Craft.
 // @icon			https://i.imgur.com/WlkWOkU.png
@@ -462,7 +462,7 @@
 	    for (const mutation of mutations) {
 	        if (mutation.addedNodes.length > 0) {
 	            for (const node of mutation.addedNodes) {
-					const instance = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances.find((i) => i.id.toString() === node.id.slice(9));
+					const instance = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instances.find((i) => i.id.toString() === node.id.slice(9));
 					node.addEventListener('mousedown', (e) => {
 						e.preventDefault();
 						if (e instanceof MouseEvent &&
@@ -472,11 +472,11 @@
 	                            e.target.classList.contains('instance-discovered-text') ||
 	                            e.target.classList.contains('instance-discovered-emoji'))) {
 
-							unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].playInstanceSound();
-							const newInstance = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].duplicateInstance(instance, 0, 0);
+							unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].playInstanceSound();
+							const newInstance = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].duplicateInstance(instance, 0, 0);
 
-							unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.selectedInstance = newInstance;
-							unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.mouseDown = true;
+							unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.selectedInstance = newInstance;
+							unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.mouseDown = true;
 						}
 					});
 	            }
@@ -625,10 +625,10 @@ if(usedBy[element.text]!=null){
            let usedByDiv=document.createElement('div');
              //resolve the elements
 
-                   elems[1]=key in cachedElements?cachedElements[key][1]:unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == elems[1]);
+                   elems[1]=key in cachedElements?cachedElements[key][1]:unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.find((e) => e.text == elems[1]);
 
 
-                   elems[0]=key in cachedElements?cachedElements[key][0]:unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text == elems[2]);
+                   elems[0]=key in cachedElements?cachedElements[key][0]:unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.find((e) => e.text == elems[2]);
 
 
               cachedElements[key]??=[elems[0],elems[1]];
@@ -650,7 +650,7 @@ if(usedBy[element.text]!=null){
 					e.stopPropagation();
 					if (e.button === 2) return openCraftsForElement(firstElement);
 					craftsModal.classList.add('disabled');
-	            	unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].selectElement(e, cloneInto(firstElement, unsafeWindow));
+	            	unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].selectElement(e, cloneInto(firstElement, unsafeWindow));
 	        	});
 
 
@@ -670,7 +670,7 @@ if(usedBy[element.text]!=null){
 					e.stopPropagation();
 					if (e.button === 2) return openCraftsForElement(secondElement);
 					craftsModal.classList.add('disabled');
-	            	unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].selectElement(e, cloneInto(firstElement, unsafeWindow));
+	            	unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].selectElement(e, cloneInto(firstElement, unsafeWindow));
 	        	});
               usedByDiv.appendChild(firstDiv);
               usedByDiv.appendChild(document.createTextNode("->"));
@@ -725,7 +725,7 @@ if(usedBy[element.text]!=null){
 	            const recipeDiv = document.createElement('div');
 	            recipeDiv.classList.add('recipe');
         let addSpace=false;
-				const firstElement = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text === elementRecipe[0].text) ?? elementRecipe[0];
+				const firstElement = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.find((e) => e.text === elementRecipe[0].text) ?? elementRecipe[0];
 	            const firstDiv = document.createElement('div');
 	            firstDiv.classList.add('item');
 				if (firstElement.discovered) firstDiv.classList.add('item-discovered');
@@ -755,13 +755,13 @@ if(usedBy[element.text]!=null){
 					e.stopPropagation();
 					if (e.button === 2) return openCraftsForElement(firstElement);
 					craftsModal.classList.add('disabled');
-	            	unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].selectElement(e, cloneInto(firstElement, unsafeWindow));
+	            	unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].selectElement(e, cloneInto(firstElement, unsafeWindow));
 	        	});
 	            recipeDiv.appendChild(firstDiv);
 	            recipeDiv.appendChild(document.createTextNode('+'));
 
 
-				const secondElement = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find((e) => e.text === elementRecipe[1].text) ?? elementRecipe[1];
+				const secondElement = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.find((e) => e.text === elementRecipe[1].text) ?? elementRecipe[1];
 	            const secondDiv = document.createElement('div');
 	            secondDiv.classList.add('item');
 				if (secondElement.discovered) secondDiv.classList.add('item-discovered');
@@ -791,7 +791,7 @@ if(usedBy[element.text]!=null){
 					e.stopPropagation();
 					if (e.button === 2) return openCraftsForElement(secondElement);
 					craftsModal.classList.add('disabled');
-	            	unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].selectElement(e, cloneInto(secondElement, unsafeWindow));
+	            	unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].selectElement(e, cloneInto(secondElement, unsafeWindow));
 	        	});
 	            recipeDiv.appendChild(secondDiv);
 	            recipeDiv.appendChild(document.createTextNode('='));
@@ -859,7 +859,7 @@ if(usedBy[element.text]!=null){
 	    discoveriesEmpty.classList.add('modal-text');
 	    discoveriesEmpty.appendChild(document.createTextNode("You don't have any first discoveries!"));
 	    discoveriesModal.appendChild(discoveriesEmpty);
-	    const discoveredElements = cloneInto(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements, unsafeWindow).filter((el) => el.discovered === true);
+	    const discoveredElements = cloneInto(unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements, unsafeWindow).filter((el) => el.discovered === true);
 	    for (const discoveredElement of discoveredElements) {
 	        addElementToDiscoveries(discoveredElement);
 	    }
@@ -965,7 +965,7 @@ if(usedBy[element.text]!=null){
 	        elementDiv.appendChild(elementEmoji);
 	        elementDiv.appendChild(document.createTextNode(` ${pinnedElement.text} `));
 	        elementDiv.addEventListener('mousedown', (e) => {
-	            unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].selectElement(e, cloneInto(pinnedElement, unsafeWindow));
+	            unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].selectElement(e, cloneInto(pinnedElement, unsafeWindow));
 	        });
 	        pinnedContainer.appendChild(elementDiv);
 	    }
@@ -974,7 +974,7 @@ if(usedBy[element.text]!=null){
 	async function pinElement(element, loading = false) {
 	    if (pinnedElements.find((el) => el.text === element.text) === undefined) {
 	        if (!loading)
-	            unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].playInstanceSound();
+	            unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].playInstanceSound();
 	        const elementDiv = document.createElement('div');
 	        elementDiv.classList.add('item');
 	        const elementEmoji = document.createElement('span');
@@ -983,7 +983,7 @@ if(usedBy[element.text]!=null){
 	        elementDiv.appendChild(elementEmoji);
 	        elementDiv.appendChild(document.createTextNode(` ${element.text} `));
 	        elementDiv.addEventListener('mousedown', (e) => {
-	            unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].selectElement(e, element);
+	            unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].selectElement(e, element);
 	        });
 	        pinnedContainer.appendChild(elementDiv);
 	        if (pinnedElements.length === 0)
@@ -994,7 +994,7 @@ if(usedBy[element.text]!=null){
 	    }
 	    else {
 	        if (!loading)
-	            unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.deleteSound.play();
+	            unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.deleteSound.play();
 	        const elementDiv = Array.from(pinnedContainer.querySelectorAll('.item')).find((el) => el.childNodes[1].textContent?.trim() === element.text.trim());
 	        elementDiv?.remove();
 	        if (pinnedElements.length === 1)
@@ -1019,8 +1019,8 @@ if(usedBy[element.text]!=null){
 	    const cleanFetch = iframe.contentWindow?.fetch?.toString() ?? '';
 	    iframe.remove();
 	    // New Element Crafted
-	    const getCraftResponse = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse;
-	    unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse = exportFunction((...args) => new window.Promise(async (resolve) => {
+	    const getCraftResponse = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].getCraftResponse;
+	    unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].getCraftResponse = exportFunction((...args) => new window.Promise(async (resolve) => {
 	        const response = await getCraftResponse(...args);
 	        const args0 = args[0].wrappedJSObject === undefined ? args[0] : args[0].wrappedJSObject;
 	        const args1 = args[1].wrappedJSObject === undefined ? args[1] : args[1].wrappedJSObject;
@@ -1075,8 +1075,8 @@ if(usedBy[element.text]!=null){
 	        console.log(`${first.text} + ${second.text} = ${result.text}`);
 	        resolve(response);
 	    }), unsafeWindow);
-	    const selectElement = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].selectElement;
-	    unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].selectElement = exportFunction((e, element) => {
+	    const selectElement = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].selectElement;
+	    unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].selectElement = exportFunction((e, element) => {
 	        element = element.wrappedJSObject === undefined ? element : element.wrappedJSObject;
 	        if (e.button === 2) {
 	            openCraftsForElement(element);
@@ -1089,7 +1089,7 @@ if(usedBy[element.text]!=null){
 	        return selectElement(e, element);
 	    }, unsafeWindow);
 
-		unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].duplicateInstance = function(e, leftOffset = 10, topOffset = -10) {
+		unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].duplicateInstance = function(e, leftOffset = 10, topOffset = -10) {
 			const t = this,
 				n = Object.assign({}, e);
 			n.id = this.instanceId++;
@@ -1130,20 +1130,20 @@ if(usedBy[element.text]!=null){
 	    sidebarSize =
 	        window.innerWidth > 800 ? Math.min(Math.min(Math.max(sidebarSize, 305), 900), window.innerWidth - 100) : 0;
 	    document.documentElement.style.setProperty('--sidebar-size', `${sidebarSize}px`);
-	    unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.sidebarSize = sidebarSize;
-	    for (const instance of unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances) {
-	        instance.width || unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].calcInstanceSize(instance),
+	    unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.sidebarSize = sidebarSize;
+	    for (const instance of unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instances) {
+	        instance.width || unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].calcInstanceSize(instance),
 	            instance.left + instance.width + 10 > window.innerWidth - sidebarSize &&
-	                unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setInstancePosition(instance, window.innerWidth - sidebarSize - instance.width - 10, instance.top),
+	                unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].setInstancePosition(instance, window.innerWidth - sidebarSize - instance.width - 10, instance.top),
 	            instance.top + instance.height + 10 > window.innerHeight &&
-	                unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setInstancePosition(instance, instance.left, window.innerHeight - instance.height - 10);
+	                unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].setInstancePosition(instance, instance.left, window.innerHeight - instance.height - 10);
 	    }
-	    unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].checkControlsBlur();
+	    unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].checkControlsBlur();
 	}
 	function init$5(elements) {
 	    sidebarSize =
 	        window.innerWidth > 800
-	            ? unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.sidebarSize > 310
+	            ? unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.sidebarSize > 310
 	                ? 350
 	                : 305
 	            : 0;
@@ -1160,7 +1160,7 @@ if(usedBy[element.text]!=null){
 	                window.innerWidth > 800
 	                    ? Math.min(Math.min(Math.max(window.innerWidth - e.clientX, 305), 900), window.innerWidth - 100)
 	                    : 13;
-	            unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.sidebarSize = sidebarSize;
+	            unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.sidebarSize = sidebarSize;
 	            document.documentElement.style.setProperty('--sidebar-size', `${sidebarSize}px`);
 	            onResize();
 	        }
@@ -1168,7 +1168,7 @@ if(usedBy[element.text]!=null){
 	    window.addEventListener('mouseup', () => {
 	        resizing = false;
 	    });
-	    window.removeEventListener('resize', unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].onResize);
+	    window.removeEventListener('resize', unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].onResize);
 	    window.addEventListener('resize', onResize);
 	}
 
@@ -1212,7 +1212,7 @@ if(usedBy[element.text]!=null){
 	        localStorage.setItem('infinite-craft-data', JSON.stringify({
 	            elements: saveFile,
 	        }));
-	        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements = cloneInto(saveFile, unsafeWindow);
+	        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements = cloneInto(saveFile, unsafeWindow);
 	        await resetCrafts();
           usedBy={};
           cachedElements={};
@@ -1246,7 +1246,7 @@ if(usedBy[element.text]!=null){
 	            await GM.setValue('recipes', JSON.stringify(fileContents.recipes));
 	        }
 	        await resetDiscoveries();
-	        const discoveredElements = cloneInto(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements, unsafeWindow).filter((el) => el.discovered === true);
+	        const discoveredElements = cloneInto(unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements, unsafeWindow).filter((el) => el.discovered === true);
 	        for (const discoveredElement of discoveredElements) {
 	            addElementToDiscoveries(discoveredElement);
 	        }
@@ -2030,32 +2030,32 @@ if(usedBy[element.text]!=null){
 	    });
 	    elements.searchBar.addEventListener('input', (e) => {
 	        if (e.inputType === 'insertText' &&
-	            unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.searchQuery.trim().length === 1) {
+	            unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.searchQuery.trim().length === 1) {
 	            elements.sidebar.scrollTo(0, 0);
 	        }
 	    });
-	    unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.sortedElements.getter =
+	    unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._computedWatchers.sortedElements.getter =
 	        exportFunction(() => {
-	            const query = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.searchQuery.trim();
+	            const query = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.searchQuery.trim();
 	            if (query === '') {
-	                const elements = [...unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements];
-	                if (unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.showDiscoveredOnly) {
+	                const elements = [...unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements];
+	                if (unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.showDiscoveredOnly) {
 	                    return cloneInto(elements.filter((el) => el.discovered), unsafeWindow);
 	                }
-	                if (unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.sortBy === 'name') {
+	                if (unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.sortBy === 'name') {
 	                    return cloneInto(elements, unsafeWindow).sort((a, b) => a.text.localeCompare(b.text, undefined, { numeric: true }));
 	                }
-	                if (unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.sortBy === 'emoji') {
+	                if (unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.sortBy === 'emoji') {
 	                    return cloneInto(elements, unsafeWindow).sort((a, b) => {
 	                        const emojiA = a.emoji ?? '⬜';
 	                        const emojiB = b.emoji ?? '⬜';
 	                        return emojiA.localeCompare(emojiB);
 	                    });
 	                }
-	                return unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements;
+	                return unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements;
 	            }
 	            else {
-	                return cloneInto(matchSorter(cloneInto(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements, unsafeWindow), unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.searchQuery, {
+	                return cloneInto(matchSorter(cloneInto(unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements, unsafeWindow), unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.searchQuery, {
 	                    keys: ['text'],
 	                }), unsafeWindow);
 	            }
@@ -2068,13 +2068,13 @@ if(usedBy[element.text]!=null){
 	    randomImage.classList.add('random');
 	    elements.sideControls.appendChild(randomImage);
 	    randomImage.addEventListener('click', (e) => {
-	        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].playInstanceSound();
-	        var randomElement = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements[Math.floor(Math.random() * unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.length)];
+	        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].playInstanceSound();
+	        var randomElement = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements[Math.floor(Math.random() * unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.length)];
             while (randomElement.hidden == true){
-            randomElement = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements[Math.floor(Math.random() * unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.length)];
+            randomElement = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements[Math.floor(Math.random() * unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.length)];
             }
 	        const data = {
-	            id: unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instanceId++,
+	            id: unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instanceId++,
 	            text: randomElement.text,
 	            emoji: randomElement.emoji,
 	            discovered: randomElement.discovered,
@@ -2084,16 +2084,16 @@ if(usedBy[element.text]!=null){
 	            offsetX: 0.5,
 	            offsetY: 0.5,
 	        };
-	        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.selectedInstance = cloneInto(data, unsafeWindow);
-	        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances.push(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.selectedInstance);
-	        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$nextTick(exportFunction(() => {
+	        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.selectedInstance = cloneInto(data, unsafeWindow);
+	        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instances.push(unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.selectedInstance);
+	        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].$nextTick(exportFunction(() => {
 	            const randomPosition = Math.random() * Math.PI * 2;
 	            const cos = 50 * Math.cos(randomPosition);
 	            const sin = 50 * Math.sin(randomPosition);
-	            unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setInstancePosition(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.selectedInstance, (window.innerWidth - unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.sidebarSize) / 2 +
+	            unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].setInstancePosition(unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.selectedInstance, (window.innerWidth - unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.sidebarSize) / 2 +
 	                cos, window.innerHeight / 2 - 40 + sin);
-	            unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setInstanceZIndex(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.selectedInstance, data.id);
-	            unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].calcInstanceSize(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.selectedInstance);
+	            unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].setInstanceZIndex(unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.selectedInstance, data.id);
+	            unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].calcInstanceSize(unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.selectedInstance);
 	        }, unsafeWindow));
 	    });
 	}
@@ -2142,14 +2142,14 @@ if(usedBy[element.text]!=null){
 	    if (storedTheme === 'dark')
 	        theme = 'dark';
 	    await GM.setValue('theme', theme);
-	    if (theme === 'light' && unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.isDarkMode) {
-	        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].toggleDarkMode();
+	    if (theme === 'light' && unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.isDarkMode) {
+	        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].toggleDarkMode();
 	    }
-	    else if (theme === 'shadow' && !unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.isDarkMode) {
-	        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].toggleDarkMode();
+	    else if (theme === 'shadow' && !unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.isDarkMode) {
+	        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].toggleDarkMode();
 	    }
-	    else if (theme === 'dark' && !unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.isDarkMode) {
-	        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].toggleDarkMode();
+	    else if (theme === 'dark' && !unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.isDarkMode) {
+	        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].toggleDarkMode();
 	    }
 	    if (theme === 'shadow') {
 	        document.getElementsByTagName('head')[0].appendChild(shadowStyles);
@@ -2161,8 +2161,8 @@ if(usedBy[element.text]!=null){
 	    if (theme === 'dark')
 	        darkModeIcon.src = '/infinite-craft/dark-mode-on.svg';
 	    elements.darkModeIcon.parentNode?.replaceChild(darkModeIcon, elements.darkModeIcon);
-	    const toggleDarkMode = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].toggleDarkMode;
-	    unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].toggleDarkMode = exportFunction(async () => {
+	    const toggleDarkMode = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].toggleDarkMode;
+	    unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].toggleDarkMode = exportFunction(async () => {
 	        if (theme === 'light') {
 	            toggleDarkMode();
 	            darkModeIcon.src = shadowIcon;
@@ -2181,7 +2181,7 @@ if(usedBy[element.text]!=null){
 	        }
 	        await GM.setValue('theme', theme);
 	    }, unsafeWindow);
-	    darkModeIcon.addEventListener('click', unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].toggleDarkMode);
+	    darkModeIcon.addEventListener('click', unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].toggleDarkMode);
 	}
 
 	window.addEventListener('load', async () => {

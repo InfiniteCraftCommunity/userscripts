@@ -3,8 +3,8 @@
 // @namespace   AutoIncrement Builder
 // @match       https://neal.fun/infinite-craft/*
 // @grant       unsafeWindow
-// @version     1.0
-// @author      Alexander_Andercou
+// @version     1.1
+// @author      Alexander_Andercou, Mikarific
 // @description 9/20/2024, 8:46:11 PM
 // ==/UserScript==
 
@@ -18,22 +18,22 @@
       setTimeout(()=>{
       for(let craftid of crafted)
       {
-       let instanceToDelete=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances.findIndex(x=>x.id==craftid)
-       unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances.splice(instanceToDelete,1);
+       let instanceToDelete=unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instances.findIndex(x=>x.id==craftid)
+       unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instances.splice(instanceToDelete,1);
 
       }},200);
       }
 
-       let response=await unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse(a,b);
+       let response=await unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].getCraftResponse(a,b);
       if(response.result=="Nothing"){
-          unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].errorSound.play();
+          unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].errorSound.play();
           return null;
       }
 
 
 
-       let center=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCenterOfCraft(a, b);
-       let id =   unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].instanceId++;
+       let center=unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].getCenterOfCraft(a, b);
+       let id =   unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].instanceId++;
        crafted.push(id);
        let newInstance= {
                           id: id,
@@ -43,37 +43,37 @@
                           zIndex: id,
                           discovered: response.isNew
                           };
-      let existingElement=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find(x=>x.text.toLowerCase()==newInstance.text.toLowerCase());
+      let existingElement=unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.find(x=>x.text.toLowerCase()==newInstance.text.toLowerCase());
       if(existingElement!=null)
        {
-        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].playInstanceSound();
+        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].playInstanceSound();
 
        }else
          {
-           unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.push({
+           unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.push({
                                       text: newInstance.text,
                                       emoji: newInstance.emoji,
                                       discovered: newInstance.isNew
                                   });
 
-           unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].saveItems();
-           unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$nextTick((function() {
-                                       unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setPinwheelCoords(center)
+           unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].saveItems();
+           unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].$nextTick((function() {
+                                       unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].setPinwheelCoords(center)
                                   }
                                   ));
            newInstance.isNew=true;
-           unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].discoverySound.play();
+           unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].discoverySound.play();
            let l = [.9, 1];
-           unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].rewardSound.rate(l[Math.floor(Math.random() * l.length)]);
-           unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].rewardSound.play();
+           unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].rewardSound.rate(l[Math.floor(Math.random() * l.length)]);
+           unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].rewardSound.play();
              }
-           unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances.push(newInstance);
+           unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instances.push(newInstance);
 
-          unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$nextTick((function() {
+          unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].$nextTick((function() {
 
-                                      unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].calcInstanceSize(newInstance),
-                                      unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setInstancePosition(newInstance, center.x - newInstance.width / 2, center.y - newInstance.height / 2),
-                                      unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setInstanceZIndex(newInstance, id);
+                                      unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].calcInstanceSize(newInstance),
+                                      unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].setInstancePosition(newInstance, center.x - newInstance.width / 2, center.y - newInstance.height / 2),
+                                      unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].setInstanceZIndex(newInstance, id);
 
                                   }));
 
@@ -149,7 +149,7 @@
 
 
                    }
-                 unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].playInstanceSound();
+                 unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].playInstanceSound();
 
           });
           return item;
@@ -172,10 +172,10 @@
               {
 
                  console.log("element1:",element1);
-                let instance=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances.find(x=>x.elem!=null?x.elem.id==element1.id:false);
+                let instance=unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instances.find(x=>x.elem!=null?x.elem.id==element1.id:false);
 
                 if(instance){
-                 unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances.filter(x=>x.id!=instance.id);
+                 unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instances=unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instances.filter(x=>x.id!=instance.id);
 
 
                 element2.appendChild(elementToItem(instance,element2,array1,array2));
@@ -196,8 +196,8 @@
     fileString="";
     let found=[];
        console.log("start building:",base,tool,regex)
-    let baseElement=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find(x=>x.text==base);
-    let toolElement=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find(x=>x.text==tool);
+    let baseElement=unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.find(x=>x.text==base);
+    let toolElement=unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.find(x=>x.text==tool);
 
     if(baseElement==null || toolElement==null)
       {  console.log("You don't own the base element or the tool");
@@ -213,8 +213,8 @@
         console.log("rev:",regexValue);
 
 
-     const getCraftResponse = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse;
-      unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse = exportFunction((...args) => new window.Promise(async (resolve) => {
+     const getCraftResponse = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].getCraftResponse;
+      unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].getCraftResponse = exportFunction((...args) => new window.Promise(async (resolve) => {
               const response = await getCraftResponse(...args);
 
           fileString+=args[0].text+" + "+args[1].text+" = "+response.result+"\n";
@@ -238,13 +238,13 @@
 
 
 
-   inputElement=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find(x=>x.text==resultText);
+   inputElement=unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.find(x=>x.text==resultText);
       await sleep(500);
 
 
     }while(inputElement && resultText.match(regexValue));
 
-  unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse=getCraftResponse;
+  unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].getCraftResponse=getCraftResponse;
               {
               const link = document.createElement("a");
 

@@ -3,8 +3,8 @@
 // @namespace   Search Scrolling Fix
 // @match       https://neal.fun/infinite-craft/*
 // @grant       unsafeWindow
-// @version     1.0
-// @author      Margen67
+// @version     1.1
+// @author      Margen67, Mikarific
 // @description Fixes the sidebar being scrolled to random places while searching.
 // ==/UserScript==
 
@@ -23,7 +23,7 @@ window.addEventListener("load", () => {
         elements.sidebar.scrollTo(0, scrollY);
       }, 1000);
     };
-    if (unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.searchQuery.trim().length === 0) {
+    if (unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.searchQuery.trim().length === 0) {
       scrollHack(0);
     } else {
       let scrollY = 0;

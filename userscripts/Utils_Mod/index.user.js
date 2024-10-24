@@ -1,16 +1,16 @@
 // ==UserScript==
-// @name        Utils Mod
-// @namespace   Catstone
-// @match       https://neal.fun/infinite-craft/
-// @grant       GM.xmlHttpRequest
-// @grant       GM_getValue
-// @grant       GM_setValue
-// @version     1.4.1
-// @author      Catstone
-// @license     MIT
-// @description Combines Infinite Craft Selection Utils, Tab Utils, Unicode Utils and more misc stuff!
-// @downloadURL https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/Utils_Mod/index.user.js
-// @updateURL   https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/Utils_Mod/index.user.js
+// @name          Utils Mod
+// @namespace     Catstone
+// @match         https://neal.fun/infinite-craft/
+// @grant         GM.xmlHttpRequest
+// @grant         GM_getValue
+// @grant         GM_setValue
+// @version       1.4.2
+// @author        Catstone
+// @license       MIT
+// @description   Combines Infinite Craft Selection Utils, Tab Utils, Unicode Utils and more misc stuff!
+// @downloadURL   https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/Utils_Mod/index.user.js
+// @updateURL     https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/Utils_Mod/index.user.js
 // ==/UserScript==
 
 (function() {
@@ -437,10 +437,12 @@ document.head.appendChild(css);
             customColor: '#ff0000',
             borderStyle: 'solid',
             borderWidth: 3,
-            chromaSpeed: 0
+            chromaSpeed: 0,
+            scale: 100
         },
         tabs: {
-            enabled: false
+            enabled: false,
+            current: 0
         },
         uni: {
             search : false,
@@ -646,6 +648,14 @@ document.head.appendChild(css);
                 content: () => settings.sel.chromaSpeed,
                 handle(elements) {
                     settings.sel.chromaSpeed = Number(elements.value);
+                }
+            },
+            {
+                label: "Scale (meme): ",
+                type: "number",
+                content: () => settings.sel.scale,
+                handle(elements) {
+                    settings.sel.scale = Number(elements.value);
                 }
             }]
         },
@@ -1094,6 +1104,7 @@ function showUtilsSettingsMenu() {
             instance.elem.style.outline = 'var(--custom-outline)';
             instance.elem.style.background = 'var(--custom-background)';
             instance.elem.style.borderColor = 'transparent';
+            instance.elem.style.scale = "" + settings.sel.scale + "%";
         }, 0);
     }
     function deselectInstance(instance) {
@@ -1109,6 +1120,7 @@ function showUtilsSettingsMenu() {
         instance.elem.style.outline = '';
         instance.elem.style.background = '';
         instance.elem.style.borderColor = '';
+        instance.elem.style.scale = '';
     }
 
     function deselectAllInstances() {
@@ -1158,7 +1170,6 @@ function showUtilsSettingsMenu() {
 //              |_____| |____|  |____|_______/|_______.'
 
     function initTabUtils() {
-        let currentTab = GM_getValue('currentTab', 0);
         const defaultData = [{elements: [], name: "Tab 1"}];
         if (GM_getValue('tabData') === undefined) {
             GM_setValue('tabData', defaultData);
@@ -1212,12 +1223,12 @@ function showUtilsSettingsMenu() {
             }
             try {
                 refreshTabButtons();
-                loadTab(currentTab);
+                loadTab(settings.tabs.current);
             }
             catch (e) {
                 console.error('Error loading tab data:', e);
                 console.log(GM_getValue('tabData'));
-                GM_setValue('currentTab', 0);
+                settings.tabs.currentTab = 0;
             }
 
             window.addEventListener('beforeunload', function() {
@@ -1242,7 +1253,7 @@ function showUtilsSettingsMenu() {
                 y: instance.top
             }));
             const tabData = GM_getValue('tabData');
-            tabData[currentTab].elements = elements;
+            tabData[settings.tabs.current].elements = elements;
             GM_setValue('tabData', tabData);
         }
 
@@ -1263,8 +1274,7 @@ function showUtilsSettingsMenu() {
 
             spawnElements(tab.elements);
 
-            currentTab = index;
-            GM_setValue('currentTab', currentTab);
+            settings.tabs.current = index;
         }
 
         function addTab(index = -1, data = null) {
@@ -1302,10 +1312,9 @@ function showUtilsSettingsMenu() {
                 unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].clearInstances();
             } else {
                 tabData.splice(index, 1);
-                if (currentTab > 0) currentTab--;
+                if (settings.tabs.current > 0) settings.tabs.current--;
                 GM_setValue('tabData', tabData);
-                GM_setValue('currentTab', currentTab);
-                loadTab(currentTab);
+                loadTab(settings.tabs.current);
 
                 const deletedTab = document.getElementById(`tab-${index}`);
                 const sizer = document.createElement('div');
@@ -1327,7 +1336,7 @@ function showUtilsSettingsMenu() {
         }
 
         function switchTab(index) {
-            if (currentTab !== index) {
+            if (settings.tabs.current !== index) {
                 saveCurrentTab();
                 loadTab(index);
                 document.querySelectorAll('.tab').forEach(button => button.classList.remove('selected'));
@@ -1417,7 +1426,7 @@ function showUtilsSettingsMenu() {
             const tabButton = document.createElement('button');
             tabButton.id = `tab-${index}`;
             tabButton.classList.add('tab');
-            if (currentTab === index) tabButton.classList.add('selected');
+            if (settings.tabs.current === index) tabButton.classList.add('selected');
 
             tabButton.textContent = name || `Tab ${index + 1}`;
             tabButton.draggable = true;
@@ -1522,7 +1531,7 @@ function showUtilsSettingsMenu() {
                 const draggedTab = tabData.splice(draggedIndex, 1)[0];
                 tabData.splice(index, 0, draggedTab);
                 GM_setValue('tabData', tabData);
-                currentTab = index;
+                settings.tabs.current = index;
                 refreshTabButtons();
             }
             draggedIndex = null;
@@ -1956,7 +1965,7 @@ function showUtilsSettingsMenu() {
 
       function spawnUnicodes(codepoint, rows = 1, x=100, y=50) {
           const elements = [];
-          const baseCode = codepoint & 0xFFF0;
+          const baseCode = codepoint & 0xFFFF0;
 
           for (let row = 0; row < rows; row++) {
               for (let step = 0; step < 16; step++) {
@@ -2099,10 +2108,11 @@ function showUtilsSettingsMenu() {
 
             // Determine elements to push
             let elements;
-            if (parts[0].includes(' = ')) {
+            if (line.includes(' = ')) {
                 columnSplit = 69420;
-                const [firstPart, result] = parts[0].split(' = ', 2);
-                const ingredients = firstPart.split(' + ', 2);
+                const [firstPart, result] = line.split(' = ', 2).map(x => x.trim());
+                const ingredients = firstPart.split(' + ', 2).map(x => x.trim());
+                console.log(ingredients)
                 elements = [...ingredients, result.split(/ \/\/| ::/)[0].trim()].map(x => x.trim());
             } else {
                 elements = [parts[0].trim()];

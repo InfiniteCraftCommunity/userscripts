@@ -4,8 +4,8 @@
 // @match       https://neal.fun/infinite-craft/*
 // @grant       unsafeWindow
 // @run-at      document-end
-// @version     0.1
-// @author      zeroptr
+// @version     0.2
+// @author      zeroptr, Mikarific
 // @downloadURL https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/BetterRandomButton/index.user.js
 // @description A better Random Element button. Works with searching. You can Shift+Click on the button to quickly combine two random elements!
 // ==/UserScript==
@@ -45,7 +45,7 @@ function pickRandomElement(list) {
 }
 
 function placeInstance(element) {
-  const IC = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0];
+  const IC = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0];
   const instance = {
     id: IC.instanceId++,
     ...element,
@@ -78,7 +78,7 @@ function placeInstance(element) {
 let lastQuickCraftAt = 0;
 
 function randomElementButton(e) {
-  const IC = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0];
+  const IC = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0];
   const elements =
     IC.searchResults.length ? IC.searchResults
     : IC.filteredElements.length ? IC.filteredElements

@@ -3,8 +3,8 @@
 // @namespace   Violentmonkey Scripts
 // @match       https://neal.fun/infinite-craft/*
 // @grant       none
-// @version     1.0
-// @author      Alexander_Andercou
+// @version     1.1
+// @author      Alexander_Andercou, Mikarific
 // @description 8/17/2024, 9:51:15 PM
 // ==/UserScript==
 
@@ -180,8 +180,8 @@ function getSave() {
       let plusText=document.createTextNode("  +  ");
       let createSecondElementDiv=document.createElement("div");
 
-       let firstElement=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find(x=>x.text==recipe[0].text);
-       let secondElement=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find(x=>x.text==recipe[1].text);
+       let firstElement=unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.find(x=>x.text==recipe[0].text);
+       let secondElement=unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.find(x=>x.text==recipe[1].text);
 
 
         let emojiSpan1=document.createElement("span");
@@ -437,19 +437,19 @@ let lastAvailableX={};
             offsetY: 0.5,
         };
         const instance = cloneInto(data, unsafeWindow);
-        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances.push(instance);
+        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instances.push(instance);
 
 
        console.log("before spawning:",instance.text,lastAvailableX,lastAvailableX[y],y,x);
 
-        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$nextTick(
+        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].$nextTick(
             exportFunction(() => {
-                unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setInstancePosition(
+                unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].setInstancePosition(
                     instance,
                     x,
                     y
                 );
-                unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setInstanceZIndex(instance, 0);
+                unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].setInstanceZIndex(instance, 0);
 
           let interval=  setInterval(
               ()=>{
@@ -487,7 +487,7 @@ let lastAvailableX={};
                         x=Math.max(lastAvailableX[y],x-size/2);
                        else
                         x=x-size/2;
-                       unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setInstancePosition(
+                       unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].setInstancePosition(
                          instance,
                           x,
                           y
@@ -645,7 +645,7 @@ let indexJ=0;
 
                              distanceY=(window.innerHeight-50)-maxy;
 
-		                       for (const instance of unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances) {
+		                       for (const instance of unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instances) {
 			                             if (!instance.elem) continue;
 
 			                            const translate = instance.elem.style.getPropertyValue("translate").split(" ").map((x) => parseInt(x));
@@ -868,8 +868,8 @@ function nextSpawn(tree,fathers,y_start)
      node["y"]=y_newStart;
 
 
-     let trueNode= unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find(x=>x.text==node.text);
-    let id=  unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instanceId++;
+     let trueNode= unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.find(x=>x.text==node.text);
+    let id=  unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instanceId++;
 
 
       return spawnElement(trueNode,node.x,y_newStart,id,node.index,nextSpawn(tree,fathers,y_newStart));
@@ -892,7 +892,7 @@ let bottom=window.innerHeight-50;
 let leftmost=document.querySelector(".items").getBoundingClientRect().left;
 let root=tree[0][0];
   console.log(root);
-let trueRoot= unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find(x=>x.text==root.text)
+let trueRoot= unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.find(x=>x.text==root.text)
 console.log(trueRoot);
   let genNr=0;
   let x_start=leftmost/2;
@@ -1046,7 +1046,7 @@ console.log("settings:",spacing,initialVerticalGap,maximumGenerations, lineColor
   let leftmost=document.querySelector(".items").getBoundingClientRect().left;
   let x_start=leftmost/2;
   let y_start=bottom-50;
-  let trueRoot= unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find(x=>x.text==finalWord)
+  let trueRoot= unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.find(x=>x.text==finalWord)
 
     try{
      document.querySelector(".choose-target-lineage").parentNode.removeChild( document.querySelector(".choose-target-lineage"));
@@ -1054,7 +1054,7 @@ console.log("settings:",spacing,initialVerticalGap,maximumGenerations, lineColor
   }catch(e){}
 
 
- let id=  unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instanceId++;
+ let id=  unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instanceId++;
 
   spawnElement(trueRoot,x_start,y_start,id,1,()=>{});
 
@@ -1282,7 +1282,7 @@ console.log("settings:",spacing,initialVerticalGap,maximumGenerations, lineColor
         item.addEventListener('mousedown', (e) => {
 
 
-               unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].playInstanceSound();
+               unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].playInstanceSound();
 
         });
         return item;
@@ -1296,7 +1296,7 @@ console.log("settings:",spacing,initialVerticalGap,maximumGenerations, lineColor
       for(let baseElm of base)
       {
 
-          let elm=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find(x=>x.text==baseElm);
+          let elm=unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.find(x=>x.text==baseElm);
 
           let item=elementToItem(elm);
            item.addEventListener("click",()=>{
@@ -1368,7 +1368,7 @@ console.log("settings:",spacing,initialVerticalGap,maximumGenerations, lineColor
 
 
           console.log("value to filter from ",searchBar.value);
-         let filtered=  (unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.filter(x=>{
+         let filtered=  (unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.filter(x=>{
           let regex="^"+searchBar.value+"*";
 
            if(searchBar.value.trim()=="")
@@ -1402,7 +1402,7 @@ console.log("settings:",spacing,initialVerticalGap,maximumGenerations, lineColor
     searchButton.style.fontSize="34px"
 
     inventoryDiv.style.borderColor="white";
-      for(let element of unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements)
+      for(let element of unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements)
       {     let item=elementToItem(element,settingsModal);
             inventoryDiv.appendChild(item);
             item.addEventListener("click",()=>{
@@ -1533,7 +1533,7 @@ function startingModal(){
 
           if(element1.classList.contains("instance"))
             {
-              let instance=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances.find(x=>x.elem.id==element1.id);
+              let instance=unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instances.find(x=>x.elem.id==element1.id);
               let clone=element1.cloneNode(true);
               let left=rect2.x+rect2.width/2-rect1.width/2;
               let top=rect2.y+rect2.height/2-rect1.height;
@@ -1542,7 +1542,7 @@ function startingModal(){
               element2.style.borderStyle="dotted";
               element2.style.borderColor="green";
 
-            unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setInstancePosition(
+            unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].setInstancePosition(
                     instance,
                     rect1.x,
                     rect2.y-100
@@ -1581,8 +1581,8 @@ window.addEventListener("load",()=>{
    document.querySelector(".side-controls").append(img);
 
 
-   const fn = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].clearInstances;
-  unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].clearInstances= () => {
+   const fn = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].clearInstances;
+  unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].clearInstances= () => {
     const context = canvas.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);
     linePoints=[];
@@ -1686,11 +1686,11 @@ let mouseData={
     makeModalWithSetting();
 
   let WaitForElements=setInterval(function(){
-                                     console.log(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data);
+                                     console.log(unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data);
 
 
 
-                 if(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.length>0)
+                 if(unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.length>0)
                  {
 
                     makeSetBasisModal();

@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name        Infinite Craft Selection Utils
-// @namespace   Catstone
+// @namespace   Catstone, Mikarific
 // @match       https://neal.fun/infinite-craft/
 // @grant       GM_getValue
 // @grant       GM_setValue
-// @version     1.2
+// @version     1.3
 // @author      Catstone
 // @license     MIT
 // @description Adds multiselect utilities for deleting, duplicating and moving!
@@ -100,14 +100,14 @@
 
 
         // Patching duplicateInstance
-        const originalDuplicateInstance = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].duplicateInstance;
-        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].duplicateInstance = function duplicateSelection(originalInstance, leftOffset = 10, topOffset = -10) {
+        const originalDuplicateInstance = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].duplicateInstance;
+        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].duplicateInstance = function duplicateSelection(originalInstance, leftOffset = 10, topOffset = -10) {
             const duplicatedInstance = originalDuplicateInstance.call(this, originalInstance, leftOffset, topOffset);
             if (originalInstance.utilsSelected) {
                 getSelectedInstances().forEach(instance => {
                     if (instance != originalInstance && instance != duplicatedInstance) {
                         deselectInstance(instance);
-                        const instanceCopy = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].duplicateInstance(instance, 0, 0);
+                        const instanceCopy = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].duplicateInstance(instance, 0, 0);
                         selectInstance(instanceCopy);
                         isDragging = true;
                         dragStartX = mouseX, dragStartY = mouseY;
@@ -119,8 +119,8 @@
             return duplicatedInstance;
         }
         // Patching selectInstance
-        const originalSelectInstance = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].selectInstance;
-        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].selectInstance = function draggingOnSelectInstance(mouseEvent, instance) {
+        const originalSelectInstance = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].selectInstance;
+        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].selectInstance = function draggingOnSelectInstance(mouseEvent, instance) {
             const og = originalSelectInstance.call(this, mouseEvent, instance);
             if (mouseButton === 2) {
                 if (instance.utilsSelected) {
@@ -139,7 +139,7 @@
     document.addEventListener('mousedown', function(e) {
         mouseButton = e.button;
         if (mouseButton === 2) { // Right mouse button
-            if (mouseX < window.innerWidth - unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].sidebarSize) {
+            if (mouseX < window.innerWidth - unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].sidebarSize) {
                 startX = e.clientX;
                 startY = e.clientY;
                 isSelecting = true;
@@ -160,7 +160,7 @@
         if (isSelecting) {
             // Update selection box position and size
             let width = Math.abs(mouseX - startX);
-            const sidebarLimit = window.innerWidth - unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].sidebarSize - 1;
+            const sidebarLimit = window.innerWidth - unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].sidebarSize - 1;
             if (mouseX > sidebarLimit) width = sidebarLimit - startX;
             else if (mouseX < 0) width = startX;
 
@@ -191,7 +191,7 @@
             // Move all selected instances
             if (!e.ctrlKey) {
                 getSelectedInstances().forEach(instance => {
-                    unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setInstancePosition(
+                    unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].setInstancePosition(
                         instance,
                         instance.left + deltaX,
                         instance.top  + deltaY);
@@ -224,7 +224,7 @@
         if (isDragging) {
             isDragging = false;
             if ((e.button === 1 || e.button === 0) // Left Click or Middle Click and beyond sidebar
-                && mouseX > window.innerWidth - unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].sidebarSize) {
+                && mouseX > window.innerWidth - unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].sidebarSize) {
                 deleteAllSelected();
             }
         }

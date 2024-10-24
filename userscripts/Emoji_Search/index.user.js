@@ -3,8 +3,8 @@
 // @namespace   Violentmonkey Scripts
 // @match       https://neal.fun/infinite-craft/*
 // @grant       none
-// @version     1.0
-// @author      Alexander_Andercou
+// @version     1.1
+// @author      Alexander_Andercou, Mikarific
 // @description 8/14/2024, 8:19:36 PM
 // ==/UserScript==
 
@@ -31,9 +31,9 @@
       checkbox.type="checkbox";
       checkbox.addEventListener("change",()=>{
         useEmoji=checkbox.checked;
-        let sq=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].searchQuery;
-        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].searchQuery+=" ";
-        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].searchQuery=sq;
+        let sq=unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].searchQuery;
+        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].searchQuery+=" ";
+        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].searchQuery=sq;
 
       });
       checkbox.style.width="15px";
@@ -58,24 +58,24 @@
         newDiv.appendChild(checkbox);
 
         if(complexFilter==null)
-             complexFilter=  unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.searchResults.getter;
+             complexFilter=  unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._computedWatchers.searchResults.getter;
 
 
 
 
 
 
-         unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.searchResults.getter=
+         unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._computedWatchers.searchResults.getter=
                  exportFunction(() => {
 
 
 
-           let returnedByComplexFilter= unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements;
+           let returnedByComplexFilter= unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements;
 
 
 
 
-            let query= unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].searchQuery;
+            let query= unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].searchQuery;
 
            let dummy=[...returnedByComplexFilter];
 
@@ -97,7 +97,7 @@
             return cloneInto(dummy,unsafeWindow);
            }
            else
-           return cloneInto(complexFilter.call(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]),unsafeWindow);
+           return cloneInto(complexFilter.call(unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]),unsafeWindow);
 
 
 

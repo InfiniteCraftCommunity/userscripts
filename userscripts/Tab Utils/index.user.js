@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name        Infinite Craft Tab Utils
-// @namespace   Catstone
+// @namespace   Catstone, Mikarific
 // @match       https://neal.fun/infinite-craft/
 // @grant       GM_getValue
 // @grant       GM_setValue
-// @version     1.0
+// @version     1.1
 // @author      Catstone
 // @license     MIT
 // @description Adds tab functionality! Also comes with Saving Tabs on reload/close window and downloading/importing tabs!
@@ -105,7 +105,7 @@
     window.addEventListener('load', () => {
       document.head.appendChild(style);
         const observer = new MutationObserver((mutations, obs) => {
-            const elementsData = unsafeWindow.$nuxt?.$root?.$children[2]?.$children[0]?.$children[0]?._data?.elements;
+            const elementsData = unsafeWindow.$nuxt?.$root?.$children[1]?.$children[0]?.$children[0]?._data?.elements;
             if (elementsData && elementsData.length > 0) {
                 obs.disconnect();
                 init();
@@ -180,7 +180,7 @@
         if (index >= tabData.length) index = 0;
         const tab = tabData[index];
 
-        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].clearInstances();
+        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].clearInstances();
         spawnElements(tab.elements);
 
         currentTab = index;
@@ -219,7 +219,7 @@
         if (tabData.length <= 1) {
             GM_setValue('tabData', defaultData);
             refreshTabButtons();
-            unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].clearInstances();
+            unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].clearInstances();
         } else {
             tabData.splice(index, 1);
             if (currentTab > 0) currentTab--;
@@ -507,7 +507,7 @@
 
     function spawnElements(elements) {
         // Create a lookup map for elements
-        const elementsMap = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.reduce((map, elem) => {
+        const elementsMap = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.reduce((map, elem) => {
             map[elem.text] = elem;
             return map;
         }, {});
@@ -521,7 +521,7 @@
 
     function spawnElement(element, x = 0, y = 0) {
         const data = {
-            id: unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instanceId++,
+            id: unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instanceId++,
             text: element.text,
             emoji: element.emoji,
             discovered: element.discovered,
@@ -532,16 +532,16 @@
             offsetY: 0.5,
         };
         const instance = cloneInto(data, unsafeWindow);
-        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances.push(instance);
-        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$nextTick(
+        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instances.push(instance);
+        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].$nextTick(
             exportFunction(() => {
-                unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setInstancePosition(
+                unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].setInstancePosition(
                     instance,
                     x,
                     y
                 );
-                unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setInstanceZIndex(instance, 0);
-                unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].calcInstanceSize(instance);
+                unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].setInstanceZIndex(instance, 0);
+                unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].calcInstanceSize(instance);
             }, unsafeWindow)
         );
     }

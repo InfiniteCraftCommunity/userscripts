@@ -3,8 +3,8 @@
 // @namespace   Quick Delete
 // @match       https://neal.fun/infinite-craft/*
 // @grant       unsafeWindow
-// @version     1.0
-// @author      Margen67
+// @version     1.1
+// @author      Margen67, Mikarific
 // @description Quickly delete elements by holding CTRL+RMB and hovering over them.
 // ==/UserScript==
 
@@ -22,8 +22,8 @@ window.addEventListener("load", () => {
                   return false;
                 };
               };
-              unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances =
-                unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances.filter(isMatch);
+              unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instances =
+                unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instances.filter(isMatch);
             };
           });
         };

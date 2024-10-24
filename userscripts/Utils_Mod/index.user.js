@@ -5,8 +5,8 @@
 // @grant         GM.xmlHttpRequest
 // @grant         GM_getValue
 // @grant         GM_setValue
-// @version       1.4.2
-// @author        Catstone
+// @version       1.4.3
+// @author        Catstone, Mikarific
 // @license       MIT
 // @description   Combines Infinite Craft Selection Utils, Tab Utils, Unicode Utils and more misc stuff!
 // @downloadURL   https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/Utils_Mod/index.user.js
@@ -954,14 +954,14 @@ function showUtilsSettingsMenu() {
 
 
             // Patching duplicateInstance
-            const originalDuplicateInstance = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].duplicateInstance;
-            unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].duplicateInstance = function duplicateSelection(originalInstance, leftOffset = 10, topOffset = -10) {
+            const originalDuplicateInstance = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].duplicateInstance;
+            unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].duplicateInstance = function duplicateSelection(originalInstance, leftOffset = 10, topOffset = -10) {
                 const duplicatedInstance = originalDuplicateInstance.call(this, originalInstance, leftOffset, topOffset);
                 if (originalInstance.utilsSelected) {
                     getSelectedInstances().forEach(instance => {
                         if (instance != originalInstance && instance != duplicatedInstance && !instance.disabled) {
                             deselectInstance(instance);
-                            const instanceCopy = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].duplicateInstance(instance, 0, 0);
+                            const instanceCopy = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].duplicateInstance(instance, 0, 0);
                             selectInstance(instanceCopy);
                             isDragging = true;
                             dragStartX = mouseData.x, dragStartY = mouseData.y;
@@ -973,8 +973,8 @@ function showUtilsSettingsMenu() {
                 return duplicatedInstance;
             }
             // Patching selectInstance
-            const originalSelectInstance = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].selectInstance;
-            unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].selectInstance = function draggingOnSelectInstance(mouseEvent, instance) {
+            const originalSelectInstance = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].selectInstance;
+            unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].selectInstance = function draggingOnSelectInstance(mouseEvent, instance) {
                 const og = originalSelectInstance.call(this, mouseEvent, instance);
                 if (mouseData.button === 2) {
                     if (instance.utilsSelected) deleteAllSelected();
@@ -1042,7 +1042,7 @@ function showUtilsSettingsMenu() {
                 // Move all selected instances
                 if (!e.ctrlKey) {
                     getSelectedInstances().forEach(instance => {
-                        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setInstancePosition(
+                        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].setInstancePosition(
                             instance,
                             instance.left + deltaX,
                             instance.top  + deltaY);
@@ -1062,7 +1062,7 @@ function showUtilsSettingsMenu() {
                 if (Math.abs(startX - endX) <= 20 && Math.abs(startY - endY) <= 20) deselectAllInstances();
                 else {
                     const onScreenInstances = getAllInstances();
-                    const newZIndex = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instanceId++;
+                    const newZIndex = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instanceId++;
                     onScreenInstances.forEach((instance) => {
                         const {left, top, height, width} = instance;
                         if (isInstanceInSelectedArea(left, top, height, width) && !instance.utilsSelected) {
@@ -1176,7 +1176,7 @@ function showUtilsSettingsMenu() {
         }
 
         const initIfElementsDataExists = () => {
-            const elementsData = unsafeWindow.$nuxt?.$root?.$children[2]?.$children[0]?.$children[0]?._data?.elements;
+            const elementsData = unsafeWindow.$nuxt?.$root?.$children[1]?.$children[0]?.$children[0]?._data?.elements;
             if (elementsData && elementsData.length > 0) {
                 tabUtilsInit = true;
                 externalSaveCurrentTab = saveCurrentTab;
@@ -1266,11 +1266,11 @@ function showUtilsSettingsMenu() {
             if (getAllInstances().filter(x => x.utilsSelected).length > 0) {
                 if (confirm('Do you want to copy the Selected Elements to the new Tab?')) {
                     getAllInstances().filter(x => !x.utilsSelected).forEach(instance => deleteInstance(instance));
-                    getAllInstances().filter(x => x.utilsSelected).forEach(instance => unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setInstancePosition(instance, instance.left - 5, instance.top - 5));
+                    getAllInstances().filter(x => x.utilsSelected).forEach(instance => unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].setInstancePosition(instance, instance.left - 5, instance.top - 5));
                 }
-                else unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].clearInstances();
+                else unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].clearInstances();
             }
-            else unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].clearInstances();
+            else unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].clearInstances();
 
             spawnElements(tab.elements);
 
@@ -1309,7 +1309,7 @@ function showUtilsSettingsMenu() {
             if (tabData.length <= 1) {
                 GM_setValue('tabData', defaultData);
                 refreshTabButtons();
-                unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].clearInstances();
+                unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].clearInstances();
             } else {
                 tabData.splice(index, 1);
                 if (settings.tabs.current > 0) settings.tabs.current--;
@@ -1611,7 +1611,7 @@ function showUtilsSettingsMenu() {
             document.querySelector(".pinned").after(unicodeContainer);
 
             // Event listener on search
-            const search = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$refs.search;
+            const search = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].$refs.search;
             search.addEventListener("input", function(e) {
                 searchUnicodeElements(e.target.value);
             });
@@ -1663,15 +1663,15 @@ function showUtilsSettingsMenu() {
             observer.observe(recipeModal, { attributes: true, subtree: true });
 
             // Patch getCraftResponse
-            const getCraftResponse = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse;
-		        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse = exportFunction((...args) => new window.Promise(async (resolve) => {
+            const getCraftResponse = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].getCraftResponse;
+		        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].getCraftResponse = exportFunction((...args) => new window.Promise(async (resolve) => {
 		        	  const response = await getCraftResponse(...args);
                 if (unicodeCheckbox.checked && isSingleUnicodeCharacter(response.result)) setTimeout(() => searchUnicodeElements(), 0);
                 return resolve(response);
             }));
 
             // Watch for changes in showDiscoveredOnly using $watch method
-            unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$watch('showDiscoveredOnly', function(newVal, oldVal) {
+            unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].$watch('showDiscoveredOnly', function(newVal, oldVal) {
                 searchUnicodeElements();
             });
         }
@@ -1741,16 +1741,16 @@ function showUtilsSettingsMenu() {
                 elementDiv.appendChild(elementEmoji);
                 elementDiv.appendChild(document.createTextNode(` ${unicodeElement.text} `));
                 elementDiv.addEventListener('mousedown', (e) => {
-                    unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].selectElement(e, cloneInto(unicodeElement, unsafeWindow));
+                    unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].selectElement(e, cloneInto(unicodeElement, unsafeWindow));
                 });
                 unicodeContainer.appendChild(elementDiv);
             }
         }
 
-        function searchUnicodeElements(query = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].searchQuery) {
+        function searchUnicodeElements(query = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].searchQuery) {
             if (!unicodeCheckbox.checked) return;
-            const showDiscoveredOnly = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].showDiscoveredOnly;
-            const filteredElements = Object.values(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements)
+            const showDiscoveredOnly = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].showDiscoveredOnly;
+            const filteredElements = Object.values(unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements)
                 .filter(element => {
                     if (!isSingleUnicodeCharacter(element.text) || (showDiscoveredOnly && !element.discovered)) return false;
 
@@ -2134,8 +2134,8 @@ function showUtilsSettingsMenu() {
 
     // Unlock Ghost Element when crafted
     function patchGhostElements () {
-        const getCraftResponse = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse;
-		    unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse = exportFunction((...args) => new window.Promise(async (resolve) => {
+        const getCraftResponse = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].getCraftResponse;
+		    unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].getCraftResponse = exportFunction((...args) => new window.Promise(async (resolve) => {
             const response = await getCraftResponse(...args);
             if (settings.spawn.ghosts) {
                 const ghostInstances = getAllInstances().filter(instance => instance.disabled && instance.text === response.result);
@@ -2200,7 +2200,7 @@ function showUtilsSettingsMenu() {
     }
 
     function fetchEmojiAndDiscovery(texts) {
-        const elementsMap = unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.reduce((map, elem) => {
+        const elementsMap = unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.reduce((map, elem) => {
             map[elem.text] = elem;
             return map;
         }, {});
@@ -2225,7 +2225,7 @@ function showUtilsSettingsMenu() {
 
     function spawnElement(element, x = 0, y = 0, disabled = false) {
         const data = {
-            id: unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instanceId++,
+            id: unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instanceId++,
             text: element.text,
             emoji: element.emoji,
             discovered: element.discovered,
@@ -2236,16 +2236,16 @@ function showUtilsSettingsMenu() {
             offsetY: 0.5,
         };
         const instance = cloneInto(data, unsafeWindow);
-        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances.push(instance);
-        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].$nextTick(
+        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instances.push(instance);
+        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].$nextTick(
             exportFunction(() => {
-                unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setInstancePosition(
+                unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].setInstancePosition(
                     instance,
                     x,
                     y
                 );
-                unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].setInstanceZIndex(instance, 0);
-                unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].calcInstanceSize(instance);
+                unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].setInstanceZIndex(instance, 0);
+                unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].calcInstanceSize(instance);
                 if (disabled) { // Ghost Elements, SPOOKYY!!!
                     instance.disabled = disabled;
                     instance.elem.style.animation = 'none';

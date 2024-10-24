@@ -4,8 +4,8 @@
 // @match       https://neal.fun/infinite-craft/*
 // @require     https://raw.githubusercontent.com/Infinite-Craft-Discord-Community/Community_Library_UserScripts_IC/main/dist/lib.user.js
 // @grant       unsafeWindow
-// @version     1.0
-// @author      Alexander_Andercou
+// @version     1.1
+// @author      Alexander_Andercou, Mikarific
 // @description 5/11/2024, 7:54:23 PM
 // ==/UserScript==
 
@@ -117,11 +117,11 @@ function basePart(applyMatcher)
 {
 
       if(complexFilter==null)
-           complexFilter=  unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.sortedElements.getter;
+           complexFilter=  unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._computedWatchers.sortedElements.getter;
 
                  // console.log("after apply filters",complexFilter());
 
-         unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.filteredElements.getter=
+         unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._computedWatchers.filteredElements.getter=
                exportFunction(() => {
 
                  let returnedByComplexFilter=complexFilter();
@@ -293,7 +293,7 @@ let timeout2=[];
 
 
 
-                                         unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].selectElement(e,element);
+                                         unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].selectElement(e,element);
                                          });
 
                         clone.addEventListener("touchstart",(e)=>{
@@ -302,7 +302,7 @@ let timeout2=[];
 
 
 
-                                         unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].mobileSelectElement(e,element);
+                                         unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].mobileSelectElement(e,element);
                                          });
                      targetDiv.appendChild(clone);
 
@@ -341,7 +341,7 @@ let timeout2=[];
 
        grandParentDiv.appendChild(newDiv);
 
-       let saveQuery=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.searchQuery;
+       let saveQuery=unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.searchQuery;
 
         renderer(applyMatcher);
 
@@ -410,10 +410,10 @@ function checkChanges()
                                    {
 
                                   if (e.inputType === 'insertText' &&
-	                                 unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.searchQuery.trim().length === 1) {
+	                                 unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.searchQuery.trim().length === 1) {
 	                                cloneBar.scrollTo(0, 0); }
 
-                                   unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.searchQuery=cloneBar.value;
+                                   unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.searchQuery=cloneBar.value;
 
                                });
 
@@ -578,7 +578,7 @@ function checkChanges()
            injectCSS();
            makeButton();
 
-           console.log(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]);
+           console.log(unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]);
 
 
 

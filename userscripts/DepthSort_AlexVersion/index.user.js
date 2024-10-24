@@ -3,8 +3,8 @@
 // @namespace   Violentmonkey Scripts
 // @match      https://neal.fun/infinite-craft/*
 // @grant       none
-// @version     1.0
-// @author      Alexander_Andercou
+// @version     1.1
+// @author      Alexander_Andercou, Mikarific
 // @description 6/30/2024, 1:15:29 AM
 // ==/UserScript==
 
@@ -511,17 +511,17 @@ function getSave() {
         console.log("Welcome to hijack sorting by  depth");
 
         let new_svg=`data:image/svg+xml;base64,PHN2ZyBmaWxsPSJub25lIiBoZWlnaHQ9IjE1IiB2aWV3Qm94PSIwIDAgMTUgMTUiIHdpZHRoPSIxNSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJtLjUgMHYxNC41aDE0di0xNC41bS0xNCA0LjVoMnYxaDJ2M2gydjNoMXYzLTJoMnYtMmgydi0zaDF2LTJoMiIgc3Ryb2tlPSIjMDAwIi8+PC9zdmc+`;
-        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].sorts.push("depth");
+        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].sorts.push("depth");
         let elementals=null;
-       const complex_filter=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.sortedElements.getter;
+       const complex_filter=unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._computedWatchers.sortedElements.getter;
 
 
 
-        unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.sortedElements.getter=
+        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._computedWatchers.sortedElements.getter=
          exportFunction( () => {
 
 
-       if (unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.sortBy === "depth") {
+       if (unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.sortBy === "depth") {
 
 
                        let elements2=[...complex_filter.call(this)];
@@ -555,7 +555,7 @@ function getSave() {
 
 
                         let elements2=[...complex_filter.call(this)];
-                      console.log("By:",unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.sortBy);
+                      console.log("By:",unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.sortBy);
                      console.log("elem normal:",elements2);
                             return elements2 ;
 
@@ -566,9 +566,9 @@ function getSave() {
                  },unsafeWindow);
 
             const sortButtonObserver = new MutationObserver((mutations) => {
-              console.log("mutation:",unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.sortBy);
+              console.log("mutation:",unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.sortBy);
 
-                    if(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.sortBy === "depth")
+                    if(unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.sortBy === "depth")
                       {    let img=document.querySelector(".sidebar-sort > img");
 
                         if(img.src.trim()=="https://neal.fun/infinite-craft/depth.svg")
@@ -611,7 +611,7 @@ function getSave() {
 
 
 
-          // console.log(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]);
+          // console.log(unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]);
 
     console.log(img);
 

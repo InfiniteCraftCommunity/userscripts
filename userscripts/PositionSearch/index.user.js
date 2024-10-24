@@ -3,8 +3,8 @@
 // @namespace   Violentmonkey Scripts
 // @match       https://neal.fun/infinite-craft/*
 // @grant       none
-// @version     1.0
-// @author      Alexander_Andercou
+// @version     1.1
+// @author      Alexander_Andercou, Mikarific
 // @description 8/15/2024, 4:32:48 PM
 // ==/UserScript==
 
@@ -177,27 +177,27 @@
         newDiv.appendChild(checkbox);
 
         if(complexFilter==null)
-             complexFilter=  unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.searchResults.getter;
+             complexFilter=  unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._computedWatchers.searchResults.getter;
 
 
 
 
 
 
-         unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._computedWatchers.searchResults.getter=
+         unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._computedWatchers.searchResults.getter=
                  exportFunction(() => {
 
 
 
-           let returnedByComplexFilter= unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements;
+           let returnedByComplexFilter= unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements;
 
 
 
 
-            let query= unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].searchQuery;
+            let query= unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].searchQuery;
              // console.log("what filter returns",returnedByComplexFilter);
 
-          // unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].searchQuery=query;
+          // unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].searchQuery=query;
 
            let dummy=[...returnedByComplexFilter];
            if(usePosition)
@@ -241,7 +241,7 @@
             return cloneInto(dummy,unsafeWindow);
            }
            else
-           return cloneInto(complexFilter.call(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]),unsafeWindow);
+           return cloneInto(complexFilter.call(unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]),unsafeWindow);
 
 
 

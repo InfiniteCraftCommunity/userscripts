@@ -10,8 +10,8 @@
 // @grant			GM.setValue
 // @grant			GM.xmlHttpRequest
 // @grant			unsafeWindow
-// @version     1.0
-// @author      Alexander_Andercou
+// @version     1.1
+// @author      Alexander_Andercou, Mikarific
 // @description 4/29/2024, 7:40:08 AM
 // ==/UserScript==
 
@@ -383,7 +383,7 @@
 
 
             cloneElement.addEventListener('mousedown', (e) => {
-                //  console.log(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].elements.filter);
+                //  console.log(unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].elements.filter);
 
 
 
@@ -400,7 +400,7 @@
                     buildFolder(element2);
 
                 } else {
-                    console.log(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].selectElement(e, element));
+                    console.log(unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].selectElement(e, element));
 
 
 
@@ -493,7 +493,7 @@
             if (folderName == null)
                 folderName = folders[mode];
             if (!e.shiftKey) {
-                console.log(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].selectElement(e, element));
+                console.log(unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].selectElement(e, element));
             } else {
                 foldersData[folderName] = foldersData[folderName].filter(item => item.text != element.text);
                 localStorage.setItem("folderStructure", JSON.stringify(foldersData));

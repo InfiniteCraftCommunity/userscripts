@@ -4,8 +4,8 @@
 // @match       https://neal.fun/infinite-craft/*
 // @grant       none
 // @require     https://unpkg.com/wanakana
-// @version     1.0
-// @author      Alexander_Andercou
+// @version     1.1
+// @author      Alexander_Andercou, Mikarific
 // @description 8/28/2024, 10:45:04 PM
 // ==/UserScript==
 
@@ -54,7 +54,7 @@
           item.appendChild(document.createTextNode(` ${element.text} `));
           item.style.display="inline-block";
           item.addEventListener('mousedown', (e) => {
-                unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].selectElement(e, element) ;
+                unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].selectElement(e, element) ;
 
           });
           return item;

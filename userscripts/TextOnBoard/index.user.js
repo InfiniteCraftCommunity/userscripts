@@ -4,8 +4,8 @@
 // @match       https://neal.fun/infinite-craft/*
 // @grant       unsafeWindow
 // @run-at      document-end
-// @version     0.2
-// @author      zeroptr
+// @version     0.3
+// @author      zeroptr, Mikarific
 // @downloadURL https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/TextOnBoard/index.user.js
 // @description Allows you to write text messages on the board
 // ==/UserScript==
@@ -22,7 +22,7 @@ let _textTool = false;
 const $ = {};
 
 window.addEventListener("load", () => {
-  IC = $nuxt.$root.$children[2].$children[0].$children[0];
+  IC = $nuxt.$root.$children[1].$children[0].$children[0];
   container = document.querySelector(".container");
 
   // compatibility

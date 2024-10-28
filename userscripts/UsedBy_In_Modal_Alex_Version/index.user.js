@@ -605,6 +605,22 @@
       while(craftsHeader.querySelector(".next-button"))
       craftsHeader.removeChild(craftsHeader.querySelector(".next-button"));
 
+    craftsHeader.insertBefore(nextTab,craftsHeader.querySelector(".close-button-container"));
+    let countElementDiv=document.createElement("div");
+      countElementDiv.style.color="var(--text-color)";
+      countElementDiv.appendChild(document.createTextNode((recipes[element.text]!=null?recipes[element.text].length.toString():"0")+ " recipes to make element"));
+      countElementDiv.classList.add("count-created");
+      if(craftsHeader.querySelector(".count-created")==undefined)
+        {  console.log("this happends");
+          craftsHeader.insertBefore( countElementDiv,nextTab);
+        }
+
+      else{
+         craftsHeader.replaceChild( countElementDiv,craftsHeader.querySelector(".count-created"));
+       }
+
+
+
 if(usedBy[element.text]!=null){
       img.src=arrow_svg;
       nextTab.appendChild(img);
@@ -619,20 +635,33 @@ if(usedBy[element.text]!=null){
               return openCraftsForElement(element);
 
           }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       craftsContainer.innerHTML = '';
 
         for(const [key, elems]  of Object.entries(usedBy[element.text])){
+
            let usedByDiv=document.createElement('div');
              //resolve the elements
-
                    elems[1]=key in cachedElements?cachedElements[key][1]:unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.find((e) => e.text == elems[1]);
 
 
-                   elems[0]=key in cachedElements?cachedElements[key][0]:unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.find((e) => e.text == elems[2]);
+                   elems[0]=key in cachedElements?cachedElements[key][0]:unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.find((e) => e.text == elems[0]);
 
 
               cachedElements[key]??=[elems[0],elems[1]];
-
 
         	const firstElement = elems[1];
           if(firstElement){
@@ -682,15 +711,7 @@ if(usedBy[element.text]!=null){
         }}
 
 
-
-
-
-      })
-
-      craftsHeader.insertBefore(nextTab,craftsHeader.querySelector(".close-button-container"));
-
-    }
-    if(usedBy[element.text]!=null){
+     if(usedBy[element.text]!=null){
       let countElementDiv=document.createElement("div");
       countElementDiv.style.color="var(--text-color)";
       countElementDiv.appendChild(document.createTextNode(Object.keys(usedBy[element.text])
@@ -704,6 +725,14 @@ if(usedBy[element.text]!=null){
       else
          craftsHeader.replaceChild( countElementDiv,craftsHeader.querySelector(".count-created"));
        }
+
+
+
+      })
+
+
+
+    }
 
 
 	    const titleEmoji = document.createElement('span');

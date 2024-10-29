@@ -13,6 +13,15 @@
 // ==/UserScript==
 
 window.addEventListener("load", async () => {
+
+
+  function sleep(ms = 0) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+
+
+
   if (window.location.host == "neal.fun") {
 
 
@@ -57,7 +66,7 @@ window.addEventListener("load", async () => {
               console.log(err);
             }
 
-
+        await sleep(500);
 
 
 

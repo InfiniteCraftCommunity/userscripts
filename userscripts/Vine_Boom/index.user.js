@@ -125,7 +125,7 @@ function makeAudio()
                                   {
                                       unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].getCraftResponse(e,o).then(a=>{
 
-                                             if(!a.isNew && "Nothing" != a.result && unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find(x=>x.text==a.result)){
+                                             if(!a.isNew && "Nothing" != a.result && unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.find(x=>x.text==a.result)){
 
                                        let center=unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].getCenterOfCraft(e,o);
 

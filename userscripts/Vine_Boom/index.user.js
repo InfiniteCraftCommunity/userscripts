@@ -106,28 +106,28 @@ function makeAudio()
   injectCSS();
 
 
-  unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].checkIntersections=function(e) {
+  unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].checkIntersections=function(e) {
                     var t = arguments.length > 1 && void 0 !== arguments[1] && arguments[1];
                     var response=""
-                    e.width && e.height || unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].calcInstanceSize(e);
-                    for (var n =(unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.instances).sort((function(a, b) {
+                    e.width && e.height || unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].calcInstanceSize(e);
+                    for (var n =(unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.instances).sort((function(a, b) {
                         return b.zIndex - a.zIndex
                     }
                     )), i = 0; i < n.length; i++)
                         if (n[i].id !== e.id) {
                             var o = n[i];
-                            if (o.width && o.height || unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].calcInstanceSize(o),
+                            if (o.width && o.height || unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].calcInstanceSize(o),
                             e.left < o.left + o.width && e.left + e.width > o.left && e.top < o.top + o.height && e.top + e.height > o.top)
                               {
                                  if(t && !o.disabled)
                                      return o;
                                 else
                                   {
-                                      unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCraftResponse(e,o).then(a=>{
+                                      unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].getCraftResponse(e,o).then(a=>{
 
                                              if(!a.isNew && "Nothing" != a.result && unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0]._data.elements.find(x=>x.text==a.result)){
 
-                                       let center=unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].getCenterOfCraft(e,o);
+                                       let center=unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].getCenterOfCraft(e,o);
 
                                         img.style.translate = "calc(".concat(center.x, "px - 48%) calc(").concat(center.y, "px - 50%)");
                                         console.log("explosion",e.top,e.left,img.style);
@@ -146,7 +146,7 @@ function makeAudio()
 
 
 
-                                    return unsafeWindow.$nuxt.$root.$children[2].$children[0].$children[0].craft(e, o);
+                                    return unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].craft(e, o);
 
                                   }
 

@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name	DBounce
-// @namespace	nat.is-a.dev, Mikarific
+// @namespace	nat.is-a.dev
 // @match	https://neal.fun/infinite-craft/*
 // @grant	unsafeWindow
 // @run-at	document-start
 // @version	1.1.2
-// @author	Natasquare
+// @author	Natasquare, Mikarific
 // @description	Adds input debouncing to the search bar and implements some other optimizations.
 // @downloadURL	https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/dbounce/index.user.js
 // @updateURL	https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/dbounce/index.user.js

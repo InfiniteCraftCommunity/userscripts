@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name	Mongolian Beef Script
-// @namespace	nat.is-a.dev, Mikarific
+// @namespace	nat.is-a.dev
 // @match	https://neal.fun/infinite-craft/*
 // @grant	unsafeWindow
 // @run-at	document-end
 // @version	1.6
-// @author	Natasquare
+// @author	Natasquare, Mikarific
 // @require	https://unpkg.com/wanakana
 // @description	Adds even more useful features to Infinite Craft.
 // ==/UserScript==

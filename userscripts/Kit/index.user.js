@@ -3,7 +3,7 @@
 // @match       https://neal.fun/infinite-craft/
 // @author      Catstone
 // @namespace   Catstone
-// @version     2.1
+// @version     2.2
 // @description Kit can literally make anything, apart from some stuff. Open the Console (Ctrl + Shift + I) and type revive(`words`) in there. Seperate multiple elements by new lines. To modify tools used, check out the settings at the top of the code.
 // ==/UserScript==
 
@@ -19,31 +19,106 @@
 
     const parallelBots = 15;          // more bots = less combining downtime, also means less understanding of what da hell is going on
 
+    const combineTime = 400;          // 400ms
+
     const addFailedSpellingsToElements = true;  // Cheats Failed Spellings in
+
+
+    const spellingTools = {
+        word: (x) =>  [
+            `${x}`, `"${x}"`, `'${x}'`
+        ],
+
+        letter2: (x) =>  [
+            `${x}`, `"${x}"`, `'${x}'`,
+            `String.append('${x}')`, `String.append('${x}');`, `String.append("${x}")`, `String.append("${x}");`,
+            `Append '${x}'`, `Append "${x}"`, `Append('${x}')`, `Append("${x}")`, `-${x}`, `‘${x}’`, `.${x}`,
+            `Seq.append('${x}')`, `String.append(\`${x}\`)`, `Append ${x}`, `String.append(${x})`
+        ],
+
+        letter1: (x) => [
+          ...spellingTools.letter2(x),  // Everything from 2 letter stuff should also work for 1 letter stuff
+          `U+${x.toLowerCase().charCodeAt(0).toString(16).padStart(4, '0')}`, `Append U+${x.toLowerCase().charCodeAt(0).toString(16).padStart(4, '0')}`,
+          `U+${x.toUpperCase().charCodeAt(0).toString(16).padStart(4, '0')}`, `Append U+${x.toUpperCase().charCodeAt(0).toString(16).padStart(4, '0')}`,
+          `The '${x}'`, `Mr. '${x}'`,
+
+        ],
+    }
+
+    const quickTools = {
+        removeMr: [
+            "Remove The Mr.", "Remove The Mr", "Remove Mr.", "Remove Mr",
+            "Removes The Mr.", "Removes The Mr", "Removes Mr.", "Removes Mr",
+            "Subtract The Mr.", "Subtract The Mr", "Subtract Mr.", "Subtract Mr",
+            "Delete The Mr.", "Delete The Mr", "Delete Mr.", "Delete Mr"
+        ],
+        removeAbcd: [
+            "Delete Abcd", "Delete The Abcd", "Delete Abcd.", "Delete The Abcd.",
+            "Remove Abcd", "Remove The Abcd",
+            "Without Abcd", "Without The Abcd",
+		        "\"remove Abcd\"", "Mr. Delete The Abcd"
+        ],
+        removeHi: [
+            "Remove Hi", "Remove The Hi", "Remove The Word Hi",
+            "Delete Hi", "Delete The Hi", "Delete The Word Hi",
+            "Without Hi", "Without The Hi", "Without The Word Hi",
+            "\"remove The Hi\"", "\"delete The Hi\"", "\"remove Hi\"",
+            "Remove The \"hi\"", "Delete The “hi”", "Delete First Word",
+            "Remove First Word"
+        ],
+        removeThe: [
+            "Remove The The", "Delete The The", "Remove The The The", "Delete First Word",
+		        "Remove First Word", "\"remove The The\"", "\"delete The The\"",
+		        "Without The The", "Remove The", "Delete The", "Without The", "Delete The With Spacing"
+        ],
+        removeQuote: [
+            "Delete The Quotation Mark", "Delete The Quotation Marks", "Remove The Quotation Mark", "Remove The Quotation Marks"
+        ],
+        removeHyphens: [
+            "Replace Hyphen With Spacing", "Delete The Hyphen", "Remove The Hyphen",
+		        "Delete The Hyphens", "Remove The Hyphens", "With Spacing", "With Spaces",
+		        "Remove Hyphen", "Delete Hyphen", "Without Hyphen", "Without Hyphens",
+		        "Without The Hyphen", "Subtract The Hyphen", "Without The Hyphens",
+		        "Replace Hyphen With Empty", "Replace Hyphen With Spaces", "Replace Hyphen With Nothing"
+        ],
+        prependHashtag: [
+            "Prepend Hashtag :3", "Pweaseprependhashtag", "Prepend Hashtag <3", "Prepend Hashtag :)", "Prepend Hashtag",
+			      "Pweaseprependhashtagorelse", "#pweaseprependhashtag", "Prepend Hashtag :) :<3", "Write A Hashtag In Front", "Hashtag The Hashtag", "Put This In Hashtag"
+        ],
+        removeHashtag: [
+            "Unplural", "Unpluralize", "Delete The Hyphen", "Remove The Hyphen", "Delete The Hashtag", "Capitalize"
+        ],
+        prependMr: [
+            "Prepend Mr.", "Prepends Mr.", "Prepend Mr", "Prepend The Mr.", "Prepend The Mr", "Mr. &", "Mr. .", "Mr. _", "Mr. '", "Mr.mr."
+        ],
+        quote: [
+            "\"quotation Mark\"", "\"quotation Marks\"", "\"prepend Quotation Mark\"", "\"prepend Quotation Marks\"",
+            "\"[/inst]\"", "\"[/st]\"", "\"[/nst]\"",
+        ],
+        appendSpace: [
+            "Append Space", "U+0020", "Append U+0020", ...spellingTools.letter1(' '), "Append The Space", "Append The U+0020", "U++0020", "Prepend Space", "Prepend U+0020"
+        ],
+
+    }
 
     const spellTechs = [              // every single spellTech the bot uses is listed here.
 	    {
           tech: '""',
           deSpell: (line) => [
-		          { start: `"${line}"`, goal: line,
-               tools: ["Delete The Quotation Mark", "Delete The Quotation Marks", "Remove The Quotation Mark", "Remove The Quotation Marks",
-		          	       line[0], line[0]+line[1], line[0]+line[1]+line[2], line[0]+line[1]+line[2]+line[3], line.split(" ")[0] ] },
-              { start: `"${line}"`, goal: `#${line}`,
-               tools: ["Prepend Hashtag :3", "Pweaseprependhashtag", "Prepend Hashtag <3", "Prepend Hashtag :)", "Prepend Hashtag",
-			                 "Pweaseprependhashtagorelse", "#pweaseprependhashtag", "Prepend Hashtag :) :<3", "Write A Hashtag In Front", "Hashtag The Hashtag", "Put This In Hashtag"] },
+		          { start: `"${line}"`,
+               tools: [...quickTools.removeQuote, line[0], line.slice(0, 2), line.slice(0, 3), line.slice(0, 4), line.split(" ")[0] ] },
 
-              { start: `#${line}`, goal: line,
-               tools: ["Unplural", "Unpluralize", "Delete The Hyphen", "Remove The Hyphen", "Delete The Hashtag",
-			                 "Capitalize", line[0], line[0]+line[1], line[0]+line[1]+line[2], line[0]+line[1]+line[2]+line[3], line.split(" ")[0] ] },
+              { start: `"${line}"`, goal: `#${line}`,
+               tools: [...quickTools.prependHashtag] },
+
+              { start: `#${line}`,
+               tools: [...quickTools.removeHashtag, line[0], line.slice(0, 2), line.slice(0, 3), line.slice(0, 4), line.split(" ")[0] ] },
 
               { start: `#${line}`, goal: `Mr. ${line}`,
-               tools: ["Prepend Mr.", "Prepends Mr.", "Prepend Mr", "Prepend The Mr.", "Prepend The Mr", "Mr. &", "Mr. .", "Mr. _", "Mr. '", "Mr.mr."] },
+               tools: [...quickTools.prependMr] },
 
-              { start: `Mr. ${line}`, goal: line,
-               tools: ["Remove The Mr.", "Remove The Mr", "Remove Mr.", "Remove Mr",
-                       "Removes The Mr.", "Removes The Mr", "Removes Mr.", "Removes Mr",
-                       "Subtract The Mr.", "Subtract The Mr", "Subtract Mr.", "Subtract Mr",
-                       "Delete The Mr.", "Delete The Mr", "Delete Mr.", "Delete Mr"] }
+              { start: `Mr. ${line}`,
+               tools: [...quickTools.removeMr] }
           ],
           aliveLength: 2,
           disabled: false,
@@ -52,63 +127,32 @@
       }, {
           tech: '"hi Mr. "',
           deSpell: (line) => [
-              { start: `"hi Mr. ${line}"`, goal: line,
-               tools: ["Remove The Hi Mr", "Remove The Hi Mr.", "Delete The Hi Mr.", "Remove The Hi Mrs.", '"delete The Hi Mr. "',
-                       "Remove The Mr.", "Remove The Mr", "Remove Mr.", "Remove Mr",
-                       "Removes The Mr.", "Removes The Mr", "Removes Mr.", "Removes Mr",
-                       "Subtract The Mr.", "Subtract The Mr", "Subtract Mr.", "Subtract Mr",
-                       "Delete The Mr.", "Delete The Mr", "Delete Mr.", "Delete Mr"] },
+              { start: `"hi Mr. ${line}"`,
+               tools: [...quickTools.removeMr, "Remove The Hi Mr", "Remove The Hi Mr.", "Delete The Hi Mr.", "Remove The Hi Mrs.", '"delete The Hi Mr. "'] },
 
               { start: `"hi Mr. ${line}"`, goal: `Mr. ${line}`,
-                tools: ["Remove Hi", "Remove The Hi", "Remove The Word Hi",
-                        "Delete Hi", "Delete The Hi", "Delete The Word Hi",
-                        "Without Hi", "Without The Hi", "Without The Word Hi",
-                        "\"remove The Hi\"", "\"delete The Hi\"", "\"remove Hi\"",
-                        "Remove The \"hi\"", "Delete The “hi”", "Delete First Word",
-                        "Remove First Word"] },
+               tools: [...quickTools.removeHi] },
 
-              { start: `Mr. ${line}`, goal: line,
-                tools: ["Remove The Mr.", "Remove The Mr", "Remove Mr.", "Remove Mr",
-                        "Removes The Mr.", "Removes The Mr", "Removes Mr.", "Removes Mr",
-                        "Subtract The Mr.", "Subtract The Mr", "Subtract Mr.", "Subtract Mr",
-                        "Delete The Mr.", "Delete The Mr", "Delete Mr.", "Delete Mr"] }
+              { start: `Mr. ${line}`,
+                tools: [...quickTools.removeMr] }
           ],
           disabled: false,
 
-
     	}, {
           tech: '"hi "',
-          deSpell: (line) => [
-		          "Remove Hi", "Remove The Hi", "Remove The Word Hi",
-              "Delete Hi", "Delete The Hi", "Delete The Word Hi",
-              "Without Hi", "Without The Hi", "Without The Word Hi",
-		          "\"remove The Hi\"", "\"delete The Hi\"", "\"remove Hi\"",
-		          "Remove The \"hi\"", "Delete The “hi”", "Delete First Word",
-		          "Remove First Word"
-          ],
+          deSpell: (line) => [...quickTools.removeHi],
           disabled: false,
 
 
       }, {
           tech: '"abcd"',
-          deSpell: (line) => [
-              "Delete Abcd", "Delete The Abcd", "Delete Abcd.", "Delete The Abcd."
-              "Remove Abcd", "Remove The Abcd",
-              "Without Abcd", "Without The Abcd",
-		          "\"remove Abcd\"", "Mr. Delete The Abcd"
-          ],
+          deSpell: (line) => [...quickTools.removeAbcd],
           disabled: false,
 
 
       }, {
           tech: '""',
-          deSpell: (line) => [
-              "Replace Hyphen With Spacing", "Delete The Hyphen", "Remove The Hyphen",
-		          "Delete The Hyphens", "Remove The Hyphens", "With Spacing", "With Spaces",
-		          "Remove Hyphen", "Delete Hyphen", "Without Hyphen", "Without Hyphens",
-		          "Without The Hyphen", "Subtract The Hyphen", "Without The Hyphens",
-		          "Replace Hyphen With Empty", "Replace Hyphen With Spaces", "Replace Hyphen With Nothing"
-          ],
+          deSpell: (line) => [...quickTools.removeHyphens],
           modifyLine: (line) => line.replace(/ /g, '-'),
           aliveLength: 2,
           disabled: false,
@@ -116,11 +160,7 @@
 
       }, {
           tech: '"the-"',
-          deSpell: [
-              "Remove The The", "Delete The The", "Remove The The The", "Delete First Word",
-		          "Remove First Word", "\"remove The The\"", "\"delete The The\"",
-		          "Without The The", "Remove The", "Delete The", "Without The", "Delete The With Spacing"
-          ],
+          deSpell: [...quickTools.removeThe],
           modifyLine: (line) => line.replace(/ /g, '-'),
           disabled: false,
       }
@@ -196,7 +236,7 @@
             const modifiedLine = spellTech.modifyLine ? spellTech.modifyLine(line) : line;
 
             if (!resultExists(spellTech.tech.splice(-1, modifiedLine)))
-                await splitWordChunkRevive(spellTech, modifiedLine)
+                await splitWordChunkRevive(spellTech, modifiedLine, line)
 
 
             if (!resultExists(line) && resultExists(spellTech.tech.splice(-1, modifiedLine))) {
@@ -227,10 +267,11 @@
     }
 
 
-    async function splitWordChunkRevive(spellTech, line) {
-        if (resultExists(spellTech.tech.slice(-1, line))) return;
+    async function splitWordChunkRevive(spellTech, line, realLine) {
         let start = 0;  // Tracks the starting position of each word
         for (let i = 0; i <= line.length; i++) {
+            if (resultExists(spellTech.tech.slice(-1, line)) || resultExists(line) || resultExists(realLine)) return;
+
             if (spacingChars.includes(line[i]) || i === line.length) {
                 const word = line.slice(start, i);
                 const spacingChar = line[start - 1] || "";
@@ -239,7 +280,7 @@
 
                 // if result exists or currentElement <= spellTech + aliveLength
                 if (!resultExists(currentGoal) && (resultExists(currentElement) || currentElement.length <= spellTech.tech.length + (spellTech.aliveLength ? spellTech.aliveLength : 1))) {
-                    await trySpellingQuotes(currentElement, spacingChar+word, spellTech.tech.length + 1);
+                    await trySpellingQuotes(currentElement, spacingChar+word, spellTech.tech.length + 1, realLine);
                 }
                 start = i + 1;
             }
@@ -248,9 +289,9 @@
 
 
 
-    async function trySpellingQuotes(start, word, aliveLength, fastMode = true) {
+    async function trySpellingQuotes(start, word, aliveLength, realLine, fastMode = true) {
         const goal = start.splice(-1, word);
-        if (resultExists(goal)) return true;
+        if (resultExists(goal) || resultExists(realLine)) return true;
         let lastSpelling = "";
         console.log("Try Spelling:", start, "and", word, "->", goal);
         for (let i = 0; i < word.length; i++) {
@@ -267,35 +308,53 @@
                     const lastStep = currentGoalUntilGoal[currentGoalUntilGoal.length - 1];
                     currentGoalUntilGoal.push(lastStep.splice(-1, char));
                 }
+                // If a result for an even later item already exists skip until there step by step
+                let skipOuter = false;
+                if (fastMode) for (const x of currentGoalUntilGoal) {
+                    if (resultExists(x)) {
+                      skipOuter = true;
+                      break;
+                    }
+                }
+                if (skipOuter) continue;
                 await tryCombine([currentSpelling],
                                  [
-                                   `${word}`, `"${word}"`, `'${word}'`,                                                           // "catstone"
-                                   `${word.slice(i)}`, `"${word.slice(i)}"`, `'${word.slice(i)}'`,                                // "stone"
-                                   `${word.slice(i, i + 2)}`, `"${word.slice(i, i + 2)}"`, `'${word.slice(i, i + 2)}'`,           // "st"
-                                   `String.append('${word.slice(i, i + 2)}')`, `String.append('${word.slice(i, i + 2)}');`,       // "st"
-                                   `String.append("${word.slice(i, i + 2)}")`, `String.append("${word.slice(i, i + 2)}");`,       // "st"
-                                   `${word.slice(0, i + 2)}`, `"${word.slice(0, i + 2)}"`, `'${word.slice(0, i + 2)}'`,           // "catst"
-                                   `${char}`, `'${char}'`, `"${char}"`,                                                           // "s"
-                                   `Append ${char}`, `Append '${char}'`, `Append "${char}"`,                                      // "s"
-                                   `String.append('${char}')`, `String.append('${char}');`,                                       // "s"
-                                   `String.append("${char}")`, `String.append("${char}");`,                                       // "s"
-                                   `${word.slice(0, i + 1)}`, `"${word.slice(0, i + 1)}"`, `'${word.slice(0, i + 1)}'`,           // "cats"
-                                   `String.append('${word.slice(i - 1, i + 1)}')`, `String.append('${word.slice(i - 1, i + 1)}');`,   // "ts"
-                                   `String.append("${word.slice(i - 1, i + 1)}")`, `String.append("${word.slice(i - 1, i + 1)}");`,   // "ts"
-                                   `The '${char}'`, `Mr. '${char}'`
+                                  // only do the first 3 in each 'category'
+                                  word,
+                                  ...spellingTools.letter2(word.slice(i, i + 2)).slice(0, 3),   // "st"
+                                  ...spellingTools.word(word).slice(1, 3),                      // "catstone"
+                                  ...spellingTools.word(word.slice(i)).slice(0, 3),             // "stone"
+                                  ...spellingTools.letter1(char).slice(0, 3),                   // "s"
+                                  ...spellingTools.word(word.slice(0, i + 1)).slice(0, 3),      // "cats"
+                                  ...spellingTools.word(word.slice(0, i + 2)).slice(0, 3),      // "catst"
+                                  `String.append('${word.slice(i - 1, i + 1)}')`, `String.append('${word.slice(i - 1, i + 1)}');`,   // "ts" (pretty much only for String.append(' A'))
+                                  `String.append("${word.slice(i - 1, i + 1)}")`, `String.append("${word.slice(i - 1, i + 1)}");`,   // "ts"
+                                  ...spellingTools.word(word.slice(0, -1)).slice(0, 3),         // "catston"
+                                  ...spellingTools.word(word.slice(0, -1)).slice(0, 3),         // "ston"
+
+                                  // Again, but this time do EVERYTHING
+                                  ...spellingTools.letter2(word.slice(i, i + 2)).slice(3),      // "st"
+                                  ...spellingTools.word(word).slice(3),                         // "catstone"
+                                  ...spellingTools.word(word.slice(i)).slice(3),                // "stone"
+                                  ...spellingTools.letter1(char).slice(3),                      // "s"
+                                  ...spellingTools.word(word.slice(0, i + 1)).slice(3),         // "cats"
+                                  ...spellingTools.word(word.slice(0, i + 2)).slice(3),         // "catst"
+                                  ...spellingTools.word(word.slice(0, -1)).slice(3),            // "catston"
+                                  ...spellingTools.word(word.slice(0, -1)).slice(3),            // "ston"
                                  ],
                                  fastMode ? currentGoalUntilGoal : [currentGoal, goal]);
             }
-            if (resultExists(goal)) return true;
+            if (resultExists(goal) || resultExists(realLine)) return true;
             if (resultExists(currentGoal)) lastSpelling = currentGoal;
         }
 
         // if it failed, try again but this time HARDER
         if (fastMode) {
-            await tryCombine([word], ["\"quotation Mark\"", "\"quotation Marks\"", "\"prepend Quotation Mark\"", "\"prepend Quotation Marks\"", "\"[/inst]\""], ["\""+word+"\""])
-            if (!resultExists(start.splice(-1, " ")))
-              await tryCombine([start], ["Append Space", "U+0020", "Append U+0020", "String.append(' ')", "String.append(\" \")", "Append The Space", "Append The U+0020", "U++0020", "Prepend Space", "Prepend U+0020"], [start.splice(-1, " ")])
-            return trySpellingQuotes(start, word, aliveLength, false);
+            if (!resultExists(`"${word}"`))
+                await tryCombine([word], [...quickTools.quote], [`"${word}"`])
+            if (word[0] === " " && !resultExists(start.splice(-1, " ")))
+                await tryCombine([start], [...quickTools.appendSpace], [start.splice(-1, " ")])
+            return trySpellingQuotes(start, word, aliveLength, realLine, false);
         }
         else failedToSpell(start.splice(-1, word), lastSpelling);
     }
@@ -325,10 +384,16 @@
             // console.log(`Combine: (logged) ${first} + ${second} = ${recipeExists(first, second)}`)
             return { result: recipeExists(first, second) }
         }
-        const waitingDelay = 400 - (Date.now() - lastCombination);
-        if (waitingDelay < 0) lastCombination = Date.now();
-        else lastCombination = Date.now() + waitingDelay;
-        await delay(waitingDelay)
+        const waitingDelay = Math.max(0, combineTime - (Date.now() - lastCombination));
+        lastCombination = Date.now() + waitingDelay;
+        await delay(waitingDelay);
+
+        if (recipeExists(first, second)) {
+            // console.log(`Combine: (logged) ${first} + ${second} = ${recipeExists(first, second)}`)
+            lastCombination -= combineTime;
+            return { result: recipeExists(first, second) }
+        }
+
         const response = await unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].getCraftResponse({ text: first }, { text: second });
         const [sortedFirst, sortedSecond] = [first.icCase(), second.icCase()].sort();
 
@@ -362,7 +427,7 @@
 
 
     function makeLineage(element, visited=[]) {
-        if (!element) return;
+        if (!element) return "";
         element = element.icCase()
         if (recipesRes[element]) {
             visited.push(element)

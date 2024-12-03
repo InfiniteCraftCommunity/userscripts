@@ -16,7 +16,7 @@
 
 
 (function() {
-	
+
 	let mapElements={}
     async function load_data(location) {
         const response = await fetch(`https://glcdn.githack.com/gameroman/infinite-craft/-/raw/main/base-elements/${location}.json`, {cache: 'no-store'});
@@ -31,8 +31,8 @@
             if (document.querySelector(".container").__vue__._data.elements.length > 0) {
                 clearInterval(inv);
 				mapElements={};
-				
-			
+
+
                 let items = Array.from(document.querySelectorAll(".item"));
                 green
 				.filter(elem=>{
@@ -41,15 +41,15 @@
 				})
 				.forEach((elem)=>{
 			    mapElements[elem.toLowerCase()]={"color":green_color};
-                
+
 				let instancesGreen = document.querySelector(".container").__vue__._data.instances.filter(x => x.text.toLowerCase() == elem.toLowerCase() && x.elem);
                 instancesGreen.forEach(x=> x.elem.style.color = green_color);
-                
+
                 let itemsGreen = items.filter(x => x.childNodes[1].data.trim().toLowerCase() == elem.trim().toLowerCase());
                 itemsGreen.forEach(x => x.style.color = green_color);
-						
+
 			     });
-             
+
                  red
 				 .filter(elem=>{
 				  let elemNode = document.querySelector(".container").__vue__._data.elements.find(x => x.text.toLowerCase() == elem.toLowerCase());
@@ -57,15 +57,15 @@
 				  })
 				  .forEach((elem)=>{
 				  mapElements[elem.toLowerCase()]={"color":red_color};
-			      
+
 				  let instancesRed = document.querySelector(".container").__vue__._data.instances.filter(x => x.text.toLowerCase() == elem.toLowerCase() && x.elem);
                   instancesRed.forEach((x) => { x.elem.style.color = red_color; });
-                  
+
 				  let itemsRed = items.filter(x => x.childNodes[1].data.trim().toLowerCase() == elem.trim().toLowerCase());
                   itemsRed.forEach(x => x.style.color = red_color);
                     });
-					
-                
+
+
             }
         }, 300);
     }
@@ -83,16 +83,16 @@
 					.filter(node=>node.id != "instance-0" && node.classList.contains("instance") && node.querySelector(".instance-emoji"))
 					.forEach(node=>{
 					  let instance = document.querySelector(".container").__vue__._data.instances.find(x => x.elem == node);
-                      if (instance) 
+                      if (instance)
 					  {
                        let elem = mapElements[instance.text.toLowerCase()];
-                       if (elem && elem.color)  
+                       if (elem && elem.color)
 					   {
                         node.style.color = elem.color;
                        }
                      }
 			})}}
-                          
+
             });
 
         instanceObserver.observe(document.getElementsByClassName("instances")[0], {

@@ -9,8 +9,6 @@
 // @match        https://neal.fun/infinite-craft/
 // @run-at       document-end
 // @grant        none
-// @downloadURL https://update.greasyfork.org/scripts/521691/IC%20Delete%20with%20regex.user.js
-// @updateURL https://update.greasyfork.org/scripts/521691/IC%20Delete%20with%20regex.meta.js
 // ==/UserScript==
 
 (function() {

@@ -4,6 +4,7 @@
 // @version       1.0
 // @author        Catstone
 // @namespace     Catstone
+// @downloadURL   https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/Depth%20Explorer/index.user.js
 // @grant         GM_getValue
 // @grant         GM_setValue
 // @description   Explores the deep depths of InfiniteCraft. Use `depthExplorer()` to start the bot. For all settings/commands, check the code itself!

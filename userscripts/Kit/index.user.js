@@ -3,7 +3,7 @@
 // @match       https://neal.fun/infinite-craft/
 // @author      Catstone
 // @namespace   Catstone
-// @version     2.2
+// @version     2.4
 // @description Kit can literally make anything, apart from some stuff. Open the Console (Ctrl + Shift + I) and type revive(`words`) in there. Seperate multiple elements by new lines. To modify tools used, check out the settings at the top of the code.
 // ==/UserScript==
 
@@ -23,6 +23,19 @@
 
     const addFailedSpellingsToElements = true;  // Cheats Failed Spellings in
 
+
+
+
+
+    // (["Delete", "Remove"], ["The", null], ["Mr."]) -> ["Delete The Mr.", "Delete Mr.", "Remove The Mr.", "Remove Mr." ]
+    function generateToolCombinations(...arrays) {
+        // Helper to recursively combine arrays
+        const recursion = (i, prefix) => {
+            if (i === arrays.length) return [prefix.trim()]; // Base case: return the final string
+    		return arrays[i].flatMap(option => recursion(i + 1, option ? `${prefix} ${option}` : prefix))
+        };
+        return recursion(0, ""); // Start combining from the first group
+    }
 
     const spellingTools = {
         word: (x) =>  [
@@ -47,24 +60,22 @@
 
     const quickTools = {
         removeMr: [
-            "Remove The Mr.", "Remove The Mr", "Remove Mr.", "Remove Mr",
-            "Removes The Mr.", "Removes The Mr", "Removes Mr.", "Removes Mr",
-            "Subtract The Mr.", "Subtract The Mr", "Subtract Mr.", "Subtract Mr",
-            "Delete The Mr.", "Delete The Mr", "Delete Mr.", "Delete Mr"
+            ...generateToolCombinations(["Delete", "Remove", "Removes", "Subtract"], ["The", null], ["Mr.", "Mr", "Mister"]),
+            // -> [ "Delete The Mr.", "Delete The Mr", "Delete The Mister", "Delete Mr.", "Delete Mr", "Delete Mister", "Remove The Mr.", "Remove The Mr", "Remove The Mister", "Remove Mr.", … ]
         ],
         removeAbcd: [
-            "Delete Abcd", "Delete The Abcd", "Delete Abcd.", "Delete The Abcd.",
-            "Remove Abcd", "Remove The Abcd",
-            "Without Abcd", "Without The Abcd",
-		        "\"remove Abcd\"", "Mr. Delete The Abcd"
+            ...generateToolCombinations(["Delete", "Remove", "Without"], ["The", null], ["Abcd", "Abcd.", "'abcd'"]),
+		        "\"remove Abcd\"", "Mr. Delete The Abcd",
         ],
         removeHi: [
-            "Remove Hi", "Remove The Hi", "Remove The Word Hi",
-            "Delete Hi", "Delete The Hi", "Delete The Word Hi",
-            "Without Hi", "Without The Hi", "Without The Word Hi",
+            ...generateToolCombinations(["Delete", "Remove", "Without"], ["The", null], ["Word", null], ["Hi"]),
             "\"remove The Hi\"", "\"delete The Hi\"", "\"remove Hi\"",
             "Remove The \"hi\"", "Delete The “hi”", "Delete First Word",
-            "Remove First Word"
+            "Remove First Word",
+        ],
+        removeHiMr: [
+            ...generateToolCombinations(["Delete", "Remove"], ["The", null], ["Hi Mr.", "Hi Mr", "Hi Mrs.", "Hi Mr."]),
+            '"delete The Hi Mr. "',
         ],
         removeThe: [
             "Remove The The", "Delete The The", "Remove The The The", "Delete First Word",
@@ -72,7 +83,7 @@
 		        "Without The The", "Remove The", "Delete The", "Without The", "Delete The With Spacing"
         ],
         removeQuote: [
-            "Delete The Quotation Mark", "Delete The Quotation Marks", "Remove The Quotation Mark", "Remove The Quotation Marks"
+            ...generateToolCombinations(["Delete", "Remove", "Without"], ["The", null], ["Quotation Mark", "Quotation Marks"]),
         ],
         removeHyphens: [
             "Replace Hyphen With Spacing", "Delete The Hyphen", "Remove The Hyphen",
@@ -100,6 +111,7 @@
         ],
 
     }
+    // console.log(quickTools)
 
     const spellTechs = [              // every single spellTech the bot uses is listed here.
 	    {
@@ -121,14 +133,14 @@
                tools: [...quickTools.removeMr] }
           ],
           aliveLength: 2,
-          disabled: false,
+          disabled: true,
 
 
       }, {
           tech: '"hi Mr. "',
           deSpell: (line) => [
               { start: `"hi Mr. ${line}"`,
-               tools: [...quickTools.removeMr, "Remove The Hi Mr", "Remove The Hi Mr.", "Delete The Hi Mr.", "Remove The Hi Mrs.", '"delete The Hi Mr. "'] },
+               tools: [...quickTools.removeMr, ...quickTools.removeHiMr] },
 
               { start: `"hi Mr. ${line}"`, goal: `Mr. ${line}`,
                tools: [...quickTools.removeHi] },
@@ -136,7 +148,7 @@
               { start: `Mr. ${line}`,
                 tools: [...quickTools.removeMr] }
           ],
-          disabled: false,
+          disabled: true,
 
     	}, {
           tech: '"hi "',
@@ -160,7 +172,7 @@
 
       }, {
           tech: '"the-"',
-          deSpell: [...quickTools.removeThe],
+          deSpell: (line) => [...quickTools.removeThe],
           modifyLine: (line) => line.replace(/ /g, '-'),
           disabled: false,
       }
@@ -174,16 +186,15 @@
 
 
 
-
-
-
-
-
-
-
     const recipesIng = [];
-    let recipesRes = [];
-    let emojiMap = [];
+    const recipesRes = [];
+    const emojiMap = new Map();
+    let elementStorageSet;
+
+
+    window.addEventListener('load', () => {
+        elementStorageSet = new Set(document.querySelector(".container").__vue__.elements.map(x => x.text));
+    });
 
     unsafeWindow.revive = async function (input) {
         const words = input.split('\n').filter(Boolean).map(x => x.trim())
@@ -193,7 +204,6 @@
         console.log(words.map(word => `Spelled: ${word}${makeLineage(word)}`).join('\n\n'));
         console.log("Revived Words:\n" + words.reduce((acc, line) => resultExists(line) ? acc + line + "\n" : acc, ""));
     }
-
 
     async function runReviveWords(lines) {
         const queue = [...lines];
@@ -226,11 +236,9 @@
 
         for (let j = 0; j < spellTechs.length; j++) {
             let spellTech = spellTechs[j];
-            if (spellTech.disabled) continue;
+            if (spellTech.disabled || line.length > 30 - spellTech.tech.length) continue;
 
-            console.log("reviving:", line, "using", spellTech)
-
-            if (line.length > 30 - spellTech.tech.length) return;
+            console.log("reviving:", line, "using", spellTech);
             if (finishedSpelling(line)) return;
 
             const modifiedLine = spellTech.modifyLine ? spellTech.modifyLine(line) : line;
@@ -321,6 +329,7 @@
                                  [
                                   // only do the first 3 in each 'category'
                                   word,
+                                  ...(char === " " ? quickTools.appendSpace : []),
                                   ...spellingTools.letter2(word.slice(i, i + 2)).slice(0, 3),   // "st"
                                   ...spellingTools.word(word).slice(1, 3),                      // "catstone"
                                   ...spellingTools.word(word.slice(i)).slice(0, 3),             // "stone"
@@ -352,8 +361,6 @@
         if (fastMode) {
             if (!resultExists(`"${word}"`))
                 await tryCombine([word], [...quickTools.quote], [`"${word}"`])
-            if (word[0] === " " && !resultExists(start.splice(-1, " ")))
-                await tryCombine([start], [...quickTools.appendSpace], [start.splice(-1, " ")])
             return trySpellingQuotes(start, word, aliveLength, realLine, false);
         }
         else failedToSpell(start.splice(-1, word), lastSpelling);
@@ -401,7 +408,7 @@
         if (!recipesRes[response.result]) recipesRes[response.result] = [];
         recipesRes[response.result].push([sortedFirst, sortedSecond]);
 
-        if (!emojiMap[response.result]) emojiMap[response.result] = response;
+        if (!emojiMap.has(response.result)) emojiMap.set(response.result, response);
 
         // console.log(`Combine: (request) ${first} + ${second} = ${response ? response.result : response}`)
         return response;
@@ -441,8 +448,9 @@
     }
 
     function addElementToStorage(elementText) {
-        if (!elementText || !emojiMap[elementText] || window.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements.some(elem => elem.text === elementText)) return;
-        const element = emojiMap[elementText];
+        if (!elementText || !emojiMap.has(elementText) || elementStorageSet.has(elementText)) return;
+        elementStorageSet.add(elementText);
+        const element = emojiMap.get(elementText);
 
 
         unsafeWindow.$nuxt._route.matched[0].instances.default.elements.push(element);
@@ -465,10 +473,19 @@
         if (result) return recipesRes[result.icCase()];
     }
 
+
+    const icCasedLookup = new Map();  // optimization to store icCased Elements
     String.prototype.icCase = function () {
-        return this.split('').map((char, index, arr) =>
-            index === 0 || arr[index - 1] === ' ' ? char.toUpperCase() : char.toLowerCase()
-        ).join('');
+        if (icCasedLookup.has(this)) return icCasedLookup.get(this);
+
+        let result = '';
+        for (let i = 0; i < this.length; i++) {
+            const char = this[i];
+            result += (i === 0 || this[i - 1] === ' ') ? char.toUpperCase() : char.toLowerCase()
+        }
+
+        icCasedLookup.set(this, result);
+        return result;
     };
 
     String.prototype.splice = function(start, newSubStr, delCount = 0) {

@@ -58,10 +58,14 @@
         ],
 
         letter1: (x) => [
-          ...spellingTools.letter2(x),  // Everything from 2 letter stuff should also work for 1 letter stuff
-          `U+${x.toLowerCase().charCodeAt(0).toString(16).padStart(4, '0')}`, `Append U+${x.toLowerCase().charCodeAt(0).toString(16).padStart(4, '0')}`,
-          `U+${x.toUpperCase().charCodeAt(0).toString(16).padStart(4, '0')}`, `Append U+${x.toUpperCase().charCodeAt(0).toString(16).padStart(4, '0')}`,
-          `The '${x}'`, `Mr. '${x}'`,
+            ...spellingTools.letter2(x),  // Everything from 2 letter stuff should also work for 1 letter stuff
+            `U+${x.toLowerCase().charCodeAt(0).toString(16).padStart(4, '0')}`,
+            `Append U+${x.toLowerCase().charCodeAt(0).toString(16).padStart(4, '0')}`,
+
+            `U+${x.toUpperCase().charCodeAt(0).toString(16).padStart(4, '0')}`,
+            `Append U+${x.toUpperCase().charCodeAt(0).toString(16).padStart(4, '0')}`,
+
+            `The '${x}'`, `Mr. '${x}'`,
         ],
     };
 
@@ -131,26 +135,23 @@
             '"[/inst]"', '"[/st]"', '"[/nst]"',
         ],
         appendSpace: [
-            "U+0020",
 
-            ...generateToolCombinations(["Append"], ["The", null], ["Space", "U+0020"]),
-
-            ...spellingTools.letter1(' '),
-
-            "U++0020", "Prepend Space", "Prepend U+0020"
         ],
     };
 
 
     const charAliases = {
         " ": [
-            "Append Space", // and other space append tools
+            "U+0020",
+
+            ...generateToolCombinations(["Append"], ["The", null], ["Space", "U+0020"]),
+
+            "U++0020", "Prepend Space", "Prepend U+0020"
         ],
         "-": [
             "Append Hyphen" // and other hyphen append tools
         ],
     };
-
 
 
     // every single spellTech the bot uses is listed here.

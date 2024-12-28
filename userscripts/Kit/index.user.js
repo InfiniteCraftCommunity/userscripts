@@ -396,7 +396,7 @@
                      [
                       // only do the first 3 in each 'category'
                       word,
-                      ...charAliases[char],
+                      ...(charAliases[char] || []),
 
                       ...spellingTools.letter2(word.slice(i, i + 2)).slice(0, 3),   // "st"
                       ...spellingTools.word(word).slice(1, 3),                      // "catstone"

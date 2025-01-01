@@ -1,9 +1,9 @@
 // ==UserScript==
-// @name        ULTIMATE reviver (WOW)
+// @name        ULTIMATE reviver (KIT)
 // @match       https://neal.fun/infinite-craft/
 // @author      Catstone
 // @namespace   Catstone
-// @version     2.4
+// @version     2.5
 // @description Kit can literally make anything, apart from some stuff. Open the Console (Ctrl + Shift + I) and type revive(`words`) in there. Seperate multiple elements by new lines. To modify tools used, check out the settings at the top of the code.
 // ==/UserScript==
 
@@ -15,13 +15,21 @@
 
 
     // Settings
-    const spacingChars = [' ', '-'];  // the bot splits the line into chunks so its easier to revive: "A Cat Loves-Food" -> "A", "Cat", "Loves", "Food"
+    const spacingChars = new Set([' ', '-']);  // the bot splits the line into chunks so its easier to revive: "A Cat Loves-Food" -> "A", "Cat", "Loves", "Food"
 
     const parallelBots = 15;          // more bots = less combining downtime, also means less understanding of what da hell is going on
 
     const combineTime = 400;          // 400ms
 
-    const addFailedSpellingsToElements = true;  // Cheats Failed Spellings in
+
+    const addSuccessfulSpellingsToElements = true;  // Adds Successful spellings to sidebar
+    const addFailedSpellingsToElements = true;      // Adds Failed Spellings to sidebar
+
+    const logMessages = true;         // wether it logs what its doing
+
+
+    const Window = unsafeWindow || window;    // change this to window if you are on mobile i guess
+
 
 
 
@@ -37,40 +45,46 @@
         return recursion(0, ""); // Start combining from the first group
     }
 
-    const spellingTools = {
-        word: (x) =>  [
+    const spellTools = {
+        word: (x) =>  x !== ''
+        ? [
             `${x}`, `"${x}"`, `'${x}'`
-        ],
+        ] : [],
 
-        letter2: (x) =>  [
+        letter2: (x) =>  x !== ''
+        ? [
             `${x}`, `"${x}"`, `'${x}'`,
             `String.append('${x}')`, `String.append('${x}');`, `String.append("${x}")`, `String.append("${x}");`,
             `Append '${x}'`, `Append "${x}"`, `Append('${x}')`, `Append("${x}")`, `-${x}`, `‘${x}’`, `.${x}`,
-            `Seq.append('${x}')`, `String.append(\`${x}\`)`, `Append ${x}`, `String.append(${x})`
-        ],
+            `Seq.append('${x}')`, `String.append(\`${x}\`)`, `Append ${x}`, `String.append(${x})`,
+            `Mr. String.append('${x}')`, `Mr. String.append('${x}');`, `Mr. String.append("${x}")`, `Mr. String.append("${x}");`,
+            `Append ${x}`, `-${x}`, `.${x}`, `String.format('${x}')`, `String.format('${x}');`, `String.format("${x}")`, `String.format("${x}");`,
+            `Mr. String.format('${x}')`, `Mr. String.format('${x}');`, `Mr. String.format("${x}")`, `Mr. String.format("${x}");`,
+        ] : [],
 
-        letter1: (x) => [
-          ...spellingTools.letter2(x),  // Everything from 2 letter stuff should also work for 1 letter stuff
+        letter1: (x) => x !== ''
+        ? [
+          ...spellTools.letter2(x),  // Everything from 2 letter stuff should also work for 1 letter stuff
           `U+${x.toLowerCase().charCodeAt(0).toString(16).padStart(4, '0')}`, `Append U+${x.toLowerCase().charCodeAt(0).toString(16).padStart(4, '0')}`,
           `U+${x.toUpperCase().charCodeAt(0).toString(16).padStart(4, '0')}`, `Append U+${x.toUpperCase().charCodeAt(0).toString(16).padStart(4, '0')}`,
           `The '${x}'`, `Mr. '${x}'`,
-
-        ],
+        ] : [],
     }
 
-    const quickTools = {
+    const tools = {
         removeMr: [
-            ...generateToolCombinations(["Delete", "Remove", "Removes", "Subtract"], ["The", null], ["Mr.", "Mr", "Mister"]),
+            ...generateToolCombinations(["Remove", "Removes", "Subtract", "Delete", "Without"], ["The", null], ["Mr.", "Mr", "Mister"]),
             // -> [ "Delete The Mr.", "Delete The Mr", "Delete The Mister", "Delete Mr.", "Delete Mr", "Delete Mister", "Remove The Mr.", "Remove The Mr", "Remove The Mister", "Remove Mr.", … ]
+            '"remove Mr."', '"remove The Mr."', '"removes Mr."', '"removes The Mr."',
         ],
         removeAbcd: [
             ...generateToolCombinations(["Delete", "Remove", "Without"], ["The", null], ["Abcd", "Abcd.", "'abcd'"]),
-		        "\"remove Abcd\"", "Mr. Delete The Abcd",
+		        '"remove Abcd"', "Mr. Delete The Abcd",
         ],
         removeHi: [
-            ...generateToolCombinations(["Delete", "Remove", "Without"], ["The", null], ["Word", null], ["Hi"]),
-            "\"remove The Hi\"", "\"delete The Hi\"", "\"remove Hi\"",
-            "Remove The \"hi\"", "Delete The “hi”", "Delete First Word",
+            ...generateToolCombinations(["Delete", "Remove", "Without", "Deletes"], ["The", null], ["Word", null], ["Hi", "'hi'"]),
+            '"remove The Hi"', '"delete The Hi"', '"remove Hi"',
+            'Remove The "hi"', "Delete The “hi”", "Delete First Word",
             "Remove First Word",
         ],
         removeHiMr: [
@@ -104,78 +118,138 @@
         ],
         quote: [
             "\"quotation Mark\"", "\"quotation Marks\"", "\"prepend Quotation Mark\"", "\"prepend Quotation Marks\"",
-            "\"[/inst]\"", "\"[/st]\"", "\"[/nst]\"",
+            "\"[/inst]\"", "\"[/st]\"", "\"[/nst]\"", "Put This In Quotation Marks", "Put Them In Quotation Marks",
+            '"put This In Quotation Marks"',
         ],
-        appendSpace: [
-            "Append Space", "U+0020", "Append U+0020", ...spellingTools.letter1(' '), "Append The Space", "Append The U+0020", "U++0020", "Prepend Space", "Prepend U+0020"
+        customAppendCharacterTools: {
+            " ": ["Append Space", "U+0020", "Append U+0020", "Append The Space", "Append The U+0020", "U++0020", "Prepend Space", "Prepend U+0020"],
+            "-": ["Append Hyphen", "Append-hyphen", "Add Hyphen", "Insert Dash"],
+        },
+        customAppendCharacter(char) {
+            // Return tools for the specific character or an empty array if not found
+            return this.customAppendCharacterTools[char] || [];
+        },
+        quirkyQuote: (quote) => [
+            quote, quote.splice(-1, ' '), quote.splice(-1, 'quotation Mark'), quote.splice(-1, 'quotation Marks'), quote.splice(-1, 'put This In Quotation Marks'), quote.splice(-1, 'put Them In Quotation Marks'),
+            quote.splice(-1, '[/inst]'), quote.splice(-1, '[/st]'),
+            ..."abcdefghijklmnopqrstuvwxyz!\"#$%&'()*+,-./0123456789".split('').flatMap(x => quote.splice(-1, x))
         ],
+        addParentheses: (parent) => [
+            parent, parent.splice(-1, 'prepend Left Parenthesis'), parent.splice(-1, 'prepend Left Parentheses'), parent.splice(-1, 'prepend Opening Parenthesis'), parent.splice(-1, 'prepend Opening Parentheses'),
+            ...generateToolCombinations(["Prepend"], ["Left", "Opening", null], ["Parenthesis", "Parentheses", "Bracket", "Braces"]),
+            "Prepend " + parent.splice(-1, 'parenthesis'), "Prepend " + parent.splice(-1, 'parentheses'), "Append " + parent.splice(-1, 'parenthesis'), "Append " + parent.splice(-1, 'parentheses'),
+            parent.splice(-1, ' '), parent.splice(-1, 'parenthesis'), parent.splice(-1, 'parentheses'), parent.splice(-1, 'put This In Parenthesis'), parent.splice(-1, 'put This In Parentheses'),
+        ]
 
     }
-    // console.log(quickTools)
+    // console.log(tools)
 
-    const spellTechs = [              // every single spellTech the bot uses is listed here.
+
+    // every single spellTech the bot uses is listed here.
+    const spellTechs = [
 	    {
-          tech: '""',
-          deSpell: (line) => [
-		          { start: `"${line}"`,
-               tools: [...quickTools.removeQuote, line[0], line.slice(0, 2), line.slice(0, 3), line.slice(0, 4), line.split(" ")[0] ] },
-
-              { start: `"${line}"`, goal: `#${line}`,
-               tools: [...quickTools.prependHashtag] },
-
-              { start: `#${line}`,
-               tools: [...quickTools.removeHashtag, line[0], line.slice(0, 2), line.slice(0, 3), line.slice(0, 4), line.split(" ")[0] ] },
-
-              { start: `#${line}`, goal: `Mr. ${line}`,
-               tools: [...quickTools.prependMr] },
-
-              { start: `Mr. ${line}`,
-               tools: [...quickTools.removeMr] }
-          ],
-          aliveLength: 2,
-          disabled: true,
-
-
-      }, {
           tech: '"hi Mr. "',
           deSpell: (line) => [
               { start: `"hi Mr. ${line}"`,
-               tools: [...quickTools.removeMr, ...quickTools.removeHiMr] },
+               tools: [...tools.removeMr, ...tools.removeHiMr] },
 
               { start: `"hi Mr. ${line}"`, goal: `Mr. ${line}`,
-               tools: [...quickTools.removeHi] },
+               tools: [...tools.removeHi] },
 
               { start: `Mr. ${line}`,
-                tools: [...quickTools.removeMr] }
+                tools: [...tools.removeMr] }
           ],
-          disabled: true,
+          disabled: false,
 
     	}, {
           tech: '"hi "',
-          deSpell: (line) => [...quickTools.removeHi],
+          deSpell: (line) => [...tools.removeHi],
           disabled: false,
 
 
       }, {
           tech: '"abcd"',
-          deSpell: (line) => [...quickTools.removeAbcd],
+          deSpell: (line) => [...tools.removeAbcd],
           disabled: false,
 
 
       }, {
           tech: '""',
-          deSpell: (line) => [...quickTools.removeHyphens],
-          modifyLine: (line) => line.replace(/ /g, '-'),
+          deSpell: (line) => [
+		          { start: `"${line}"`,
+               tools: [...tools.removeQuote, line[0], line.slice(0, 2), line.slice(0, 3), line.slice(0, 4), line.split(" ")[0] ] },
+
+              { start: `"${line}"`, goal: `#${line}`,
+               tools: [...tools.prependHashtag] },
+
+              { start: `#${line}`,
+               tools: [...tools.removeHashtag, line[0], line.slice(0, 2), line.slice(0, 3), line.slice(0, 4), line.split(" ")[0] ] },
+
+              { start: `#${line}`, goal: `Mr. ${line}`,
+               tools: [...tools.prependMr] },
+
+              { start: `Mr. ${line}`,
+               tools: [...tools.removeMr] }
+          ],
+          aliveLength: 2,
+          disabled: false,
+
+
+      }, {
+          tech: '""',
+          deSpell: (line) => [...tools.removeHyphens],
+          modifyElement: (line) => line.replace(/ /g, '-'),
           aliveLength: 2,
           disabled: false,
 
 
       }, {
           tech: '"the-"',
-          deSpell: (line) => [...quickTools.removeThe],
-          modifyLine: (line) => line.replace(/ /g, '-'),
+          deSpell: (line) => [...tools.removeThe],
+          modifyElement: (line) => line.replace(/ /g, '-'),
           disabled: false,
       }
+    ];
+
+
+
+
+
+    const customReviveRules = [
+      {
+        code: async (element) => {
+            const quotes = ['""', "''", '``'];
+            const convertableQuotes = ['“”', '❝❞', '‘’'];
+            const parentheses = ['()', '[]', '{}'];
+
+            for (const quote of [...quotes, ...convertableQuotes, ...parentheses]) {
+                if (!element.startsWith(quote[0]) || !element.endsWith(quote[1])) continue;
+
+                const strippedElement = element.slice(1, -1);
+
+                if ([...convertableQuotes, ...parentheses].includes(quote)) {
+                    await chunkRevive({ tech: '""' }, strippedElement, element);
+                    if (convertableQuotes.includes(quote)) {
+                        await deSpell({ tech: '""', deSpell: (line) => [...tools.quirkyQuote(quote)] }, strippedElement, element);
+                    }
+                    else if (parentheses.includes(quote)) {
+                        await deSpell({ tech: '""', deSpell: (line) => [...tools.addParentheses(quote)] }, strippedElement, element);
+                    }
+                }
+
+                await chunkRevive({ tech: quote }, strippedElement, element);
+
+                return { stopAfter: true };
+            }
+        },
+        disabled: false,
+
+      }, {
+        code: async (element) => {
+
+        },
+        disabled: false,
+      },
     ];
 
 
@@ -186,277 +260,310 @@
 
 
 
-    const recipesIng = [];
-    const recipesRes = [];
+
+
+
+
+
+
+    const recipesIng = {};
+    const recipesRes = new Map();
+    // const aliveSet = new Set();   // elements from results or ingredients of recipes (not implementing because zombies mess this up sometimes :(( )
     const emojiMap = new Map();
-    let elementStorageSet;
-
-
+    const failedSpellingsMap = new Map();
+    let elementStorageSet = new Set();
     window.addEventListener('load', () => {
-        elementStorageSet = new Set(document.querySelector(".container").__vue__.elements.map(x => x.text));
+        if (addFailedSpellingsToElements || addSuccessfulSpellingsToElements) elementStorageSet = new Set(document.querySelector(".container").__vue__.elements.map(x => x.text));
+
+        Window.revive = async function (input) {
+            const elems = input.split('\n').filter(Boolean).map(x => x.trim())
+            console.log("Revive called with words:", elems);
+
+            await reviveElements(elems);
+
+            console.log("Revived (lineages)\n" + elems.filter(x => resultExists(x)).map(x => `Revived: ${x}${makeLineage(x)}`).join('\n\n'));
+
+            console.log(`Successfully Revived Elements:\n${elems.filter(x => resultExists(x)).join('\n')}`);
+            console.log(`Failed to Revive Elements:\n${elems.filter(x => !resultExists(x)).join('\n')}`);
+        }
     });
 
-    unsafeWindow.revive = async function (input) {
-        const words = input.split('\n').filter(Boolean).map(x => x.trim())
-        console.log("Revive called with words:", words);
 
-        await runReviveWords(words);
-        console.log(words.map(word => `Spelled: ${word}${makeLineage(word)}`).join('\n\n'));
-        console.log("Revived Words:\n" + words.reduce((acc, line) => resultExists(line) ? acc + line + "\n" : acc, ""));
-    }
 
-    async function runReviveWords(lines) {
-        const queue = [...lines];
-        const promises = [];
+
+
+    async function reviveElements(elements) {
+        // parallelizing stuff (very gamer)
+        const queue = [...elements];
 
         async function worker() {
-            while (queue.length > 0) await tryToReviveWord(queue.shift());
+            while (queue.length > 0) await reviveElement(queue.shift());
         }
 
-        for (let i = 0; i < parallelBots; i++) promises.push(worker());
-
-        await Promise.all(promises);
+        const workers = Array(parallelBots).fill(worker());
+        await Promise.all(workers);
     }
 
 
-    async function tryToReviveWord(line) {
-        console.log("starting to revive word:", line)
 
-        const quoteChars = ['""', "''", "``", "“”"];
+    async function reviveElement(element) {
+        if (logMessages) console.log("starting to revive element:", element);
 
-        // Check if line is quoted with any of the characters in quoteChars
-        for (const quote of quoteChars) {
-            if (line.startsWith(quote[0]) && line.endsWith(quote[1])) {
-                await splitWordChunkRevive({ tech: quote }, line.slice(1, -1))
-                finishedSpelling(line, line)
-                return;
+        for (const customRule of customReviveRules) {
+            const returnValue = await customRule.code(element);
+
+            if (returnValue) {
+                if (finishedSpelling(element)) return;
+
+                if (returnValue.stopAfter) {
+                    failedToSpell(element);
+                    return;
+                }
             }
         }
 
 
-        for (let j = 0; j < spellTechs.length; j++) {
-            let spellTech = spellTechs[j];
-            if (spellTech.disabled || line.length > 30 - spellTech.tech.length) continue;
+        for (const spellTech of spellTechs) {
+            if (spellTech.disabled || element.length > 30 - spellTech.tech.length) continue;
 
-            console.log("reviving:", line, "using", spellTech);
-            if (finishedSpelling(line)) return;
+            const modifiedElement = spellTech.modifyElement ? spellTech.modifyElement(element) : element;
 
-            const modifiedLine = spellTech.modifyLine ? spellTech.modifyLine(line) : line;
+            await chunkRevive(spellTech, modifiedElement, element);
+            await deSpell(spellTech, modifiedElement, element);
 
-            if (!resultExists(spellTech.tech.splice(-1, modifiedLine)))
-                await splitWordChunkRevive(spellTech, modifiedLine, line)
-
-
-            if (!resultExists(line) && resultExists(spellTech.tech.splice(-1, modifiedLine))) {
-                let currentElement = spellTech.tech.splice(-1, modifiedLine);
-                let deSpellSteps = spellTech.deSpell(line);
-
-                // If no advanced stuff with start and goal
-                if (!deSpellSteps[0].tools) {
-                    await tryCombine([currentElement], deSpellSteps, [line]);
-                }
-                else {
-                    for (let k = 0; k < deSpellSteps.length; k++) {
-                        const deSpellStep = deSpellSteps[k];
-                        const start = deSpellStep.start ? deSpellStep.start : currentElement;
-                        const goal = deSpellStep.goal ? deSpellStep.goal : line;
-
-                        console.log("Attempting deSpell:", deSpellStep, "for", start, "->", goal);
-
-                        if (resultExists(start) && !resultExists(goal)) {
-                            await tryCombine([start], deSpellStep.tools, [goal, line]);
-                        }
-                        if (finishedSpelling(line)) return;
-                    }
-                }
-            }
-            if (finishedSpelling(line, spellTech.tech.splice(-1, modifiedLine))) return;
+            if (finishedSpelling(element)) return;
         }
+        failedToSpell(element);
     }
 
 
-    async function splitWordChunkRevive(spellTech, line, realLine) {
-        let start = 0;  // Tracks the starting position of each word
-        for (let i = 0; i <= line.length; i++) {
-            if (resultExists(spellTech.tech.slice(-1, line)) || resultExists(line) || resultExists(realLine)) return;
 
-            if (spacingChars.includes(line[i]) || i === line.length) {
-                const word = line.slice(start, i);
-                const spacingChar = line[start - 1] || "";
-                const currentElement = spellTech.tech.splice(-1, line.slice(0, start - spacingChar.length));
-                const currentGoal = spellTech.tech.splice(-1, line.slice(0, i));
+    function finishedSpelling(element) {
+        if (resultExists(element)) {
+            element = element.icCase();
+            console.log(`Finished spelling: ${element}${makeLineage(element)}`)
+            if (addSuccessfulSpellingsToElements) addElementToStorage(element);
+            return true;
+        }
+    }
 
-                // if result exists or currentElement <= spellTech + aliveLength
-                if (!resultExists(currentGoal) && (resultExists(currentElement) || currentElement.length <= spellTech.tech.length + (spellTech.aliveLength ? spellTech.aliveLength : 1))) {
-                    await trySpellingQuotes(currentElement, spacingChar+word, spellTech.tech.length + 1, realLine);
-                }
-                start = i + 1;
-            }
+    function addFailedSpelling(element, failedSpelling) {
+        element = element.icCase();
+        if (!failedSpellingsMap.has(element)) failedSpellingsMap.set(element, [])
+        failedSpellingsMap.get(element).push(failedSpelling);
+    }
+
+    function failedToSpell(element) {
+        element = element.icCase();
+        if (failedSpellingsMap.has(element)) {
+            const failedSpellings = failedSpellingsMap.get(element).map(x => x.icCase());
+            console.log(`Failed to spell ${element} with all kinds of tools... I guess i'm not powerful enough :(\nThese were the failed spellings:\n${failedSpellings.join('\n')}`);
+            if (addFailedSpellingsToElements) failedSpellings.forEach(x => addElementToStorage(x));
         }
     }
 
 
 
-    async function trySpellingQuotes(start, word, aliveLength, realLine, fastMode = true) {
-        const goal = start.splice(-1, word);
-        if (resultExists(goal) || resultExists(realLine)) return true;
-        let lastSpelling = "";
-        console.log("Try Spelling:", start, "and", word, "->", goal);
-        for (let i = 0; i < word.length; i++) {
-            const char = word.charAt(i);
-            const currentSpelling = start.splice(-1, word.slice(0, i));
-            const currentGoal = start.splice(-1, word.slice(0, i+1));
+    async function chunkRevive(spellTech, element, realElement) {
+        const goal = spellTech.tech.splice(-1, element);
+        let currentWordStart = 0;
+        let currentWordEnd = 0;
 
-            if (!resultExists(goal) && (resultExists(currentSpelling) || currentSpelling.length <= aliveLength)) {
+        let lastExistingSpelling = spellTech.tech;
 
 
-                // generate this: ["C", "Ca", "Cat"]
-                const currentGoalUntilGoal = [currentGoal];
-                for (const char of word.slice(i+1)) {
-                    const lastStep = currentGoalUntilGoal[currentGoalUntilGoal.length - 1];
-                    currentGoalUntilGoal.push(lastStep.splice(-1, char));
-                }
-                // If a result for an even later item already exists skip until there step by step
-                let skipOuter = false;
-                if (fastMode) for (const x of currentGoalUntilGoal) {
-                    if (resultExists(x)) {
-                      skipOuter = true;
-                      break;
-                    }
-                }
-                if (skipOuter) continue;
-                await tryCombine([currentSpelling],
-                                 [
-                                  // only do the first 3 in each 'category'
-                                  word,
-                                  ...(char === " " ? quickTools.appendSpace : []),
-                                  ...spellingTools.letter2(word.slice(i, i + 2)).slice(0, 3),   // "st"
-                                  ...spellingTools.word(word).slice(1, 3),                      // "catstone"
-                                  ...spellingTools.word(word.slice(i)).slice(0, 3),             // "stone"
-                                  ...spellingTools.letter1(char).slice(0, 3),                   // "s"
-                                  ...spellingTools.word(word.slice(0, i + 1)).slice(0, 3),      // "cats"
-                                  ...spellingTools.word(word.slice(0, i + 2)).slice(0, 3),      // "catst"
-                                  `String.append('${word.slice(i - 1, i + 1)}')`, `String.append('${word.slice(i - 1, i + 1)}');`,   // "ts" (pretty much only for String.append(' A'))
-                                  `String.append("${word.slice(i - 1, i + 1)}")`, `String.append("${word.slice(i - 1, i + 1)}");`,   // "ts"
-                                  ...spellingTools.word(word.slice(0, -1)).slice(0, 3),         // "catston"
-                                  ...spellingTools.word(word.slice(0, -1)).slice(0, 3),         // "ston"
+        for (let i = 0; i < element.length; i++) {
 
-                                  // Again, but this time do EVERYTHING
-                                  ...spellingTools.letter2(word.slice(i, i + 2)).slice(3),      // "st"
-                                  ...spellingTools.word(word).slice(3),                         // "catstone"
-                                  ...spellingTools.word(word.slice(i)).slice(3),                // "stone"
-                                  ...spellingTools.letter1(char).slice(3),                      // "s"
-                                  ...spellingTools.word(word.slice(0, i + 1)).slice(3),         // "cats"
-                                  ...spellingTools.word(word.slice(0, i + 2)).slice(3),         // "catst"
-                                  ...spellingTools.word(word.slice(0, -1)).slice(3),            // "catston"
-                                  ...spellingTools.word(word.slice(0, -1)).slice(3),            // "ston"
-                                 ],
-                                 fastMode ? currentGoalUntilGoal : [currentGoal, goal]);
+            const char = element[i]; // Current character
+            if (spacingChars.has(char) || i === 0) {
+                currentWordStart = i + (i !== 0);
+                currentWordEnd = i + 1 + (element+" ").slice(i + 1).split('').findIndex(x => spacingChars.has(x));
             }
-            if (resultExists(goal) || resultExists(realLine)) return true;
-            if (resultExists(currentGoal)) lastSpelling = currentGoal;
-        }
 
-        // if it failed, try again but this time HARDER
-        if (fastMode) {
-            if (!resultExists(`"${word}"`))
-                await tryCombine([word], [...quickTools.quote], [`"${word}"`])
-            return trySpellingQuotes(start, word, aliveLength, realLine, false);
+            const word = element.slice(currentWordStart, currentWordEnd);   // current word
+            const startWord = element.slice(currentWordStart, i);           // already spelled part of the word
+            const finishWord = element.slice(i, currentWordEnd);            // Remaining part of the word
+            const next2Chars = char + (element[i+1] || "");
+            const lastChar = element[i-1] || "";
+            const currentSpelling = spellTech.tech.splice(-1, element.slice(0, i));
+
+            // console.log({spellTech: spellTech, element: element, realElement: realElement},
+            //             {word: word, goal: goal, lastExistingSpelling: lastExistingSpelling, startWord: startWord, finishWord: finishWord, char: char, next2Chars: next2Chars, lastChar: lastChar, currentSpelling: currentSpelling})
+
+            if (currentSpelling === spellTech.tech || resultExists(currentSpelling)) {
+                await tryCombine(
+                  [currentSpelling],
+                  [
+                    // only do the first 3 in each 'category'
+                    word,                                                           // spelling "catstone" and KIT already spelled "cat"
+                    ...(lastChar === " " ? spellTools.letter2(" " + char).slice(0, 3) : []),
+                    ...tools.customAppendCharacter(char).slice(0, 3),               // "s"
+                    ...spellTools.letter2(next2Chars).slice(0, 3),                  // "st"
+                    ...spellTools.word(word).slice(1, 3),                           // "catstone"
+                    ...spellTools.word(element.slice(0, currentWordEnd)).slice(0, 3),// "i am catstone"
+                    ...spellTools.word(finishWord).slice(0, 3),                     // "stone"
+                    ...spellTools.letter1(char).slice(0, 3),                        // "s"
+                    ...spellTools.word(startWord + char).slice(0, 3),               // "cats"
+                    ...spellTools.word(startWord + next2Chars).slice(0, 3),         // "catst"
+                    ...spellTools.word(word.slice(0, -1)).slice(0, 3),              // "catston"
+                    ...spellTools.word(finishWord.slice(0, -1)).slice(0, 3),        // "ston"
+
+                    // Again, but this time do EVERYTHING
+                    ...(lastChar === " " ? spellTools.letter2(" " + char).slice(3) : []),
+                    ...tools.customAppendCharacter(char).slice(3),                  // "s"
+                    ...spellTools.letter2(next2Chars).slice(3),                     // "st"
+                    ...spellTools.word(word).slice(3),                              // "catstone"
+                    ...spellTools.word(element.slice(0, currentWordEnd)).slice(3),  // "i am catstone"
+                    ...spellTools.word(finishWord).slice(3),                        // "stone"
+                    ...spellTools.letter1(char).slice(3),                           // "s"
+                    ...spellTools.word(startWord + char).slice(3),                  // "cats"
+                    ...spellTools.word(startWord + next2Chars).slice(3),            // "catst"
+                    ...spellTools.word(word.slice(0, -1)).slice(3),                 // "catston"
+                    ...spellTools.word(finishWord.slice(0, -1)).slice(3),           // "ston"
+                  ],
+                  [...allStringsFromAUntilB(currentSpelling.slice(1, -1), goal.slice(1, -1)).slice(1).map(x => spellTech.tech[0] + x + spellTech.tech[spellTech.tech.length - 1]), realElement]
+                );
+            }
+            if (resultExists(realElement) || resultExists(goal)) return;
+            if (resultExists(currentSpelling)) lastExistingSpelling = currentSpelling;
         }
-        else failedToSpell(start.splice(-1, word), lastSpelling);
+        // if this point was reached, it failed.
+        addFailedSpelling(realElement, lastExistingSpelling);
+    }
+
+
+    async function deSpell(spellTech, element, realElement) {
+        const deSpellSteps = spellTech.deSpell(element);
+
+        const currentElement = spellTech.tech.splice(-1, element);
+
+        if (!deSpellSteps[0].tools) {
+            // if there is no fancy deSpellStep stuff
+            await tryCombine([currentElement], deSpellSteps, [realElement]);
+            if (resultExists(realElement)) return;
+        }
+        else {
+            for (const deSpellStep of deSpellSteps) {
+                const start = deSpellStep.start ? deSpellStep.start : currentElement;
+                const goal = deSpellStep.goal ? deSpellStep.goal : undefined;
+
+                if (logMessages) console.log("Attempting deSpell:", deSpellStep, "for", start, "->", goal);
+
+                if (resultExists(start)) await tryCombine([start], deSpellStep.tools, [goal, realElement].filter(Boolean));
+                if (resultExists(realElement)) return;
+            }
+        }
+        // if this point was reached, it failed.
+        addFailedSpelling(realElement, currentElement);
     }
 
 
 
+
+
+    function finishedSpelling(element, failedLastSpelling) {
+        if (!element) return;
+        element = element.icCase();
+
+        if (resultExists(element)) {
+            console.log(`Finished spelling: ${element}${makeLineage(element)}`)
+            if (addSuccessfulSpellingsToElements) addElementToStorage(element);
+            return true;
+        }
+        else if (failedLastSpelling) {
+            failedLastSpelling = failedLastSpelling.icCase()
+            console.log("Failed to spell:", element, makeLineage(failedLastSpelling));
+            if (addFailedSpellingsToElements) addElementToStorage(failedLastSpelling);
+        }
+    }
+
+
+
+    function makeLineage(element, visited=new Set()) {
+        element = element.icCase();
+        if (recipesRes.has(element)) {
+            visited.add(element);
+            const [first, second] = recipesRes.get(element)[0].map(x => x.icCase());
+            if (first && second && (first !== element && second !== element) && (!visited.has(first) && !visited.has(second))) {
+                return (makeLineage(first, visited) +
+                        makeLineage(second, visited) +
+                        `\n${first} + ${second} = ${element}`);
+            }
+        }
+        return "";
+    }
 
 
     async function tryCombine(inputs1, inputs2, expected) {
-        console.log("\nTrying", inputs1, "+", inputs2, "=", expected)
+        for (let i = 0; i < expected.length; i++) {
+            if (resultExists(expected[i])) return true;
+            expected[i] = expected[i].icCase();
+        }
+        inputs1 = inputs1.map(x => x.icCase());
+        inputs2 = inputs2.map(x => x.icCase());
+
+        if (logMessages) console.log("\nTrying", inputs1, "+", inputs2, "=", expected)
         for (const input1 of inputs1) {
             for (const input2 of inputs2) {
-                const response = await combine(input1.icCase(), input2.icCase());
-                if (expected.some(exp => response.result === exp.icCase())) return response;
+                const response = await combine(input1, input2);
+                if (response && expected.some(exp => response === exp)) return response;
             }
         }
         return false;
     }
 
 
-
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
     let lastCombination = Date.now();
 
     async function combine(first, second) {
-        if (recipeExists(first, second)) {
-            // console.log(`Combine: (logged) ${first} + ${second} = ${recipeExists(first, second)}`)
-            return { result: recipeExists(first, second) }
-        }
+        // console.log("combine", first, "+", second);
+        if (!first || !second) return;
+        [first, second] = [first.trim(), second.trim()].sort();
+
+        let recExists = recipeExists(first, second);
+        if (recExists) return recExists;
+
         const waitingDelay = Math.max(0, combineTime - (Date.now() - lastCombination));
         lastCombination = Date.now() + waitingDelay;
         await delay(waitingDelay);
 
-        if (recipeExists(first, second)) {
-            // console.log(`Combine: (logged) ${first} + ${second} = ${recipeExists(first, second)}`)
-            lastCombination -= combineTime;
-            return { result: recipeExists(first, second) }
+        const failCount = 0;
+        while (failCount < 3) {
+            recExists = recipeExists(first, second);
+            if (recExists) return recExists;
+
+            const response = await Window.$nuxt.$root.$children[1].$children[0].$children[0].getCraftResponse({ text: first }, { text: second });
+            const result = response?.result;
+
+            if (result) {
+                recipesIng[`${first}=${second}`] = result;
+                if (!recipesRes.has(result)) recipesRes.set(result, []);
+                recipesRes.get(result).push([first, second]);
+
+                if (result !== "Nothing") {
+                    emojiMap.set(result, response);
+                }
+
+                return result;
+            }
+            failCount++;
         }
-
-        const response = await unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].getCraftResponse({ text: first }, { text: second });
-        const [sortedFirst, sortedSecond] = [first.icCase(), second.icCase()].sort();
-
-        recipesIng[`${sortedFirst}  ${sortedSecond}`] = response.result;
-        if (!recipesRes[response.result]) recipesRes[response.result] = [];
-        recipesRes[response.result].push([sortedFirst, sortedSecond]);
-
-        if (!emojiMap.has(response.result)) emojiMap.set(response.result, response);
-
-        // console.log(`Combine: (request) ${first} + ${second} = ${response ? response.result : response}`)
-        return response;
     }
 
-
-    function finishedSpelling(element, lastSpelling) {
-        if (!element) return;
-        element = element.icCase()
-
-        if (resultExists(element)) {
-            console.log(`Finished spelling: ${element}${makeLineage(element)}`)
-            addElementToStorage(element);
-            return true;
-        }
-        else if (lastSpelling) failedToSpell(element, lastSpelling.icCase());
-    }
-
-    function failedToSpell(element, lastSpelling) {
-        console.log("Failed to spell:", element, makeLineage(lastSpelling));
-        if (addFailedSpellingsToElements) addElementToStorage(lastSpelling);
-    }
-
-
-    function makeLineage(element, visited=[]) {
-        if (!element) return "";
-        element = element.icCase()
-        if (recipesRes[element]) {
-            visited.push(element)
-            const ings = recipesRes[element][0].map(x => x.icCase())
-            if (ings && (ings[0] !== element && ings[1] !== element) && (!visited.includes(ings[0]) && !visited.includes(ings[1])))
-                return makeLineage(ings[0], visited) +
-                       makeLineage(ings[1], visited) +
-                       `\n${ings[0]} + ${ings[1]} = ${element}`
-        }
-        return "";
-    }
 
     function addElementToStorage(elementText) {
+        console.log("adding to storage:", elementText, emojiMap.has(elementText))
         if (!elementText || !emojiMap.has(elementText) || elementStorageSet.has(elementText)) return;
         elementStorageSet.add(elementText);
+
         const element = emojiMap.get(elementText);
 
-
-        unsafeWindow.$nuxt._route.matched[0].instances.default.elements.push(element);
-        element.text = element.result;
-        element.discovered = element.isNew;
+        Window.$nuxt._route.matched[0].instances.default.elements.push(element);
+        Object.defineProperty(element, 'text', Object.getOwnPropertyDescriptor(element, 'result'));
         delete element.result;
+
+        Object.defineProperty(element, 'discovered', Object.getOwnPropertyDescriptor(element, 'isNew'));
         delete element.isNew;
 
         let craftData = JSON.parse(localStorage.getItem("infinite-craft-data"));
@@ -464,13 +571,23 @@
         localStorage.setItem("infinite-craft-data", JSON.stringify(craftData));
     }
 
+
     function recipeExists(first, second) {
-        const [sortedFirst, sortedSecond] = [first.icCase(), second.icCase()].sort();
-        return recipesIng[`${sortedFirst}  ${sortedSecond}`] || undefined;
+        // first and second have to already be in icCase() and Sorted
+        return recipesIng[`${first}=${second}`] || undefined;
     }
 
-    function resultExists(result) {
-        if (result) return recipesRes[result.icCase()];
+    function resultExists(result, ret=false) {
+        return ret ? recipesRes.get(result.icCase()) : recipesRes.has(result.icCase());
+    }
+
+
+    function allStringsFromAUntilB(a, b) {
+        const aUntilB = [a];
+        for (let i = 0; i < b.length - a.length; i++) {
+            aUntilB.push(aUntilB[i] + b[a.length + i])
+        }
+        return aUntilB;
     }
 
 
@@ -487,6 +604,7 @@
         icCasedLookup.set(this, result);
         return result;
     };
+
 
     String.prototype.splice = function(start, newSubStr, delCount = 0) {
         return this.slice(0, start) + newSubStr + this.slice(start + Math.abs(delCount));

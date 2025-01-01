@@ -295,13 +295,23 @@
     async function reviveElements(elements) {
         // parallelizing stuff (very gamer)
         const queue = [...elements];
+        let processedElements = 0;
+
+        const interval = setInterval(() => {
+            console.log(processedElements, "/", elements.length, "elements processed -", Math.round(processedElements / elements.length * 100 * 100) / 100, "%");
+        }, 10 * 1000);  // 10 seconds
+
 
         async function worker() {
-            while (queue.length > 0) await reviveElement(queue.shift());
+            while (queue.length > 0) {
+                await reviveElement(queue.shift());
+                processedElements++;
+            }
         }
 
-        const workers = Array(parallelBots).fill(worker());
+        const workers = Array(parallelBots).fill().map(() => worker());
         await Promise.all(workers);
+        clearInterval(interval);
     }
 
 

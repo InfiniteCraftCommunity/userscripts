@@ -92,29 +92,33 @@
             '"delete The Hi Mr. "',
         ],
         removeThe: [
-            "Remove The The", "Delete The The", "Remove The The The", "Delete First Word",
-		        "Remove First Word", "\"remove The The\"", "\"delete The The\"",
-		        "Without The The", "Remove The", "Delete The", "Without The", "Delete The With Spacing"
+            ...generateToolCombinations(["Remove", "Delete", "Without"], ["The The", "The", "The The The"]),
+            "Delete First Word", "Remove First Word",
+            '"remove The The"', '"delete The The"',
+            "Delete The With Spacing"
         ],
         removeQuote: [
             ...generateToolCombinations(["Delete", "Remove", "Without"], ["The", null], ["Quotation Mark", "Quotation Marks"]),
         ],
         removeHyphens: [
-            "Replace Hyphen With Spacing", "Delete The Hyphen", "Remove The Hyphen",
-		        "Delete The Hyphens", "Remove The Hyphens", "With Spacing", "With Spaces",
-		        "Remove Hyphen", "Delete Hyphen", "Without Hyphen", "Without Hyphens",
-		        "Without The Hyphen", "Subtract The Hyphen", "Without The Hyphens",
-		        "Replace Hyphen With Empty", "Replace Hyphen With Spaces", "Replace Hyphen With Nothing"
+            ...generateToolCombinations(["Delete", "Remove", "Without"], ["The", null], ["Hyphen", "Hyphens"]),
+            ...generateToolCombinations(["Replace Hyphen With"], ["Empty", "Spaces", "Spacing", "Nothing"]),
+            "With Spacing", "With Spaces",
+            "Subtract The Hyphen",
         ],
         prependHashtag: [
             "Prepend Hashtag :3", "Pweaseprependhashtag", "Prepend Hashtag <3", "Prepend Hashtag :)", "Prepend Hashtag",
-			      "Pweaseprependhashtagorelse", "#pweaseprependhashtag", "Prepend Hashtag :) :<3", "Write A Hashtag In Front", "Hashtag The Hashtag", "Put This In Hashtag"
+			      "Pweaseprependhashtagorelse", "#pweaseprependhashtag", "Prepend Hashtag :) :<3", "Write A Hashtag In Front", "Hashtag The Hashtag", "Put This In Hashtag",
         ],
         removeHashtag: [
-            "Unplural", "Unpluralize", "Delete The Hyphen", "Remove The Hyphen", "Delete The Hashtag", "Capitalize"
+            "Unplural", "Unpluralize",
+            "Delete The Hyphen", "Remove The Hyphen",
+            "Delete The Hashtag", "Remove The Hashtag",
+            "Capitalize",
         ],
         prependMr: [
-            "Prepend Mr.", "Prepends Mr.", "Prepend Mr", "Prepend The Mr.", "Prepend The Mr", "Mr. &", "Mr. .", "Mr. _", "Mr. '", "Mr.mr."
+            ...generateToolCombinations(["Prepend", "Prepends"], ["The", null], ["Mr", "Mr."]),
+            "Mr. &", "Mr. .", "Mr. _", "Mr. '", "Mr.mr."
         ],
         quote: [
             "\"quotation Mark\"", "\"quotation Marks\"", "\"prepend Quotation Mark\"", "\"prepend Quotation Marks\"",
@@ -281,10 +285,23 @@
 
             await reviveElements(elems);
 
-            console.log("Revived (lineages)\n" + elems.filter(x => resultExists(x)).map(x => `Revived: ${x}${makeLineage(x)}`).join('\n\n'));
+            const groupLineages = ['%cLineages', 'background: purple; color: white']
+            const lineageMessage = elems.filter(x => resultExists(x)).map(x => `Revived: ${x}${makeLineage(x)}`).join('\n\n');
+            console.group(...groupLineages);
+            if (lineageMessage) console.log(lineageMessage);
+            console.groupEnd(...groupLineages);
 
-            console.log(`Successfully Revived Elements:\n${elems.filter(x => resultExists(x)).join('\n')}`);
-            console.log(`Failed to Revive Elements:\n${elems.filter(x => !resultExists(x)).join('\n')}`);
+            const groupSuccess = ['%cSuccessfully Revived Elements:', 'background: green; color: white'];
+            const successMessage = elems.filter(x => resultExists(x)).join('\n');
+            console.group(...groupSuccess);
+            if (successMessage) console.log(successMessage);
+            console.groupEnd(...groupSuccess);
+
+            const groupFailed = ['%cFailed to Revive Elements:', 'background: red; color: white'];
+            const failedMessage = elems.filter(x => !resultExists(x)).join('\n');
+            console.group(...groupFailed);
+            if (failedMessage) console.log(failedMessage);
+            console.groupEnd(...groupFailed);
         }
     });
 
@@ -563,7 +580,7 @@
 
 
     function addElementToStorage(elementText) {
-        console.log("adding to storage:", elementText, emojiMap.has(elementText))
+        if (logMessages) console.log("adding to storage:", elementText, emojiMap.has(elementText))
         if (!elementText || !emojiMap.has(elementText) || elementStorageSet.has(elementText)) return;
         elementStorageSet.add(elementText);
 

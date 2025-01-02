@@ -3,7 +3,8 @@
 // @match       https://neal.fun/infinite-craft/
 // @author      Catstone
 // @namespace   Catstone
-// @version     2.5
+// @downloadURL   https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/Kit/index.user.js
+// @version     3.0
 // @description Kit can literally make anything, apart from some stuff. Open the Console (Ctrl + Shift + I) and type revive(`words`) in there. Seperate multiple elements by new lines. To modify tools used, check out the settings at the top of the code.
 // ==/UserScript==
 
@@ -151,48 +152,48 @@
 
     // every single spellTech the bot uses is listed here.
     const spellTechs = [
-	    {
+      {
           tech: '"hi Mr. "',
-          deSpell: (line) => [
-              { start: `"hi Mr. ${line}"`,
+          deSpell: (elem) => [
+              { start: `"hi Mr. ${elem}"`,
                tools: [...tools.removeMr, ...tools.removeHiMr] },
 
-              { start: `"hi Mr. ${line}"`, goal: `Mr. ${line}`,
+              { start: `"hi Mr. ${elem}"`, goal: `Mr. ${elem}`,
                tools: [...tools.removeHi] },
 
-              { start: `Mr. ${line}`,
+              { start: `Mr. ${elem}`,
                 tools: [...tools.removeMr] }
           ],
           disabled: false,
 
     	}, {
           tech: '"hi "',
-          deSpell: (line) => [...tools.removeHi],
+          deSpell: (elem) => [...tools.removeHi],
           disabled: false,
 
 
       }, {
           tech: '"abcd"',
-          deSpell: (line) => [...tools.removeAbcd],
+          deSpell: (elem) => [...tools.removeAbcd],
           disabled: false,
 
 
       }, {
           tech: '""',
-          deSpell: (line) => [
-		          { start: `"${line}"`,
-               tools: [...tools.removeQuote, line[0], line.slice(0, 2), line.slice(0, 3), line.slice(0, 4), line.split(" ")[0] ] },
+          deSpell: (elem) => [
+		          { start: `"${elem}"`,
+               tools: [...tools.removeQuote, elem[0], elem.slice(0, 2), elem.slice(0, 3), elem.slice(0, 4), elem.split(" ")[0] ] },
 
-              { start: `"${line}"`, goal: `#${line}`,
+              { start: `"${elem}"`, goal: `#${elem}`,
                tools: [...tools.prependHashtag] },
 
-              { start: `#${line}`,
-               tools: [...tools.removeHashtag, line[0], line.slice(0, 2), line.slice(0, 3), line.slice(0, 4), line.split(" ")[0] ] },
+              { start: `#${elem}`,
+               tools: [...tools.removeHashtag, elem[0], elem.slice(0, 2), elem.slice(0, 3), elem.slice(0, 4), elem.split(" ")[0] ] },
 
-              { start: `#${line}`, goal: `Mr. ${line}`,
+              { start: `#${elem}`, goal: `Mr. ${elem}`,
                tools: [...tools.prependMr] },
 
-              { start: `Mr. ${line}`,
+              { start: `Mr. ${elem}`,
                tools: [...tools.removeMr] }
           ],
           aliveLength: 2,
@@ -200,17 +201,19 @@
 
 
       }, {
+          trigger: (elem) => elem.indexOf('-') === -1,   // element doesn't have Hyphens
           tech: '""',
-          deSpell: (line) => [...tools.removeHyphens],
-          modifyElement: (line) => line.replace(/ /g, '-'),
+          deSpell: (elem) => [...tools.removeHyphens],
+          modifyElement: (elem) => elem.replace(/ /g, '-'),
           aliveLength: 2,
           disabled: false,
 
 
       }, {
+          trigger: (elem) => elem.indexOf('-') === -1,   // element doesn't have Hyphens
           tech: '"the-"',
-          deSpell: (line) => [...tools.removeThe],
-          modifyElement: (line) => line.replace(/ /g, '-'),
+          deSpell: (elem) => [...tools.removeThe],
+          modifyElement: (elem) => elem.replace(/ /g, '-'),
           disabled: false,
       }
     ];
@@ -231,14 +234,15 @@
 
                 const strippedElement = element.slice(1, -1);
 
-                if ([...convertableQuotes, ...parentheses].includes(quote)) {
-                    await chunkRevive({ tech: '""' }, strippedElement, element);
-                    if (convertableQuotes.includes(quote)) {
-                        await deSpell({ tech: '""', deSpell: (line) => [...tools.quirkyQuote(quote)] }, strippedElement, element);
-                    }
-                    else if (parentheses.includes(quote)) {
-                        await deSpell({ tech: '""', deSpell: (line) => [...tools.addParentheses(quote)] }, strippedElement, element);
-                    }
+                if (convertableQuotes.includes(quote)) {
+                    const spellTech = { tech: '""', deSpell: (line) => [...tools.quirkyQuote(quote)] };
+                    await chunkRevive(spellTech, strippedElement, element);
+                    await deSpell(spellTech, strippedElement, element);
+                }
+                else if (parentheses.includes(quote)) {
+                    const spellTech = { tech: '""', deSpell: (line) => [...tools.addParentheses(quote)] }
+                    await chunkRevive(spellTech, strippedElement, element);
+                    await deSpell(spellTech, strippedElement, element);
                 }
 
                 await chunkRevive({ tech: quote }, strippedElement, element);
@@ -282,6 +286,7 @@
         Window.revive = async function (input) {
             const elems = input.split('\n').filter(Boolean).map(x => x.trim())
             console.log("Revive called with words:", elems);
+            console.time();
 
             await reviveElements(elems);
 
@@ -302,6 +307,8 @@
             console.group(...groupFailed);
             if (failedMessage) console.log(failedMessage);
             console.groupEnd(...groupFailed);
+
+            console.timeEnd();
         }
     });
 
@@ -316,7 +323,7 @@
 
         const interval = setInterval(() => {
             console.log(processedElements, "/", elements.length, "elements processed -", Math.round(processedElements / elements.length * 100 * 100) / 100, "%");
-        }, 10 * 1000);  // 10 seconds
+        }, 30 * 1000);  // 30 seconds
 
 
         async function worker() {
@@ -351,7 +358,9 @@
 
 
         for (const spellTech of spellTechs) {
-            if (spellTech.disabled || element.length > 30 - spellTech.tech.length) continue;
+            if (spellTech.disabled
+                || (spellTech.trigger && !spellTech.trigger(element))
+                || element.length > 30 - spellTech.tech.length) continue;
 
             const modifiedElement = spellTech.modifyElement ? spellTech.modifyElement(element) : element;
 
@@ -361,32 +370,6 @@
             if (finishedSpelling(element)) return;
         }
         failedToSpell(element);
-    }
-
-
-
-    function finishedSpelling(element) {
-        if (resultExists(element)) {
-            element = element.icCase();
-            console.log(`Finished spelling: ${element}${makeLineage(element)}`)
-            if (addSuccessfulSpellingsToElements) addElementToStorage(element);
-            return true;
-        }
-    }
-
-    function addFailedSpelling(element, failedSpelling) {
-        element = element.icCase();
-        if (!failedSpellingsMap.has(element)) failedSpellingsMap.set(element, [])
-        failedSpellingsMap.get(element).push(failedSpelling);
-    }
-
-    function failedToSpell(element) {
-        element = element.icCase();
-        if (failedSpellingsMap.has(element)) {
-            const failedSpellings = failedSpellingsMap.get(element).map(x => x.icCase());
-            console.log(`Failed to spell ${element} with all kinds of tools... I guess i'm not powerful enough :(\nThese were the failed spellings:\n${failedSpellings.join('\n')}`);
-            if (addFailedSpellingsToElements) failedSpellings.forEach(x => addElementToStorage(x));
-        }
     }
 
 
@@ -423,7 +406,7 @@
                   [
                     // only do the first 3 in each 'category'
                     word,                                                           // spelling "catstone" and KIT already spelled "cat"
-                    ...(lastChar === " " ? spellTools.letter2(" " + char).slice(0, 3) : []),
+                    ...(spacingChars.has(lastChar) ? spellTools.letter2(lastChar + char).slice(0, 3) : []),
                     ...tools.customAppendCharacter(char).slice(0, 3),               // "s"
                     ...spellTools.letter2(next2Chars).slice(0, 3),                  // "st"
                     ...spellTools.word(word).slice(1, 3),                           // "catstone"
@@ -436,7 +419,7 @@
                     ...spellTools.word(finishWord.slice(0, -1)).slice(0, 3),        // "ston"
 
                     // Again, but this time do EVERYTHING
-                    ...(lastChar === " " ? spellTools.letter2(" " + char).slice(3) : []),
+                    ...(spacingChars.has(lastChar) ? spellTools.letter2(lastChar + char).slice(3) : []),
                     ...tools.customAppendCharacter(char).slice(3),                  // "s"
                     ...spellTools.letter2(next2Chars).slice(3),                     // "st"
                     ...spellTools.word(word).slice(3),                              // "catstone"
@@ -460,47 +443,49 @@
 
 
     async function deSpell(spellTech, element, realElement) {
-        const deSpellSteps = spellTech.deSpell(element);
+        let deSpellSteps = spellTech.deSpell(element);
 
         const currentElement = spellTech.tech.splice(-1, element);
 
-        if (!deSpellSteps[0].tools) {
-            // if there is no fancy deSpellStep stuff
-            await tryCombine([currentElement], deSpellSteps, [realElement]);
+        // if there is no fancy deSpellStep stuff make it fancy
+        if (!deSpellSteps[0].tools) deSpellSteps = [{ tools: deSpellSteps }];
+
+        for (const deSpellStep of deSpellSteps) {
+            const start = deSpellStep.start ? deSpellStep.start : currentElement;
+            const goal = deSpellStep.goal ? deSpellStep.goal : undefined;
+
+            if (resultExists(start)) {
+                if (logMessages) console.log("Attempting deSpell:", deSpellStep, "for", start, "->", goal);
+                await tryCombine([start], deSpellStep.tools, [goal, realElement].filter(Boolean));
+                addFailedSpelling(realElement, start);
+            }
             if (resultExists(realElement)) return;
         }
-        else {
-            for (const deSpellStep of deSpellSteps) {
-                const start = deSpellStep.start ? deSpellStep.start : currentElement;
-                const goal = deSpellStep.goal ? deSpellStep.goal : undefined;
-
-                if (logMessages) console.log("Attempting deSpell:", deSpellStep, "for", start, "->", goal);
-
-                if (resultExists(start)) await tryCombine([start], deSpellStep.tools, [goal, realElement].filter(Boolean));
-                if (resultExists(realElement)) return;
-            }
-        }
-        // if this point was reached, it failed.
-        addFailedSpelling(realElement, currentElement);
     }
 
 
 
-
-
-    function finishedSpelling(element, failedLastSpelling) {
-        if (!element) return;
-        element = element.icCase();
-
+    function finishedSpelling(element) {
         if (resultExists(element)) {
+            element = element.icCase();
             console.log(`Finished spelling: ${element}${makeLineage(element)}`)
             if (addSuccessfulSpellingsToElements) addElementToStorage(element);
             return true;
         }
-        else if (failedLastSpelling) {
-            failedLastSpelling = failedLastSpelling.icCase()
-            console.log("Failed to spell:", element, makeLineage(failedLastSpelling));
-            if (addFailedSpellingsToElements) addElementToStorage(failedLastSpelling);
+    }
+
+    function addFailedSpelling(element, failedSpelling) {
+        element = element.icCase();
+        if (!failedSpellingsMap.has(element)) failedSpellingsMap.set(element, [])
+        failedSpellingsMap.get(element).push(failedSpelling);
+    }
+
+    function failedToSpell(element) {
+        element = element.icCase();
+        if (failedSpellingsMap.has(element)) {
+            const failedSpellings = [...new Set(failedSpellingsMap.get(element).map(x => x.icCase()))];
+            console.log(`Failed to spell ${element} with all kinds of tools... I guess i'm not powerful enough :(\nThese were the failed spellings:\n${failedSpellings.join('\n')}`);
+            if (addFailedSpellingsToElements) failedSpellings.forEach(x => addElementToStorage(x));
         }
     }
 

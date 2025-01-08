@@ -14,8 +14,6 @@
 // @compatible   firefox
 // @license      MIT
 // @credits      adrianmgg for original "tweaks" script.
-// @downloadURL https://update.greasyfork.org/scripts/522960/Infinite%20Craft%20More%20%20Colored%20Tabs.user.js
-// @updateURL https://update.greasyfork.org/scripts/522960/Infinite%20Craft%20%20Colored%20Tabs.meta.js
 // ==/UserScript==
 
 (function() {
@@ -518,12 +516,11 @@
                 }
             });
         }, sideControls);
-
         // --- Pinned Tabs UI ---
-        const pinnedTabsContainer = createElement('div', { style: { display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', position: 'sticky', top: '60px', background: 'var(--sidebar-bg)', width: 'calc(100% - 10px)', overflowX: 'auto', overflowY: 'hidden', borderBottom: '1px solid var(--border-color)', zIndex: '10', padding: '5px' } });
+        const pinnedTabsContainer = createElement('div', { style: { display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', position: 'sticky', top: '5px', background: 'var(--sidebar-bg)', width: 'calc(100% - 10px)', overflowX: 'auto', overflowY: 'hidden', borderBottom: '1px solid var(--border-color)', zIndex: '10', padding: '5px' } });
         const pinnedTabsList = createElement('div', { style: { display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: '5px' } });
         pinnedTabsContainer.appendChild(pinnedTabsList);
-        const pinnedItemsContainer = createElement('div', { style: { display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', position: 'sticky', top: '120px', width: 'calc(100% - 10px)', overflowX: 'auto', overflowY: 'auto', borderBottom: '1px solid var(--border-color)', zIndex: '10', padding: '0px' } });
+        const pinnedItemsContainer = createElement('div', { style: { display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', position: 'sticky', top: '40px', width: 'calc(100% - 10px)', overflowX: 'auto', overflowY: 'auto', borderBottom: '1px solid var(--border-color)', zIndex: '10', padding: '0px' } });
         const sidebar = document.querySelector('.container > .sidebar');
         sidebar.insertBefore(pinnedItemsContainer, sidebar.firstChild);
         sidebar.insertBefore(pinnedTabsContainer, sidebar.firstChild);

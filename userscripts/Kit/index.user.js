@@ -1,47 +1,31 @@
 // ==UserScript==
-// @name        ULTIMATE reviver (KIT)
-// @match       https://neal.fun/infinite-craft/
-// @author      Catstone
-// @namespace   Catstone
+// @name          ULTIMATE reviver (KIT)
+// @match         https://neal.fun/infinite-craft/
+// @author        Catstone
+// @namespace     Catstone
 // @downloadURL   https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/Kit/index.user.js
-// @version     3.0
-// @description Kit can literally make anything, apart from some stuff. Open the Console (Ctrl + Shift + I) and type revive(`words`) in there. Seperate multiple elements by new lines. To modify tools used, check out the settings at the top of the code.
+// @version       3.3
+// @description   Kit can literally make anything, apart from some stuff. Open the Console (Ctrl + Shift + I) and type revive(`words`) in there. Seperate multiple elements by new lines. To modify tools used, check out the settings at the top of the code.
 // ==/UserScript==
 
-
-
-(function() {
+(function () {
     'use strict';
 
-
-
     // Settings
-    const spacingChars = new Set([' ', '-']);  // the bot splits the line into chunks so its easier to revive: "A Cat Loves-Food" -> "A", "Cat", "Loves", "Food"
-
-    const parallelBots = 15;          // more bots = less combining downtime, also means less understanding of what da hell is going on
-
-    const combineTime = 400;          // 400ms
-
-
-    const addSuccessfulSpellingsToElements = true;  // Adds Successful spellings to sidebar
-    const addFailedSpellingsToElements = true;      // Adds Failed Spellings to sidebar
-
-    const logMessages = true;         // wether it logs what its doing
-
-
-    const Window = unsafeWindow || window;    // change this to window if you are on mobile i guess
-
-
-
-
-
+    const spacingChars = new Set([' ', '-']); // the bot splits the line into chunks so its easier to revive: "A Cat Loves-Food" -> "A", "Cat", "Loves", "Food"
+    const parallelBots = 15; // more bots = less combining downtime, also means less understanding of what da hell is going on
+    const combineTime = 400; // 400ms
+    const addSuccessfulSpellingsToElements = true; // Adds Successful spellings to sidebar
+    const addFailedSpellingsToElements = true; // Adds Failed Spellings to sidebar
+    const logMessages = true; // wether it logs what its doing
+    const Window = unsafeWindow || window; // change this to window if you are on mobile i guess
 
     // (["Delete", "Remove"], ["The", null], ["Mr."]) -> ["Delete The Mr.", "Delete Mr.", "Remove The Mr.", "Remove Mr." ]
     function generateToolCombinations(...arrays) {
         // Helper to recursively combine arrays
         const recursion = (i, prefix) => {
             if (i === arrays.length) return [prefix.trim()]; // Base case: return the final string
-    		return arrays[i].flatMap(option => recursion(i + 1, option ? `${prefix} ${option}` : prefix))
+            return arrays[i].flatMap(option => recursion(i + 1, option ? `${prefix} ${option}` : prefix))
         };
         return recursion(0, ""); // Start combining from the first group
     }
@@ -74,84 +58,188 @@
 
     const tools = {
         removeMr: [
-            ...generateToolCombinations(["Remove", "Removes", "Subtract", "Delete", "Without"], ["The", null], ["Mr.", "Mr", "Mister"]),
-            // -> [ "Delete The Mr.", "Delete The Mr", "Delete The Mister", "Delete Mr.", "Delete Mr", "Delete Mister", "Remove The Mr.", "Remove The Mr", "Remove The Mister", "Remove Mr.", … ]
-            '"remove Mr."', '"remove The Mr."', '"removes Mr."', '"removes The Mr."',
+          ...generateToolCombinations(["Remove", "Removes", "Subtract", "Delete", "Without"], ["The", null], ["Mr.", "Mr", "Mister"]),
+          // -> [ "Delete The Mr.", "Delete The Mr", "Delete The Mister", "Delete Mr.", "Delete Mr", "Delete Mister", "Remove The Mr.", "Remove The Mr", "Remove The Mister", "Remove Mr.", … ]
+            '"remove Mr."', '"remove The Mr."', '"removes Mr."', '"removes The Mr."', "Remove Mr. Without Correction",
         ],
         removeAbcd: [
-            ...generateToolCombinations(["Delete", "Remove", "Without"], ["The", null], ["Abcd", "Abcd.", "'abcd'"]),
-		        '"remove Abcd"', "Mr. Delete The Abcd",
-        ],
+          ...generateToolCombinations(["Delete", "Remove", "Without"], ["The", null], ["Abcd", "Abcd.", "'abcd'"]),
+          '"remove Abcd"', "Mr. Delete The Abcd",],
         removeHi: [
-            ...generateToolCombinations(["Delete", "Remove", "Without", "Deletes"], ["The", null], ["Word", null], ["Hi", "'hi'"]),
-            '"remove The Hi"', '"delete The Hi"', '"remove Hi"',
-            'Remove The "hi"', "Delete The “hi”", "Delete First Word",
-            "Remove First Word",
+          ...generateToolCombinations(["Delete", "Remove", "Without", "Deletes"], ["The", null], ["Word", null], ["Hi", "'hi'"]),
+          '"remove The Hi"', '"delete The Hi"', '"remove Hi"', 'Remove The "hi"', "Delete The “hi”", "Delete First Word", "Remove First Word",
         ],
         removeHiMr: [
-            ...generateToolCombinations(["Delete", "Remove"], ["The", null], ["Hi Mr.", "Hi Mr", "Hi Mrs.", "Hi Mr."]),
-            '"delete The Hi Mr. "',
+          ...generateToolCombinations(["Delete", "Remove"], ["The", null], ["Hi Mr.", "Hi Mr", "Hi Mrs.", "Hi Mr."]),
+          '"delete The Hi Mr. "',
         ],
         removeThe: [
-            ...generateToolCombinations(["Remove", "Delete", "Without"], ["The The", "The", "The The The"]),
-            "Delete First Word", "Remove First Word",
-            '"remove The The"', '"delete The The"',
-            "Delete The With Spacing"
+          ...generateToolCombinations(["Remove", "Delete", "Without"], ["The The", "The", "The The The"]),
+          "Delete First Word", "Remove First Word", '"remove The The"', '"delete The The"', "Delete The With Spacing",
         ],
         removeQuote: [
-            ...generateToolCombinations(["Delete", "Remove", "Without"], ["The", null], ["Quotation Mark", "Quotation Marks"]),
+          ...generateToolCombinations(["Delete", "Remove", "Without"], ["The", null], ["Quotation Mark", "Quotation Marks"]),
         ],
         removeHyphens: [
-            ...generateToolCombinations(["Delete", "Remove", "Without"], ["The", null], ["Hyphen", "Hyphens"]),
-            ...generateToolCombinations(["Replace Hyphen With"], ["Empty", "Spaces", "Spacing", "Nothing"]),
-            "With Spacing", "With Spaces",
-            "Subtract The Hyphen",
+          ...generateToolCombinations(["Delete", "Remove", "Without"], ["The", null], ["Hyphen", "Hyphens"]),
+          ...generateToolCombinations(["Replace Hyphen With"], ["Empty", "Spaces", "Spacing", "Nothing"]),
+          "With Spacing", "With Spaces", "Subtract The Hyphen",
         ],
-        prependHashtag: [
-            "Prepend Hashtag :3", "Pweaseprependhashtag", "Prepend Hashtag <3", "Prepend Hashtag :)", "Prepend Hashtag",
-			      "Pweaseprependhashtagorelse", "#pweaseprependhashtag", "Prepend Hashtag :) :<3", "Write A Hashtag In Front", "Hashtag The Hashtag", "Put This In Hashtag",
+        removeFirstCharacter: [
+          ...generateToolCombinations(["Delete", "Remove", "Without"], [null, "The"], ["First"], ["Character", "Letter", "Characters", "Letters", "Deleter"]),
+        ],
+        removeChar: (char) => [
+            ...generateToolCombinations(["Delete", "Remove", "Without"], ["The", null], [null, "Letter", "Character"], [char, `"${char}"`, `'${char}'`]),
+            `String.remove(${char})`, `String.remove("${char}")`, `String.remove('${char}')`, `Seq.remove(${char})`, `Seq.remove("${char}")`, `Seq.remove('${char}')`,
         ],
         removeHashtag: [
-            "Unplural", "Unpluralize",
-            "Delete The Hyphen", "Remove The Hyphen",
-            "Delete The Hashtag", "Remove The Hashtag",
-            "Capitalize",
+          "Unplural", "Unpluralize", "Delete The Hyphen", "Remove The Hyphen", "Delete The Hashtag", "Remove The Hashtag", "Capitalize",
+        ],
+        prependHashtag: [
+          "Prepend Hashtag :3", "Pweaseprependhashtag", "Prepend Hashtag <3", "Prepend Hashtag :)", "Prepend Hashtag", "Pweaseprependhashtagorelse", "#pweaseprependhashtag",
+          "Prepend Hashtag :) :<3", "Write A Hashtag In Front", "Hashtag The Hashtag", "Put This In Hashtag",
         ],
         prependMr: [
-            ...generateToolCombinations(["Prepend", "Prepends"], ["The", null], ["Mr", "Mr."]),
-            "Mr. &", "Mr. .", "Mr. _", "Mr. '", "Mr.mr."
+          ...generateToolCombinations(["Prepend", "Prepends"], ["The", null], ["Mr", "Mr."]),
+          "Mr. &", "Mr. .", "Mr. _", "Mr. '", "Mr.mr."
         ],
-        quote: [
-            "\"quotation Mark\"", "\"quotation Marks\"", "\"prepend Quotation Mark\"", "\"prepend Quotation Marks\"",
-            "\"[/inst]\"", "\"[/st]\"", "\"[/nst]\"", "Put This In Quotation Marks", "Put Them In Quotation Marks",
-            '"put This In Quotation Marks"',
+        prependAt: [
+          "@convert.to.twitter.handle", "@word", "String.prepend('@')", 'String.prepend("@")', "String.prepend('@');", 'String.prepend("@");',
+          "@element", "@water", "@fire", "@earth", "@wind",
         ],
         customAppendCharacterTools: {
-            " ": ["Append Space", "U+0020", "Append U+0020", "Append The Space", "Append The U+0020", "U++0020", "Prepend Space", "Prepend U+0020"],
-            "-": ["Append Hyphen", "Append-hyphen", "Add Hyphen", "Insert Dash"],
+          " ": ["Append Space", "U+0020", "Append U+0020", "Append The Space", "Append The U+0020", "U++0020", "Prepend Space", "Prepend U+0020"],
+          "-": ["Append Hyphen", "Append-hyphen", "Add Hyphen", "Insert Dash"],
         },
         customAppendCharacter(char) {
-            // Return tools for the specific character or an empty array if not found
-            return this.customAppendCharacterTools[char] || [];
+          // Return tools for the specific character or an empty array if not found
+          return this.customAppendCharacterTools[char] || [];
         },
         quirkyQuote: (quote) => [
-            quote, quote.splice(-1, ' '), quote.splice(-1, 'quotation Mark'), quote.splice(-1, 'quotation Marks'), quote.splice(-1, 'put This In Quotation Marks'), quote.splice(-1, 'put Them In Quotation Marks'),
-            quote.splice(-1, '[/inst]'), quote.splice(-1, '[/st]'),
-            ..."abcdefghijklmnopqrstuvwxyz!\"#$%&'()*+,-./0123456789".split('').flatMap(x => quote.splice(-1, x))
+          quote, quote.splice(-1, ' '), quote.splice(-1, 'quotation Mark'), quote.splice(-1, 'quotation Marks'), quote.splice(-1, 'put This In Quotation Marks'), quote.splice(-1, 'put Them In Quotation Marks'),
+          quote.splice(-1, 'prepend Quotation Mark'), quote.splice(-1, 'prepend Quotation Marks'), quote.splice(-1, 'prepend Quote'),
+          quote.splice(-1, 'prepend Quotation'), quote.splice(-1, '[/inst]'), quote.splice(-1, '[/st]'), quote.splice(-1, '[/nst]'),
+          ..."abcdefghijklmnopqrstuvwxyz!\"#$%&'()*+,-./0123456789".split('').flatMap(x => quote.splice(-1, x)), `Append(${quote})`,
         ],
         addParentheses: (parent) => [
-            parent, parent.splice(-1, 'prepend Left Parenthesis'), parent.splice(-1, 'prepend Left Parentheses'), parent.splice(-1, 'prepend Opening Parenthesis'), parent.splice(-1, 'prepend Opening Parentheses'),
-            ...generateToolCombinations(["Prepend"], ["Left", "Opening", null], ["Parenthesis", "Parentheses", "Bracket", "Braces"]),
-            "Prepend " + parent.splice(-1, 'parenthesis'), "Prepend " + parent.splice(-1, 'parentheses'), "Append " + parent.splice(-1, 'parenthesis'), "Append " + parent.splice(-1, 'parentheses'),
-            parent.splice(-1, ' '), parent.splice(-1, 'parenthesis'), parent.splice(-1, 'parentheses'), parent.splice(-1, 'put This In Parenthesis'), parent.splice(-1, 'put This In Parentheses'),
+          parent, parent.splice(-1, 'prepend Left Parenthesis'), parent.splice(-1, 'prepend Left Parentheses'), parent.splice(-1, 'prepend Opening Parenthesis'), parent.splice(-1, 'prepend Opening Parentheses'),
+          ...generateToolCombinations(["Prepend"], ["Left", "Opening", null], ["Parenthesis", "Parentheses", "Bracket", "Braces"]), "Prepend " + parent.splice(-1, 'parenthesis'),
+          "Prepend " + parent.splice(-1, 'parentheses'), "Append " + parent.splice(-1, 'parenthesis'), "Append " + parent.splice(-1, 'parentheses'), parent.splice(-1, ' '), parent.splice(-1, 'parenthesis'),
+          parent.splice(-1, 'put This In Parenthesis'), parent.splice(-1, 'put This In Parentheses'),
         ]
 
     }
-    // console.log(tools)
-
 
     // every single spellTech the bot uses is listed here.
     const spellTechs = [
+      { // convertable quote stuff
+          trigger: (elem) => elem.startsWith('“') && elem.endsWith('”'),
+          tech: '""',
+          deSpell: (line) => [...tools.quirkyQuote('“”')],
+          modifyElement: (elem) => elem.slice(1, -1),
+          stopAfter: true,
+          disabled: false,
+      }, {
+          trigger: (elem) => elem.startsWith('❝') && elem.endsWith('❞'),
+          tech: '""',
+          deSpell: (line) => [...tools.quirkyQuote('❝❞')],
+          modifyElement: (elem) => elem.slice(1, -1),
+          stopAfter: true,
+          disabled: false,
+      }, {
+          trigger: (elem) => elem.startsWith('‘') && elem.endsWith('’'),
+          tech: '""',
+          deSpell: (line) => [...tools.quirkyQuote('‘’')],
+          modifyElement: (elem) => elem.slice(1, -1),
+          stopAfter: true,
+          disabled: false,
+
+
+      }, {  // normal quote stuff!!
+          trigger: (elem) => elem.startsWith('"') && elem.endsWith('"'),
+          tech: '""',
+          deSpell: (line) => [],
+          modifyElement: (elem) => elem.slice(1, -1),
+          stopAfter: true,
+          disabled: false,
+      }, {
+          trigger: (elem) => elem.startsWith("'") && elem.endsWith("'"),
+          tech: "''",
+          deSpell: (line) => [],
+          modifyElement: (elem) => elem.slice(1, -1),
+          disabled: false,
+      }, {
+          trigger: (elem) => elem.startsWith("`") && elem.endsWith("`"),
+          tech: "``",
+          deSpell: (line) => [],
+          modifyElement: (elem) => elem.slice(1, -1),
+          disabled: false,
+
+
+      }, {  // parentheses!!1!
+          trigger: (elem) => elem.startsWith('(') && elem.endsWith(')'),
+          tech: '""',
+          deSpell: (line) => [...tools.addParentheses('()')],
+          modifyElement: (elem) => elem.slice(1, -1),
+          disabled: false,
+      }, {
+          trigger: (elem) => elem.startsWith('[') && elem.endsWith(']'),
+          tech: '""',
+          deSpell: (line) => [...tools.addParentheses('[]')],
+          modifyElement: (elem) => elem.slice(1, -1),
+          disabled: false,
+      }, {
+          trigger: (elem) => elem.startsWith('{') && elem.endsWith('}'),
+          tech: '""',
+          deSpell: (line) => [...tools.addParentheses('{}')],
+          modifyElement: (elem) => elem.slice(1, -1),
+          disabled: false,
+      },
+
+
+
+
+      {   // #element
+          trigger: (elem) => elem.startsWith('#'),
+          tech: '""',
+          deSpell: () => [...tools.prependHashtag],
+          modifyElement: (elem) => elem.slice(1),
+          disabled: false,
+      },
+      {   // @element
+          trigger: (elem) => elem.startsWith('@'),
+          tech: '""',
+          deSpell: (elem) => [...tools.prependAt, "@"+elem.slice(0, 1), "@"+elem.slice(0, 2)],
+          modifyElement: (elem) => elem.slice(1),
+          disabled: false,
+      },
+      
+      {   // Mr. Element
+          trigger: (elem) => elem.startsWith('Mr. '),
+          tech: '"hi Mr. "',
+          deSpell: (elem) => [...tools.removeHi],
+          modifyElement: (elem) => elem.slice(4),
+          disabled: false,
+    	}, {
+          trigger: (elem) => elem.startsWith('Mr. '),
+          tech: '""',
+          deSpell: (elem) => [
+              { start: `"${elem}"`,
+               tools: [...tools.prependMr] },
+
+              { start: `"${elem}"`, goal: `#${elem}`,
+               tools: [...tools.prependHashtag] },
+              { start: `#${elem}`,
+               tools: [...tools.prependMr] },
+          ],
+          modifyElement: (elem) => elem.slice(4),
+          disabled: false,
+      },
+
+
+
+
+
       {
           tech: '"hi Mr. "',
           deSpell: (elem) => [
@@ -171,12 +259,38 @@
           deSpell: (elem) => [...tools.removeHi],
           disabled: false,
 
-
       }, {
           tech: '"abcd"',
-          deSpell: (elem) => [...tools.removeAbcd],
+          deSpell: (elem) => [
+		          { start: `"abcd${elem}"`,
+               tools: [...tools.removeAbcd ] },
+
+              // too many steps... :(
+              // { start: `"abcd${elem}"`, goal: `"bcd${elem}"`,
+              //  tools: [...tools.removeFirstCharacter, ...tools.removeChar('a')] },
+              // { start: `"bcd${elem}"`, goal: `"cd${elem}"`,
+              //  tools: [...tools.removeFirstCharacter, ...tools.removeChar('b')] },
+              // { start: `"cd${elem}"`, goal: `"d${elem}"`,
+              //  tools: [...tools.removeFirstCharacter, ...tools.removeChar('c')] },
+              // { start: `"d${elem}"`, goal: `"${elem}"`,
+              //  tools: [...tools.removeFirstCharacter, ...tools.removeChar('d')] },
+          ],
           disabled: false,
 
+      }, {
+          tech: '"the "',
+          deSpell: (elem) => [...tools.removeThe],
+          disabled: false,
+
+      }, {
+          tech: '"a"',
+          deSpell: (elem) => [...tools.removeChar('a'), ...tools.removeFirstCharacter],
+          disabled: false,
+
+      }, {
+          tech: '"0"',
+          deSpell: (elem) => [...tools.removeChar('0'), ...tools.removeFirstCharacter],
+          disabled: false,
 
       }, {
           tech: '""',
@@ -184,91 +298,31 @@
 		          { start: `"${elem}"`,
                tools: [...tools.removeQuote, elem[0], elem.slice(0, 2), elem.slice(0, 3), elem.slice(0, 4), elem.split(" ")[0] ] },
 
+              { start: `${elem}`, goal: `Mr. ${elem}`,
+               tools: [...tools.prependMr] },
+
               { start: `"${elem}"`, goal: `#${elem}`,
                tools: [...tools.prependHashtag] },
-
               { start: `#${elem}`,
                tools: [...tools.removeHashtag, elem[0], elem.slice(0, 2), elem.slice(0, 3), elem.slice(0, 4), elem.split(" ")[0] ] },
-
               { start: `#${elem}`, goal: `Mr. ${elem}`,
                tools: [...tools.prependMr] },
 
               { start: `Mr. ${elem}`,
                tools: [...tools.removeMr] }
           ],
-          aliveLength: 2,
           disabled: false,
-
 
       }, {
           trigger: (elem) => elem.indexOf('-') === -1,   // element doesn't have Hyphens
           tech: '""',
           deSpell: (elem) => [...tools.removeHyphens],
           modifyElement: (elem) => elem.replace(/ /g, '-'),
-          aliveLength: 2,
           disabled: false,
 
 
-      }, {
-          trigger: (elem) => elem.indexOf('-') === -1,   // element doesn't have Hyphens
-          tech: '"the-"',
-          deSpell: (elem) => [...tools.removeThe],
-          modifyElement: (elem) => elem.replace(/ /g, '-'),
-          disabled: false,
       }
     ];
-
-
-
-
-
-    const customReviveRules = [
-      {
-        code: async (element) => {
-            const quotes = ['""', "''", '``'];
-            const convertableQuotes = ['“”', '❝❞', '‘’'];
-            const parentheses = ['()', '[]', '{}'];
-
-            for (const quote of [...quotes, ...convertableQuotes, ...parentheses]) {
-                if (!element.startsWith(quote[0]) || !element.endsWith(quote[1])) continue;
-
-                const strippedElement = element.slice(1, -1);
-
-                if (convertableQuotes.includes(quote)) {
-                    const spellTech = { tech: '""', deSpell: (line) => [...tools.quirkyQuote(quote)] };
-                    await chunkRevive(spellTech, strippedElement, element);
-                    await deSpell(spellTech, strippedElement, element);
-                }
-                else if (parentheses.includes(quote)) {
-                    const spellTech = { tech: '""', deSpell: (line) => [...tools.addParentheses(quote)] }
-                    await chunkRevive(spellTech, strippedElement, element);
-                    await deSpell(spellTech, strippedElement, element);
-                }
-
-                await chunkRevive({ tech: quote }, strippedElement, element);
-
-                return { stopAfter: true };
-            }
-        },
-        disabled: false,
-
-      }, {
-        code: async (element) => {
-
-        },
-        disabled: false,
-      },
-    ];
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -280,35 +334,42 @@
     const emojiMap = new Map();
     const failedSpellingsMap = new Map();
     let elementStorageSet = new Set();
+
+    const elementsInputed = [];
+
     window.addEventListener('load', () => {
         if (addFailedSpellingsToElements || addSuccessfulSpellingsToElements) elementStorageSet = new Set(document.querySelector(".container").__vue__.elements.map(x => x.text));
 
         Window.revive = async function (input) {
-            const elems = input.split('\n').filter(Boolean).map(x => x.trim())
+            const elems = input.split('\n').filter(Boolean).map(x => x.trim());
+            elementsInputed.push(...elems);
             console.log("Revive called with words:", elems);
             console.time();
 
             await reviveElements(elems);
 
+            Window.revivingProgress();
+            console.timeEnd();
+        }
+
+        Window.revivingProgress = function () {
             const groupLineages = ['%cLineages', 'background: purple; color: white']
-            const lineageMessage = elems.filter(x => resultExists(x)).map(x => `Revived: ${x}${makeLineage(x)}`).join('\n\n');
+            const lineageMessage = elementsInputed.filter(x => resultExists(x)).map(x => `Revived: ${x}${makeLineage(x)}`).join('\n\n');
             console.group(...groupLineages);
             if (lineageMessage) console.log(lineageMessage);
             console.groupEnd(...groupLineages);
 
             const groupSuccess = ['%cSuccessfully Revived Elements:', 'background: green; color: white'];
-            const successMessage = elems.filter(x => resultExists(x)).join('\n');
+            const successMessage = elementsInputed.filter(x => resultExists(x)).join('\n');
             console.group(...groupSuccess);
             if (successMessage) console.log(successMessage);
             console.groupEnd(...groupSuccess);
 
             const groupFailed = ['%cFailed to Revive Elements:', 'background: red; color: white'];
-            const failedMessage = elems.filter(x => !resultExists(x)).join('\n');
+            const failedMessage = elementsInputed.filter(x => !resultExists(x)).join('\n');
             console.group(...groupFailed);
             if (failedMessage) console.log(failedMessage);
             console.groupEnd(...groupFailed);
-
-            console.timeEnd();
         }
     });
 
@@ -343,23 +404,9 @@
     async function reviveElement(element) {
         if (logMessages) console.log("starting to revive element:", element);
 
-        for (const customRule of customReviveRules) {
-            const returnValue = await customRule.code(element);
-
-            if (returnValue) {
-                if (finishedSpelling(element)) return;
-
-                if (returnValue.stopAfter) {
-                    failedToSpell(element);
-                    return;
-                }
-            }
-        }
-
-
         for (const spellTech of spellTechs) {
             if (spellTech.disabled
-                || (spellTech.trigger && !spellTech.trigger(element))
+                || (spellTech.trigger && !spellTech.trigger(icCase(element)))
                 || element.length > 30 - spellTech.tech.length) continue;
 
             const modifiedElement = spellTech.modifyElement ? spellTech.modifyElement(element) : element;
@@ -368,6 +415,10 @@
             await deSpell(spellTech, modifiedElement, element);
 
             if (finishedSpelling(element)) return;
+            if (spellTech.stopAfter) {
+                failedToSpell(element);
+                return;
+            }
         }
         failedToSpell(element);
     }
@@ -400,7 +451,7 @@
             // console.log({spellTech: spellTech, element: element, realElement: realElement},
             //             {word: word, goal: goal, lastExistingSpelling: lastExistingSpelling, startWord: startWord, finishWord: finishWord, char: char, next2Chars: next2Chars, lastChar: lastChar, currentSpelling: currentSpelling})
 
-            if (currentSpelling === spellTech.tech || resultExists(currentSpelling)) {
+            if (i === 0 || i < 2 || resultExists(currentSpelling)) {
                 await tryCombine(
                   [currentSpelling],
                   [
@@ -448,7 +499,7 @@
         const currentElement = spellTech.tech.splice(-1, element);
 
         // if there is no fancy deSpellStep stuff make it fancy
-        if (!deSpellSteps[0].tools) deSpellSteps = [{ tools: deSpellSteps }];
+        if (!deSpellSteps[0] || !deSpellSteps[0].tools) deSpellSteps = [{ tools: deSpellSteps }];
 
         for (const deSpellStep of deSpellSteps) {
             const start = deSpellStep.start ? deSpellStep.start : currentElement;
@@ -467,7 +518,7 @@
 
     function finishedSpelling(element) {
         if (resultExists(element)) {
-            element = element.icCase();
+            element = icCase(element);
             console.log(`Finished spelling: ${element}${makeLineage(element)}`)
             if (addSuccessfulSpellingsToElements) addElementToStorage(element);
             return true;
@@ -475,15 +526,15 @@
     }
 
     function addFailedSpelling(element, failedSpelling) {
-        element = element.icCase();
+        element = icCase(element);
         if (!failedSpellingsMap.has(element)) failedSpellingsMap.set(element, [])
         failedSpellingsMap.get(element).push(failedSpelling);
     }
 
     function failedToSpell(element) {
-        element = element.icCase();
+        element = icCase(element);
         if (failedSpellingsMap.has(element)) {
-            const failedSpellings = [...new Set(failedSpellingsMap.get(element).map(x => x.icCase()))];
+            const failedSpellings = [...new Set(failedSpellingsMap.get(element).map(x => icCase(x)))];
             console.log(`Failed to spell ${element} with all kinds of tools... I guess i'm not powerful enough :(\nThese were the failed spellings:\n${failedSpellings.join('\n')}`);
             if (addFailedSpellingsToElements) failedSpellings.forEach(x => addElementToStorage(x));
         }
@@ -492,10 +543,10 @@
 
 
     function makeLineage(element, visited=new Set()) {
-        element = element.icCase();
+        element = icCase(element);
         if (recipesRes.has(element)) {
             visited.add(element);
-            const [first, second] = recipesRes.get(element)[0].map(x => x.icCase());
+            const [first, second] = recipesRes.get(element)[0].map(x => icCase(x));
             if (first && second && (first !== element && second !== element) && (!visited.has(first) && !visited.has(second))) {
                 return (makeLineage(first, visited) +
                         makeLineage(second, visited) +
@@ -509,10 +560,10 @@
     async function tryCombine(inputs1, inputs2, expected) {
         for (let i = 0; i < expected.length; i++) {
             if (resultExists(expected[i])) return true;
-            expected[i] = expected[i].icCase();
+            expected[i] = icCase(expected[i]);
         }
-        inputs1 = inputs1.map(x => x.icCase());
-        inputs2 = inputs2.map(x => x.icCase());
+        inputs1 = inputs1.map(x => icCase(x));
+        inputs2 = inputs2.map(x => icCase(x));
 
         if (logMessages) console.log("\nTrying", inputs1, "+", inputs2, "=", expected)
         for (const input1 of inputs1) {
@@ -527,21 +578,30 @@
 
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
     let lastCombination = Date.now();
+    const currentRequests = new Map();  // no duplicate requests
 
     async function combine(first, second) {
         // console.log("combine", first, "+", second);
         if (!first || !second) return;
+        if (first.length > 30 || second.length > 30) return;
         [first, second] = [first.trim(), second.trim()].sort();
+
+        const combString = `${first}=${second}`;
 
         let recExists = recipeExists(first, second);
         if (recExists) return recExists;
 
-        const waitingDelay = Math.max(0, combineTime - (Date.now() - lastCombination));
-        lastCombination = Date.now() + waitingDelay;
-        await delay(waitingDelay);
+        // if recipe is already requested
+        if (currentRequests.has(combString)) {
+            return currentRequests.get(combString);
+        }
 
-        const failCount = 0;
-        while (failCount < 3) {
+        const promise = (async () => {
+
+            const waitingDelay = Math.max(0, combineTime - (Date.now() - lastCombination));
+            lastCombination = Date.now() + waitingDelay;
+            await delay(waitingDelay);
+
             recExists = recipeExists(first, second);
             if (recExists) return recExists;
 
@@ -549,7 +609,7 @@
             const result = response?.result;
 
             if (result) {
-                recipesIng[`${first}=${second}`] = result;
+                recipesIng[combString] = result;
                 if (!recipesRes.has(result)) recipesRes.set(result, []);
                 recipesRes.get(result).push([first, second]);
 
@@ -559,8 +619,12 @@
 
                 return result;
             }
-            failCount++;
-        }
+        })();
+
+        currentRequests.set(combString, promise);
+        const result = await promise;
+        currentRequests.delete(combString);
+        return result;
     }
 
 
@@ -590,7 +654,7 @@
     }
 
     function resultExists(result, ret=false) {
-        return ret ? recipesRes.get(result.icCase()) : recipesRes.has(result.icCase());
+        return ret ? recipesRes.get(icCase(result)) : recipesRes.has(icCase(result));
     }
 
 
@@ -604,16 +668,18 @@
 
 
     const icCasedLookup = new Map();  // optimization to store icCased Elements
-    String.prototype.icCase = function () {
-        if (icCasedLookup.has(this)) return icCasedLookup.get(this);
+    function icCase(input) {
+        if (icCasedLookup.has(input)) return icCasedLookup.get(input);
 
         let result = '';
-        for (let i = 0; i < this.length; i++) {
-            const char = this[i];
-            result += (i === 0 || this[i - 1] === ' ') ? char.toUpperCase() : char.toLowerCase()
+        const len = input.length;
+
+        for (let i = 0; i < len; i++) {
+            const char = input[i];
+            result += (i === 0 || input[i - 1] === ' ') ? char.toUpperCase() : char.toLowerCase()
         }
 
-        icCasedLookup.set(this, result);
+        icCasedLookup.set(input, result);
         return result;
     };
 

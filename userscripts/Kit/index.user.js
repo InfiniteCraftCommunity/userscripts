@@ -4,7 +4,7 @@
 // @author        Catstone
 // @namespace     Catstone
 // @downloadURL   https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/Kit/index.user.js
-// @version       3.3
+// @version       3.4
 // @description   Kit can literally make anything, apart from some stuff. Open the Console (Ctrl + Shift + I) and type revive(`words`) in there. Seperate multiple elements by new lines. To modify tools used, check out the settings at the top of the code.
 // ==/UserScript==
 
@@ -213,7 +213,7 @@
           modifyElement: (elem) => elem.slice(1),
           disabled: false,
       },
-      
+
       {   // Mr. Element
           trigger: (elem) => elem.startsWith('Mr. '),
           tech: '"hi Mr. "',
@@ -335,14 +335,13 @@
     const failedSpellingsMap = new Map();
     let elementStorageSet = new Set();
 
-    const elementsInputed = [];
+    const processedElementsList = [];
 
     window.addEventListener('load', () => {
         if (addFailedSpellingsToElements || addSuccessfulSpellingsToElements) elementStorageSet = new Set(document.querySelector(".container").__vue__.elements.map(x => x.text));
 
         Window.revive = async function (input) {
             const elems = input.split('\n').filter(Boolean).map(x => x.trim());
-            elementsInputed.push(...elems);
             console.log("Revive called with words:", elems);
             console.time();
 
@@ -354,21 +353,21 @@
 
         Window.revivingProgress = function () {
             const groupLineages = ['%cLineages', 'background: purple; color: white']
-            const lineageMessage = elementsInputed.filter(x => resultExists(x)).map(x => `Revived: ${x}${makeLineage(x)}`).join('\n\n');
+            const lineageMessage = processedElementsList.filter(x => resultExists(x)).map(x => `Revived: ${x}${makeLineage(x)}`).join('\n\n');
             console.group(...groupLineages);
             if (lineageMessage) console.log(lineageMessage);
             console.groupEnd(...groupLineages);
 
-            const groupSuccess = ['%cSuccessfully Revived Elements:', 'background: green; color: white'];
-            const successMessage = elementsInputed.filter(x => resultExists(x)).join('\n');
+            const successMessage = processedElementsList.filter(x => resultExists(x));
+            const groupSuccess = [`%cSuccessfully Revived Elements: (${successMessage.length})`, 'background: green; color: white'];
             console.group(...groupSuccess);
-            if (successMessage) console.log(successMessage);
+            if (successMessage.length > 0) console.log(successMessage.join('\n'));
             console.groupEnd(...groupSuccess);
 
-            const groupFailed = ['%cFailed to Revive Elements:', 'background: red; color: white'];
-            const failedMessage = elementsInputed.filter(x => !resultExists(x)).join('\n');
+            const failedMessage = processedElementsList.filter(x => !resultExists(x));
+            const groupFailed = [`%cFailed to Revive Elements: (${failedMessage.length})`, 'background: red; color: white'];
             console.group(...groupFailed);
-            if (failedMessage) console.log(failedMessage);
+            if (failedMessage.length > 0) console.log(failedMessage.join('\n'));
             console.groupEnd(...groupFailed);
         }
     });
@@ -389,8 +388,10 @@
 
         async function worker() {
             while (queue.length > 0) {
-                await reviveElement(queue.shift());
+                const elem = queue.shift();
+                await reviveElement(elem);
                 processedElements++;
+                processedElementsList.push(elem);
             }
         }
 
@@ -410,7 +411,6 @@
                 || element.length > 30 - spellTech.tech.length) continue;
 
             const modifiedElement = spellTech.modifyElement ? spellTech.modifyElement(element) : element;
-
             await chunkRevive(spellTech, modifiedElement, element);
             await deSpell(spellTech, modifiedElement, element);
 

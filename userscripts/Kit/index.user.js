@@ -406,11 +406,12 @@
         if (logMessages) console.log("starting to revive element:", element);
 
         for (const spellTech of spellTechs) {
+            const modifiedElement = spellTech.modifyElement ? spellTech.modifyElement(element) : element;
+
             if (spellTech.disabled
                 || (spellTech.trigger && !spellTech.trigger(icCase(element)))
-                || element.length > 30 - spellTech.tech.length) continue;
+                || modifiedElement.length + spellTech.tech.length > 30) continue;
 
-            const modifiedElement = spellTech.modifyElement ? spellTech.modifyElement(element) : element;
             await chunkRevive(spellTech, modifiedElement, element);
             await deSpell(spellTech, modifiedElement, element);
 
@@ -682,7 +683,6 @@
         icCasedLookup.set(input, result);
         return result;
     };
-
 
     String.prototype.splice = function(start, newSubStr, delCount = 0) {
         return this.slice(0, start) + newSubStr + this.slice(start + Math.abs(delCount));

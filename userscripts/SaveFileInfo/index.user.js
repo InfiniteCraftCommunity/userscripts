@@ -1,15 +1,15 @@
 // ==UserScript==
 //
-// @name			Save File Info
-// @namespace		zptr.cc
-// @match			https://neal.fun/infinite-craft/*
-// @grantv			unsafeWindow
-// @run-at			document-end
-// @version			0.1
-// @author			zeroptr
-// @downloadURL		https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/SaveFileInfo/index.user.js
-// @updateURL		https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/SaveFileInfo/index.user.js
-// @description		Adds a button that displays some useful information about your savefile
+// @name          Save File Info
+// @namespace     zptr.cc
+// @match         https://neal.fun/infinite-craft/*
+// @grantv        unsafeWindow
+// @run-at        document-end
+// @version       0.1
+// @author        zeroptr
+// @downloadURL   https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/SaveFileInfo/index.user.js
+// @updateURL     https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/SaveFileInfo/index.user.js
+// @description   Adds a button that displays some useful information about your savefile
 //
 // ==/UserScript==
 

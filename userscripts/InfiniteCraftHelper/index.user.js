@@ -19,7 +19,7 @@
 // @updateURL       https://github.com/Mikarific/InfiniteCraftHelper/raw/main/dist/InfiniteCraftHelper.user.js
 // @supportURL      https://discord.gg/NSMut3Wx3Y
 // @homepageURL     https://discord.gg/NSMut3Wx3Y
-// @license        	MIT
+// @license         MIT
 //
 // Created with love using Gorilla
 // ==/UserScript==
@@ -894,6 +894,7 @@
 
 	function init$4(elements) {
 	    const uploadContainer = document.createElement('label');
+        uploadContainer.id = 'import-savefile-button';
 	    uploadContainer.setAttribute('for', 'import-save');
 	    uploadContainer.classList.add('setting');
 	    const uploadInput = document.createElement('input');
@@ -961,6 +962,7 @@
 	        }
 	    });
 	    const downloadContainer = document.createElement('div');
+        downloadContainer.id = 'export-savefile-button';
 	    downloadContainer.classList.add('setting');
 	    const downloadText = document.createTextNode('Export Save File');
 	    downloadContainer.appendChild(downloadText);
@@ -1887,8 +1889,10 @@
 
 	window.addEventListener('load', async () => {
 	    const sidebarHeader = document.createElement('div');
+	    sidebarHeader.id = 'sidebar-header';
 	    sidebarHeader.classList.add('sidebar-header');
 	    const settingsContent = document.createElement('div');
+        settingsContent.id = 'settings-content-div';
 	    settingsContent.classList.add('settings-content');
 	    const elements = {
 	        favicon: document.querySelector('link[rel="icon"]'),
@@ -1924,6 +1928,7 @@
 	    await init$a(elements);
 	    init$1(elements);
 	    init(elements);
+        dispatchEvent(new Event('helper-load'))
 	}, false);
 	
 	window.addEventListener('contextmenu', (e) => {

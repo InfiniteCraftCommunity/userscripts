@@ -895,6 +895,7 @@ input:checked + .checkbox-slider:before {
         }
 
         const settingsOpenContainer = document.createElement("div");
+        settingsOpenContainer.id = "mbs-settings-button";
         settingsOpenContainer.classList.add("setting");
         settingsOpenContainer.appendChild(document.createTextNode("MBS Settings"));
         const settingsImage = document.createElement("img");

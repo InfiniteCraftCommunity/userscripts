@@ -6,6 +6,7 @@ Allows you to write text messages on the board
 
 Supports pannable board from [MBS](../MBS)
 
-**pro tip:** you can press Shift+Enter to create a message just under the current one
+> [!TIP]
+> You can press <kbd>Shift + Enter</kbd> to create a message just under the current one
 
 ### by [zeroptr](https://github.com/zptr1)

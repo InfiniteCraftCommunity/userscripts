@@ -46,6 +46,7 @@
             return 1;
         return current.localeCompare(latest, undefined, { numeric: true, sensitivity: 'case', caseFirst: 'upper' }) === -1;
     }
+    
     function init$d(elements) {
         GM.xmlHttpRequest({
             method: 'GET',
@@ -441,23 +442,47 @@
         pointer-events: none;
     }
 `;
+    
     function init$b(elements) {
         elements.styles.appendChild(document.createTextNode(css.trim()));
         document.getElementsByTagName('head')[0].appendChild(elements.styles);
     }
 
+    const keysPressed = {};
+
+    window.addEventListener('keydown', (event) => {
+        keysPressed[event.key] = true;
+    });
+
+    window.addEventListener('keyup', (event) => {
+        keysPressed[event.key] = false;
+    });
+    
     function setMiddleClickOnMutations(mutations, elements) {
-        for (const mutation of mutations) {
+       for (const mutation of mutations) {
             if (mutation.addedNodes.length > 0) {
                 for (const node of mutation.addedNodes) {
                     node.addEventListener('mousedown', (e) => {
                         e.preventDefault();
-                        if (e instanceof MouseEvent &&
-                            e.button === 1 &&
+                        if (
+                            e instanceof MouseEvent &&
+                            (
+                                e.button === 1 || // Middle click
+                                (
+                                    e.button === 0 &&  // Ctrl/Shift + Left click
+                                    (
+                                        keysPressed.Control ||
+                                        keysPressed.Shift
+                                    )
+                                )
+                            ) &&
                             e.target instanceof HTMLElement &&
-                            (e.target.classList.contains('instance') ||
+                            (
+                                e.target.classList.contains('instance') ||
                                 e.target.classList.contains('instance-discovered-text') ||
-                                e.target.classList.contains('instance-discovered-emoji'))) {
+                                e.target.classList.contains('instance-discovered-emoji')
+                            )
+                        ) {
                             unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].playInstanceSound();
                             const targetElement = e.target.classList.contains('instance-discovered-emoji')
                                 ? e.target.parentElement?.parentElement
@@ -485,8 +510,7 @@
                                 unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].setInstanceZIndex(unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.selectedInstance, data.id);
                                 unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.selectedInstance.elem.addEventListener('mouseup', exportFunction((e) => {
                                     if (!unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.selectedInstance.hasMoved) {
-                                        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.selectedInstance.hasMoved =
-                                            true;
+                                        unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.selectedInstance.hasMoved = true;
                                         unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0].calcInstanceSize(unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.selectedInstance);
                                     }
                                 }, unsafeWindow));
@@ -539,6 +563,7 @@
             craftsModal.close();
         });
     }
+    
     async function addElementToCrafts(first, second, result, loading = false) {
         const ingredients = [first, second].sort((a, b) => {
             if (a.text > b.text) return 1;
@@ -565,6 +590,7 @@
             await GM.setValue('recipes', JSON.stringify(recipes));
         }
     }
+    
     function openCraftsForElement(element) {
         craftsTitle.innerHTML = '';
         const titleEmoji = document.createElement('span');

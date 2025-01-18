@@ -2,7 +2,7 @@
 // @name            Infinite Craft Helper
 // @namespace       mikarific.com
 // @match           https://neal.fun/infinite-craft/*
-// @version         2.1.4
+// @version         2.1.4.1
 // @author          Mikarific
 // @description     A script that adds various useful features to Infinite Craft.
 // @icon            https://i.imgur.com/WlkWOkU.png
@@ -541,12 +541,16 @@
 	}
 	async function addElementToCrafts(first, second, result, loading = false) {
 	    const ingredients = [first, second].sort((a, b) => {
-	        return a.text.localeCompare(b.text);
-	    });
-	    if (recipes[result] === undefined)
+		    if (a.text > b.text) return 1;
+		    if (a.text < b.text) return -1;
+		    return 0; // Ensures stability for equal values
+		});
+	    if (recipes[result] === undefined) {
 	        recipes[result] = [];
-	    if (recipes[result].find((recipe) => recipe[0].text === ingredients[0].text && recipe[1].text === ingredients[1].text) !== undefined)
+		}
+	    if (recipes[result].find((recipe) => recipe[0].text === ingredients[0].text && recipe[1].text === ingredients[1].text) !== undefined) {
 	        return;
+		}
 	    recipes[result].push([
 	        {
 	            text: ingredients[0].text,
@@ -557,8 +561,9 @@
 	            emoji: ingredients[1].emoji ?? '⬜',
 	        },
 	    ]);
-	    if (!loading)
+	    if (!loading) {
 	        await GM.setValue('recipes', JSON.stringify(recipes));
+		}
 	}
 	function openCraftsForElement(element) {
 	    craftsTitle.innerHTML = '';
@@ -574,8 +579,7 @@
 	        recipesEmpty.classList.add('modal-text');
 	        recipesEmpty.appendChild(document.createTextNode("I don't know how to craft this element!"));
 	        craftsContainer.appendChild(recipesEmpty);
-	    }
-	    else {
+	    } else {
 	        const recipeKeys = Object.keys(recipes);
 	        for (const elementRecipe of elementRecipes) {
 	            const recipeDiv = document.createElement('div');
@@ -761,7 +765,7 @@
 	        const response = await getCraftResponse(...args);
 	        const args0 = args[0].wrappedJSObject === undefined ? args[0] : args[0].wrappedJSObject;
 	        const args1 = args[1].wrappedJSObject === undefined ? args[1] : args[1].wrappedJSObject;
-	        const ingredients = args0.text.localeCompare(args1.text, 'en') === -1 ? [args0, args1] : [args1, args0];
+	       	const ingredients = args0.text < args1.text ? [args0, args1] : [args1, args0];
 	        const first = ingredients[0];
 	        const second = ingredients[1];
 	        const result = {
@@ -1740,14 +1744,17 @@
 	                    return cloneInto(elements.filter((el) => el.discovered), unsafeWindow);
 	                }
 	                if (unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.sortBy === 'name') {
-	                    return cloneInto(elements, unsafeWindow).sort((a, b) => a.text.localeCompare(b.text, undefined, { numeric: true }));
+	                    return cloneInto(elements, unsafeWindow).sort((a, b) => 
+						    (a.text > b.text ? 1 : a.text < b.text ? -1 : 0)
+						);
 	                }
 	                if (unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.sortBy === 'emoji') {
-	                    return cloneInto(elements, unsafeWindow).sort((a, b) => {
-	                        const emojiA = a.emoji ?? '⬜';
-	                        const emojiB = b.emoji ?? '⬜';
-	                        return emojiA.localeCompare(emojiB);
-	                    });
+						return cloneInto(elements, unsafeWindow).sort((a, b) => {
+						    const emojiA = a.emoji ?? '⬜';
+						    const emojiB = b.emoji ?? '⬜';
+						
+						    return emojiA > emojiB ? 1 : emojiA < emojiB ? -1 : 0;
+						});
 	                }
 	                return unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.elements;
 	            }

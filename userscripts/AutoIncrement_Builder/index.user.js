@@ -225,7 +225,8 @@
     let regexBaseText = "";
     let baseInput = "";
     let toolInput = "";
-    function makeStartModal() {
+    
+    async function makeStartModal() {
         let setInput = false;
         let setTool = false;
         crafted = [];
@@ -278,8 +279,8 @@
         regexInput.addEventListener("focus", () => {
             inFocus = regexInput;
         });
+        
         regexInput.addEventListener("mouseout", () => {
-            console.log("mouse leave");
             inFocus = null;
         });
 
@@ -296,24 +297,24 @@
         // Add observers on instances
         let instancesObserver = new MutationObserver((mutations) => {
             for (let mutation of mutations) {
-                // console.log("removedNodes:",mutation.removedNodes);
                 for (let node of mutation.addedNodes) {
                     node.addEventListener("mouseup", (event) => {
-                        console.log(event.clientX, event.clientY);
-                        if (setInput == false)
+                        if (setInput == false) {
                             AtIntersection(node, inputDiv, (elm) => {
                                 if (setInput == false) {
                                     setInput = true;
                                     baseInput = elm.text;
                                 }
                             });
-                        if (setTool == false)
+                        }
+                        if (setTool == false) {
                             AtIntersection(node, toolDiv, (elm) => {
                                 if (setTool == false) {
                                     setTool = true;
                                     toolInput = elm.text;
                                 }
                             });
+                        }
                     });
                 }
             }
@@ -329,22 +330,15 @@
         modal.show();
     }
 
-    let imngsrc = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAAAGmVYSWZNTQAqAAAACAABARIAAwAAAAEAAAAAAAAAALW3flMAAAABc1JHQgCuzhzpAAAABHNCSVQICAgIfAhkiAAAAtFJREFUeJzt3LGuVFUYhuFvedDEEihsKCxsSUzsrfAm5BpsKKgsjB2xpSTR6CXYaCy4AxESCjoLGkLoTeSwrEhOSM4HMjt775N5nmTaf/3Nmz2TrNkJAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMBbjK0XYF1zzqtJ7m+9xzlOk/wxxri99SKvXdp6AVb3YZLrWy9xjpdJnmy9xFkfbL0A7JlAoBAIFAKBQiBQCAQKgUAhECgEAoVAoBAIFAKB4mgvK845byW5duCYx0l+HGO8WmAlduhoA0nydZIvDpzxa5Kfk1ykQE6T/L3wzI+TXE7y0cJzN3fMgRylMcbzOednC4+9keSH7Pca/XsTyBEaY5wuOW/OeZGeoP+LH+lQCAQKgUAhECgEAoVAoBAIFAKBQiBQCAQKgUAhECgEAoVAoBAIFAKBQiBQCAQKgUAhECgEAoVAoBAIFAKBQiBQ7OrNinPOr5J8kmSscNyVBWZcS3JzzrnomwrP8XCM8WiFczhjV4EkuZ3kyyQnK5y1xNPz8yT3FpjzLr5PIpCV7S2QkzOfi2BkvV3XeKryBr9BoBAIFAKBQiBQCAQKgUAhECgEAoVAoBAIFAKBQiBQCASKvd3mvZPkp6xzc/W7JJ8eOONBkrtJ1vg/yF8rnMEbdhXIGOP3tc6ac36TwwN5muSXMca/C6zEDvmKBYVAoBAIFAKBQiBQCAQKgUAhECgEAoVAoBAIFAKBQiBQCAQKgUAhECgEAoVAoBAIFAKBQiBQCAQKgUAhECgEAoVAoNjVq0dX9luSJwfO+DPJqwV2YaeONpAxxrdb78D++YoFhUCgEAgUAoFCIFAIBAqBQCEQKAQChUCgEAgUAoHiaC8rsqh/kjxLcvnAOS+TvDh8HQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAFf0H2kM9toyYv18AAAAASUVORK5CYII=";
+    let imgsrc = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAAAGmVYSWZNTQAqAAAACAABARIAAwAAAAEAAAAAAAAAALW3flMAAAABc1JHQgCuzhzpAAAABHNCSVQICAgIfAhkiAAAAtFJREFUeJzt3LGuVFUYhuFvedDEEihsKCxsSUzsrfAm5BpsKKgsjB2xpSTR6CXYaCy4AxESCjoLGkLoTeSwrEhOSM4HMjt775N5nmTaf/3Nmz2TrNkJAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMBbjK0XYF1zzqtJ7m+9xzlOk/wxxri99SKvXdp6AVb3YZLrWy9xjpdJnmy9xFkfbL0A7JlAoBAIFAKBQiBQCAQKgUAhECgEAoVAoBAIFAKB4mgvK845byW5duCYx0l+HGO8WmAlduhoA0nydZIvDpzxa5Kfk1ykQE6T/L3wzI+TXE7y0cJzN3fMgRylMcbzOednC4+9keSH7Pca/XsTyBEaY5wuOW/OeZGeoP+LH+lQCAQKgUAhECgEAoVAoBAIFAKBQiBQCAQKgUAhECgEAoVAoBAIFAKBQiBQCAQKgUAhECgEAoVAoBAIFAKBQiBQ7OrNinPOr5J8kmSscNyVBWZcS3JzzrnomwrP8XCM8WiFczhjV4EkuZ3kyyQnK5y1xNPz8yT3FpjzLr5PIpCV7S2QkzOfi2BkvV3XeKryBr9BoBAIFAKBQiBQCAQKgUAhECgEAoVAoBAIFAKBQiBQCASKvd3mvZPkp6xzc/W7JJ8eOONBkrtJ1vg/yF8rnMEbdhXIGOP3tc6ac36TwwN5muSXMca/C6zEDvmKBYVAoBAIFAKBQiBQCAQKgUAhECgEAoVAoBAIFAKBQiBQCAQKgUAhECgEAoVAoBAIFAKBQiBQCAQKgUAhECgEAoVAoNjVq0dX9luSJwfO+DPJqwV2YaeONpAxxrdb78D++YoFhUCgEAgUAoFCIFAIBAqBQCEQKAQChUCgEAgUAoHiaC8rsqh/kjxLcvnAOS+TvDh8HQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAFf0H2kM9toyYv18AAAAASUVORK5CYII=";
     let csstext = "width: 42px;cursor: pointer;opacity: .8;-webkit-user-select: none;-moz-user-select: none;user-select: none;filter:invert(1) !important";
-    window.addEventListener(
-        "load",
-        () => {
-            console.log("loading");
-            let img = document.createElement("img");
-            img.src = imngsrc;
-            img.style.cssText = csstext;
-            img.addEventListener("click", async () => {
-                makeStartModal();
-            });
-            console.log("it gets here");
+    
+    window.addEventListener("load", async () => {
+        let img = document.createElement("img");
+        img.src = imgsrc;
+        img.style.cssText = csstext;
+        img.addEventListener("click", makeStartModal);
 
-            document.querySelector(".side-controls").appendChild(img);
-        },
-        false
-    );
+        document.querySelector(".side-controls").appendChild(img);
+    }, false);
 })();

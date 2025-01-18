@@ -3,9 +3,8 @@
 // @namespace    N/A
 // @version      1.0.0
 // @description  A humble client-sided modification for Infinite Craft.
-// @author       LofiHD
+// @author       LofiHD, Patch by Sapporo
 // @match        https://neal.fun/infinite-craft/*
-// @icon         https://i.imgur.com/MKWwBdg.png
 // @grant        none
 // ==/UserScript==
 
@@ -161,28 +160,11 @@ const ToastLibrary = new Toast(3000)
 const themes = {
     DefaultDark: `
 
-        body
-        {
-            overflow: hidden !important;
-            -ms-overflow-style: none !important;
-            scrollbar-width: none !important;
-        }
+
 
         .container
         {
             background-color: #13181D !important;
-        }
-
-        .items
-        {
-            background-color: #070C10 !important;
-            align-items: center !important;
-            display: ruby-text !important;
-        }
-
-        body::webkit-scrollbar
-        {
-            display: none !important;
         }
 
         .reset

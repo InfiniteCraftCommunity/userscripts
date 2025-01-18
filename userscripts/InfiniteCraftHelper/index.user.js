@@ -1,28 +1,29 @@
 // ==UserScript==
-// @name			Infinite Craft Helper
-// @namespace		mikarific.com
-// @match			https://neal.fun/infinite-craft/*
-// @version			2.1.4
-// @author			Mikarific
-// @description		A script that adds various useful features to Infinite Craft.
-// @icon			https://i.imgur.com/WlkWOkU.png
-// @grant			GM.getValue
-// @grant			GM.setValue
-// @grant			GM.xmlHttpRequest
-// @grant			unsafeWindow
-// @run-at			document-end
+// @name            Infinite Craft Helper
+// @namespace       mikarific.com
+// @match           https://neal.fun/infinite-craft/*
+// @version         2.1.4
+// @author          Mikarific
+// @description     A script that adds various useful features to Infinite Craft.
+// @icon            https://i.imgur.com/WlkWOkU.png
+// @grant           GM.getValue
+// @grant           GM.setValue
+// @grant           GM.xmlHttpRequest
+// @grant           unsafeWindow
+// @run-at          document-end
 // @noframes
-// @inject-into		page
-// @sandbox			raw
-// @connect			*
-// @downloadURL		https://github.com/Mikarific/InfiniteCraftHelper/raw/main/dist/InfiniteCraftHelper.user.js
-// @updateURL		https://github.com/Mikarific/InfiniteCraftHelper/raw/main/dist/InfiniteCraftHelper.user.js
-// @supportURL		https://discord.gg/NSMut3Wx3Y
-// @homepageURL		https://discord.gg/NSMut3Wx3Y
-// @license			MIT
+// @inject-into     page
+// @sandbox         raw
+// @connect         *
+// @downloadURL     https://github.com/Mikarific/InfiniteCraftHelper/raw/main/dist/InfiniteCraftHelper.user.js
+// @updateURL       https://github.com/Mikarific/InfiniteCraftHelper/raw/main/dist/InfiniteCraftHelper.user.js
+// @supportURL      https://discord.gg/NSMut3Wx3Y
+// @homepageURL     https://discord.gg/NSMut3Wx3Y
+// @license        	MIT
 //
 // Created with love using Gorilla
 // ==/UserScript==
+
 
 (function () {
 	'use strict';
@@ -1989,6 +1990,7 @@
 	    init$1(elements);
 	    init(elements);
 	}, false);
+	
 	window.addEventListener('contextmenu', (e) => {
 	    e.preventDefault();
 	});

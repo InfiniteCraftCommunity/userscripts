@@ -15,8 +15,8 @@
 // @inject-into     page
 // @sandbox         raw
 // @connect         *
-// @downloadURL     https://github.com/Mikarific/InfiniteCraftHelper/raw/main/dist/InfiniteCraftHelper.user.js
-// @updateURL       https://github.com/Mikarific/InfiniteCraftHelper/raw/main/dist/InfiniteCraftHelper.user.js
+// @downloadURL     https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/InfiniteCraftHelper/index.user.js
+// @updateURL       https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/InfiniteCraftHelper/index.user.js
 // @supportURL      https://discord.gg/NSMut3Wx3Y
 // @homepageURL     https://discord.gg/NSMut3Wx3Y
 // @license         MIT

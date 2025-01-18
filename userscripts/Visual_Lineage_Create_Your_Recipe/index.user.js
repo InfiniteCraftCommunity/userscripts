@@ -1,11 +1,11 @@
 // ==UserScript==
-// @name        Lineage Visualizer Choose Your Own Story
-// @namespace   Violentmonkey Scripts
-// @match       https://neal.fun/infinite-craft/*
-// @grant       none
-// @version     1.1
-// @author      Alexander_Andercou, Mikarific
-// @description 8/17/2024, 9:51:15 PM
+// @name            Lineage Visualizer Choose Your Own Story
+// @namespace       Violentmonkey Scripts
+// @match           https://neal.fun/infinite-craft/*
+// @grant           none
+// @version         1.1.1
+// @author          Alexander_Andercou, Mikarific
+// @description     A visual tree builder from IC savefile using your own recipes
 // ==/UserScript==
 
 (function () {

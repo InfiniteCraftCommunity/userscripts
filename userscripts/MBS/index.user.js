@@ -316,6 +316,17 @@ input:checked + .checkbox-slider:before {
                 tooltips.push(`🔢 ${space}${res}`);
             },
         },
+        {
+            id: "length",
+            name: "Element length",
+            priority: 2,
+            description: "Shows element length for long elements",
+            enabled: false,
+            condition: (e) => e.text.length >= 25, // Chnange to 0 if you want to show it for all elements
+            handle(element, tooltips) {
+                tooltips.push(`📊 Length: ${element.text.length} characters`);
+            },
+        }
     ];
 
     function addTooltipOnMutation(instances, mutations) {

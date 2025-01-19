@@ -3,141 +3,116 @@
 // @namespace   Violentmonkey Scripts
 // @match       https://neal.fun/infinite-craft/*
 // @grant       none
-// @version     1.0
+// @version     1.0.1
 // @author      Alexander_Andercou
 // @description 7/11/2024, 10:00:45 PM
 // ==/UserScript==
- (function() {
-   var EMOJIS={};
 
 
-        function emojiToUni(emoji) {
+(function () {
+    var EMOJIS = {};
 
-          return emoji.codePointAt(0);
-
-        }
-      function getAvgHex(color, total){
-          return Math.round(color / total)
+    function emojiToUni(emoji) {
+        return emoji.codePointAt(0);
+    }
+    
+    function getAvgHex(color, total) {
+        return Math.round(color / total)
             .toString(16)
             .padStart(2, 0);
-          }
+    }
 
-     function calculatedAverageAndMaxFreqColor(emoji)
-           {
-              let   totalPixels = 0;
-              const colors      = {
-                red  : 0,
-                green: 0,
-                blue : 0,
-                alpha: 0
-              };
-              const canvas        = document.createElement("canvas");
-              const ctx           = canvas.getContext("2d");
-              ctx.font      = "30px Arial";
-              ctx.fillStyle = window.getComputedStyle(document.querySelector(".container")).getPropertyValue("--text-color").trim();
-              ctx.fillText(emoji, 0, 28);
-              var colors2 = [];
-              var freq    = [];
-              const { data: imageData } = ctx.getImageData(0, 0, 30, 30);
+    function calculatedAverageAndMaxFreqColor(emoji) {
+        let totalPixels = 0;
+        const colors = {
+            red: 0,
+            green: 0,
+            blue: 0,
+            alpha: 0,
+        };
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        ctx.font = "30px Arial";
+        ctx.fillStyle = window.getComputedStyle(document.querySelector(".container")).getPropertyValue("--text-color").trim();
+        ctx.fillText(emoji, 0, 28);
+        var colors2 = [];
+        var freq = [];
+        const { data: imageData } = ctx.getImageData(0, 0, 30, 30);
 
-              for (let i = 0; i < imageData.length; i += 4) {
-                let [r, g, b, a] = imageData.slice(i, i + 4);
-                if (a > 50) {
+        for (let i = 0; i < imageData.length; i += 4) {
+            let [r, g, b, a] = imageData.slice(i, i + 4);
+            if (a > 50) {
+                let JColors = JSON.stringify(colors2);
+                let JColor = JSON.stringify([r, g, b]);
 
-                    let JColors = JSON.stringify(colors2);
-                    let JColor  = JSON.stringify([r,g,b]);
+                if (JColors.indexOf(JColor) > -1) {
+                    let index = 0;
+                    for (let [rc, gc, bc] of colors2) {
+                        if (r == rc && g == gc && b == bc) break;
+                        index += 1;
+                    }
 
-
-                    if(JColors.indexOf(JColor)>-1)
-                      {
-                       let index = 0;
-                        for(let [rc,gc,bc] of colors2)
-                        {
-                           if(r==rc && g==gc && b==bc)
-                            break;
-                          index += 1;
-
-                        }
-
-
-                         freq[index] += 1;
-                      }
-                       else
-                     {
-                          if(r!=0 || g!=0 || b!=0)
-                            {
-                           colors2.push([r,g,b]);
-                           freq.push(1);
-                            }
-
-                      }
-
-
-
-                  totalPixels  += 1;
-                  colors.red   += r;
-                  colors.green += g;
-                  colors.blue  += b;
-                  colors.alpha += a;
+                    freq[index] += 1;
+                } else {
+                    if (r != 0 || g != 0 || b != 0) {
+                        colors2.push([r, g, b]);
+                        freq.push(1);
+                    }
                 }
-              }
-              const r = getAvgHex(colors.red, totalPixels);
-              const g = getAvgHex(colors.green, totalPixels);
-              const b = getAvgHex(colors.blue, totalPixels);
-              const indexOfLargestValue = freq. reduce((maxIndex, currentValue, currentIndex, array) => currentValue > array[maxIndex] ? currentIndex : maxIndex, 0);
-              const secondColor = colors2[indexOfLargestValue];
 
+                totalPixels += 1;
+                colors.red += r;
+                colors.green += g;
+                colors.blue += b;
+                colors.alpha += a;
+            }
+        }
+        const r = getAvgHex(colors.red, totalPixels);
+        const g = getAvgHex(colors.green, totalPixels);
+        const b = getAvgHex(colors.blue, totalPixels);
+        const indexOfLargestValue = freq.reduce((maxIndex, currentValue, currentIndex, array) => (currentValue > array[maxIndex] ? currentIndex : maxIndex), 0);
+        const secondColor = colors2[indexOfLargestValue];
 
-              return ["#" + r + g + b,"rgb(" +secondColor[0].toString()+ ","+secondColor[1].toString()+","+secondColor[2].toString()+")"];
+        return ["#" + r + g + b, "rgb(" + secondColor[0].toString() + "," + secondColor[1].toString() + "," + secondColor[2].toString() + ")"];
+    }
+    
+    function getEmojiColors(emoji) {
+        var code = emojiToUni(emoji);
+        if (!(code in EMOJIS)) {
+            EMOJIS[code] = ["", ""];
 
+            EMOJIS[code] = calculatedAverageAndMaxFreqColor(emoji);
 
-           }
-  function getEmojiColors(emoji)
-          {
+            localStorage.setItem("emojiColors", JSON.stringify(EMOJIS));
+            return EMOJIS[code];
+        } else {
+            return EMOJIS[code];
+        }
+    }
 
-             var code = emojiToUni(emoji);
-            if(! (code in EMOJIS) )
-             {
-                     EMOJIS[code] = ["",""];
+    function doStuffOnInstancesMutation(mutations) {
+        for (const mutation of mutations) {
+            if (mutation.addedNodes.length > 0) {
+                for (const node of mutation.addedNodes) {
+                    if (node.id != "instance-0" && !node.classList.contains("background-instance")) {
+                        const emojiSpan = node.querySelector(".instance-emoji");
+                        const emoji = emojiSpan.textContent;
+                        const avg = getEmojiColors(emoji)[0];
+                        node.style.setProperty("--avgColor", avg);
+                        node.style.setProperty("--maxFreq", getEmojiColors(emoji)[1]);
+                        node.style.setProperty("--shadow-rgb", avg);
 
-                     EMOJIS[code] = calculatedAverageAndMaxFreqColor(emoji);
-
-
-
-              localStorage.setItem("emojiColors",JSON.stringify(EMOJIS));
-               return  EMOJIS[code] ;
-
-             }else
-               {
-                       return EMOJIS[code];
-
-
-               }
-          }
-
-
-        function doStuffOnInstancesMutation(mutations) {
-                for (const mutation of mutations) {
-                    if (mutation.addedNodes.length > 0) {
-                        for (const node of mutation.addedNodes) {
-
-
-                              if(node.id!="instance-0" && !node.classList.contains("background-instance"))
-                                {  const emojiSpan = node.querySelector(".instance-emoji");
-                                   const emoji     = emojiSpan.textContent;
-                                   const avg=getEmojiColors(emoji)[0];
-                                   node.style.setProperty("--avgColor",avg);
-                                   node.style.setProperty("--maxFreq",getEmojiColors(emoji)[1]);
-                                   node.style.setProperty("--shadow-rgb",avg);
-
-                                 let text_div      = node.querySelector(".instance-discovered-text");
-                                 if(text_div){
-                                   text_div.style.setProperty("--main-color","color-mix( in srgb,"+avg+",#fff 60%)");
-                                   text_div.style.setProperty("--second-color",avg);
-                                 let discovery_img = text_div.querySelector(".instance-discovered-emoji");
-                                 if(discovery_img)
-                                  discovery_img.src=`data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"
-             width="10px" height="10px"><path fill="%23`+ avg.substring(1) +`" d="M49.306 26.548l-11.24-3.613-3.613-11.241C34.319
+                        let text_div = node.querySelector(".instance-discovered-text");
+                        if (text_div) {
+                            text_div.style.setProperty("--main-color", "color-mix( in srgb," + avg + ",#fff 60%)");
+                            text_div.style.setProperty("--second-color", avg);
+                            let discovery_img = text_div.querySelector(".instance-discovered-emoji");
+                            if (discovery_img)
+                                discovery_img.src =
+                                    `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"
+             width="10px" height="10px"><path fill="%23` +
+                                    avg.substring(1) +
+                                    `" d="M49.306 26.548l-11.24-3.613-3.613-11.241C34.319
              11.28 33.935 11 33.5 11s-.819.28-.952.694l-3.613 11.241-11.24 3.613C17.28 26.681 17 27.065 17
              27.5s.28.819.694.952l11.24 3.613 3.613 11.241C32.681 43.72 33.065 44 33.5 44s.819-.28.952-.694l3.613-11.241
              11.24-3.613C49.72 28.319 50 27.935 50 27.5S49.72 26.681 49.306 26.548zM1.684 13.949l7.776 2.592 2.592 7.776C12.188 24.725
@@ -146,40 +121,33 @@
              1 13S1.275 13.813 1.684 13.949zM17.316 39.05l-5.526-1.842-1.842-5.524C9.813 31.276 9.431 31 9 31s-.813.275-.948.684L6.21
              37.208.685 39.05c-.408.136-.684.518-.684.949s.275.813.684.949l5.526 1.842 1.841 5.524C8.188 48.721 8.569 48.997 9
              48.997s.813-.275.948-.684l1.842-5.524 5.526-1.842C17.725 40.811 18 40.429 18 39.999S17.725 39.186 17.316 39.05z"/></svg>`;
-                                }}
                         }
                     }
                 }
             }
+        }
+    }
 
-            function initColors() {
+    function initColors() {
+        EMOJIS = {};
+        console.log("init colors");
 
-                     EMOJIS = {};
-                      console.log("init colors");
+        if (localStorage.getItem("emojiColors") != null) {
+            EMOJIS = JSON.parse(localStorage.getItem("emojiColors"));
+        }
 
+        const instanceObserver = new MutationObserver((mutations) => {
+            doStuffOnInstancesMutation(mutations);
+        });
 
-                      if( localStorage.getItem("emojiColors")!=null)
-                      {
-                          EMOJIS = JSON.parse(localStorage.getItem("emojiColors"));
-                      }
+        instanceObserver.observe(document.getElementsByClassName("instances")[0], {
+            childList: true,
+            subtree: true,
+        });
+    }
 
-                const instanceObserver = new MutationObserver((mutations) => {
-                    doStuffOnInstancesMutation(mutations);
-                });
-
-                instanceObserver.observe(document.getElementsByClassName("instances")[0], {
-                    childList: true,
-                    subtree  : true,
-
-                });
-
-
-            }
-
-       function injectCSS()
-      {
-
-        let css=`
+    function injectCSS() {
+        let css = `
         :root {
               --mouse-x: 0px;
               --avgColor:rgb(0,255,255);
@@ -408,22 +376,14 @@
 
         `;
 
-         let style = document.createElement('style');
-         style.appendChild(document.createTextNode(css.trim()));
-         document.getElementsByTagName('head')[0].appendChild(style);
+        let style = document.createElement("style");
+        style.appendChild(document.createTextNode(css.trim()));
+        document.getElementsByTagName("head")[0].appendChild(style);
+    }
 
-
-
-      }
-
-
-
-    window.addEventListener('load', async () => {
-              console.log("Welcome to themes");
-              injectCSS();
-              initColors();
-
+    window.addEventListener("load", async () => {
+        console.log("Welcome to themes");
+        injectCSS();
+        initColors();
     });
-
-
-    })();
+})();

@@ -5,7 +5,7 @@
 // @match         https://neal.fun/infinite-craft/*
 // @grantv        unsafeWindow
 // @run-at        document-end
-// @version       0.1.1
+// @version       0.1.2
 // @author        zeroptr
 // @downloadURL   https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/SaveFileInfo/index.user.js
 // @updateURL     https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/SaveFileInfo/index.user.js

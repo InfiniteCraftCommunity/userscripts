@@ -24,7 +24,7 @@ window.addEventListener("load", async () => {
     // which ruins muscle memory because the order is always random
     setTimeout(() => document.querySelector(".side-controls").append(button), 1);
 
-    $injectStyle(".modal{margin:auto;max-width:75%;max-height:75%;padding-top:0px;border:1px solid var(--border-color);background-color:var(--background-color);font-family:Roboto,sans-serif;border-radius:5px;outline:none!important}.modal::backdrop{background-color:rgba(0,0,0,.5)}.modal-header{position:sticky;top:0;display:flex;gap:1rem;padding-top:16px;padding-bottom:16px;justify-content:space-between;align-items:center;align-content:center;background-color:var(--background-color)user-select:none}.modal-title{font-size:20px;line-height:35px;color:var(--text-color)}.modal-text{font-size:15px;color:var(--text-color);user-select:none;pointer-events:unset!important;text-align:left!important}");
+    $injectStyle(".modal{margin:auto;max-width:75%;max-height:75%;padding-top:0px;border:1px solid var(--border-color);background-color:var(--background-color);font-family:Roboto,sans-serif;border-radius:5px;outline:none!important}.modal::backdrop{background-color:rgba(0,0,0,.5)}.modal-header{position:sticky;top:0;display:flex;gap:1rem;padding-top:16px;padding-bottom:16px;justify-content:space-between;align-items:center;align-content:center;background-color:var(--background-color);user-select:none}.modal-title{font-size:20px;line-height:35px;color:var(--text-color)}.modal-text{font-size:15px;color:var(--text-color);user-select:none;pointer-events:unset!important;text-align:left!important}");
     $injectStyle(`
         #savefile_info .modal-text > div {
             display: grid;

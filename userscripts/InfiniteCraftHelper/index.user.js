@@ -46,7 +46,7 @@
             return 1;
         return current.localeCompare(latest, undefined, { numeric: true, sensitivity: 'case', caseFirst: 'upper' }) === -1;
     }
-    
+
     function init$d(elements) {
         GM.xmlHttpRequest({
             method: 'GET',
@@ -354,9 +354,16 @@
         font-family: Roboto, sans-serif;
         line-height: 35px;
         color: var(--text-color);
+    }
+
+    .modal-title:not(:has(.display-item-emoji)) {
         -webkit-user-select: none;
         -moz-user-select: none;
         user-select: none;
+    }
+
+    .modal-title .display-item-emoji {
+        padding-right: .3em;
     }
 
     .modal-text {
@@ -442,7 +449,7 @@
         pointer-events: none;
     }
 `;
-    
+
     function init$b(elements) {
         elements.styles.appendChild(document.createTextNode(css.trim()));
         document.getElementsByTagName('head')[0].appendChild(elements.styles);
@@ -457,7 +464,7 @@
     window.addEventListener('keyup', (event) => {
         keysPressed[event.key] = false;
     });
-    
+
     function setMiddleClickOnMutations(mutations, elements) {
        for (const mutation of mutations) {
             if (mutation.addedNodes.length > 0) {
@@ -563,7 +570,7 @@
             craftsModal.close();
         });
     }
-    
+
     async function addElementToCrafts(first, second, result, loading = false) {
         const ingredients = [first, second].sort((a, b) => {
             if (a.text > b.text) return 1;
@@ -590,14 +597,14 @@
             await GM.setValue('recipes', JSON.stringify(recipes));
         }
     }
-    
+
     function openCraftsForElement(element) {
         craftsTitle.innerHTML = '';
         const titleEmoji = document.createElement('span');
         titleEmoji.classList.add('display-item-emoji');
         titleEmoji.appendChild(document.createTextNode(element.emoji ?? '⬜'));
         craftsTitle.appendChild(titleEmoji);
-        craftsTitle.appendChild(document.createTextNode(` ${element.text} `));
+        craftsTitle.appendChild(document.createTextNode(element.text));
         craftsContainer.innerHTML = '';
         const elementRecipes = recipes[element.text];
         if (elementRecipes === undefined) {
@@ -659,7 +666,7 @@
         }
         craftsModal.showModal();
     }
-    
+
     async function resetCrafts() {
         recipes = {};
         await GM.setValue('recipes', '{}');
@@ -1781,7 +1788,7 @@
                         return cloneInto(elements.filter((el) => el.discovered), unsafeWindow);
                     }
                     if (unsafeWindow.$nuxt.$root.$children[1].$children[0].$children[0]._data.sortBy === 'name') {
-                        return cloneInto(elements, unsafeWindow).sort((a, b) => 
+                        return cloneInto(elements, unsafeWindow).sort((a, b) =>
                             (a.text > b.text ? 1 : a.text < b.text ? -1 : 0)
                         );
                     }
@@ -1789,7 +1796,7 @@
                         return cloneInto(elements, unsafeWindow).sort((a, b) => {
                             const emojiA = a.emoji ?? '⬜';
                             const emojiB = b.emoji ?? '⬜';
-                        
+
                             return emojiA > emojiB ? 1 : emojiA < emojiB ? -1 : 0;
                         });
                     }
@@ -1965,7 +1972,7 @@
         init(elements);
         dispatchEvent(new Event('helper-load'))
     }, false);
-    
+
     window.addEventListener('contextmenu', (e) => {
         e.preventDefault();
     });

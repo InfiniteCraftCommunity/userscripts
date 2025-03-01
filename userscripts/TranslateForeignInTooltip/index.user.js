@@ -37,7 +37,8 @@
                 const result = await response.json();
                 console.log(result);
 
-                if (result[2] != "en") return result[2].toUpperCase() + " " + result[0][0][0];
+                if (result[2].trim().toLowerCase() != "en" &&  result[0][0][0].trim()!=text.trim()) 
+                  return result[2].toUpperCase() + " " + result[0][0][0];
             }
 
             return "";

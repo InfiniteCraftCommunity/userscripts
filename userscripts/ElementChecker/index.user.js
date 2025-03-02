@@ -1,12 +1,13 @@
 // ==UserScript==
-// @name        Element Finder
+// @name        Element Checker
 // @namespace   Violentmonkey Scripts
 // @match       https://neal.fun/infinite-craft/*
 // @grant       unsafeWindow
+// @grant       GM.getValue
 // @run-at      document-end
-// @version     2.0
-// @author      BrentBE, Chad
-// @description Checks if specified elements exist in *current* savefile. Options: Any Caps, Emoji, Insert List
+// @version     3.0
+// @author      BrentBE and Chad
+// @description Checks if specified elements exist in *current* savefile. Options: Any Caps, Emoji, Insert List | Also can check for elements with missing recipes.
 // ==/UserScript==
 
 window.addEventListener("load", () => {
@@ -202,8 +203,73 @@ window.addEventListener("load", () => {
             input.click();
         });
 
-        buttonGroup.appendChild(checkButton);
+        const noRecipesButton = document.createElement("button");
+        noRecipesButton.textContent = "No Recipes";
+        noRecipesButton.addEventListener("click", async () => {
+            console.log("Fetching elements and recipes...");
+
+            const vueInstance = document.querySelector(".container").__vue__;
+            if (!vueInstance || !vueInstance.elements) {
+                console.log("Vue instance or elements missing");
+                return;
+            }
+
+            let recipes = {};
+            try {
+                const save = await getSave().then(res => res.json());
+                recipes = save.recipes || {};
+            } catch (error) {
+                console.error("Failed to fetch recipes:", error);
+                return;
+            }
+
+            console.log("Elements and recipes fetched successfully.");
+
+            const noRecipeElements = vueInstance.elements.filter(el => !recipes.hasOwnProperty(el.text));
+
+            noRecipesButton.innerHTML = `No Recipes <br> (${noRecipeElements.length} found)`;
+            noRecipesButton.style.whiteSpace = "normal";
+
+            const fileContent = noRecipeElements.length
+                ? noRecipeElements.map(el => el.text).join("\n")
+                : "All elements have recipes.";
+
+            const blob = new Blob([fileContent], { type: 'text/plain' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "no_recipes.txt";
+            link.click();
+        });
+
+        function getSave() {
+            return new Promise((resolve, reject) => {
+                const handleClick = HTMLElement.prototype.click;
+                HTMLElement.prototype.click = () => HTMLElement.prototype.click = handleClick;
+
+                const bodyObserver = new MutationObserver((mutations) => {
+                    for (const mutation of mutations) {
+                        const anchor = [...mutation.addedNodes].find(n => n.download === "infinitecraft.json");
+                        if (anchor) return fetch(anchor.href).then(resolve);
+                    }
+                });
+
+                bodyObserver.observe(document.body, { childList: true, subtree: true });
+                handleClick.call(document.querySelector(".setting[for=import-save] + .setting"));
+
+                setTimeout(() => {
+                    bodyObserver.disconnect();
+                    reject("Timed out");
+                }, 1500);
+            });
+        }
+
+
         buttonGroup.appendChild(insertListButton);
+        buttonGroup.appendChild(checkButton);
+        buttonGroup.appendChild(noRecipesButton);
+
+
+
 
         const checkboxGroup = document.createElement("div");
         checkboxGroup.classList.add("checkbox-group");

@@ -5,7 +5,7 @@
 //
 // @match           https://infinibrowser.wiki/item*
 //
-// @version         3.0.0
+// @version         3.1.0
 // @author          GameRoMan
 // @description     Adds alternative lineages to InfiniBrowser
 //
@@ -28,9 +28,9 @@
 
 
 	async function loadLineages(type) {
-		const itemID = window.location.pathname.split('/')[2];
+		const itemId = window.location.pathname.split('/')[2];
 
-		return fetch(`https://ib.gameroman.workers.dev/alt-lineages/get?type=${type}&id=${itemID}`)
+		return fetch(`https://ib.gameroman.workers.dev/alt-lineages/get?type=${type}&id=${itemId}`)
 			.then(res => res.json())
 			.catch(() => []);
 	}
@@ -48,8 +48,8 @@
 			return;
 		}
 
-		const lineageID = input.split('https://infinibrowser.wiki/item/')[1];
-		if (lineageID.length != 26) {
+		const lineageId = input.split('https://infinibrowser.wiki/item/')[1];
+		if (lineageId.length != 26) {
 			document.getElementById('status-text').textContent = 'Invalid input';
 			statusText.style.color = '#FFAAAA';
 			return;
@@ -57,7 +57,7 @@
 
 		document.getElementById('status-text').textContent = 'Processing...';
 		statusText.style.color = '#777777';
-		fetch(`https://ib.gameroman.workers.dev/alt-lineages/submit?id=${encodeURIComponent(lineageID)}`, {
+		fetch(`https://ib.gameroman.workers.dev/alt-lineages/submit?id=${encodeURIComponent(lineageId)}`, {
 			method: 'POST'
 		})
 			.then(response => response.json())
@@ -227,7 +227,7 @@ width: 475px;
 				lineageDiv.textContent = `${lineage.steps} steps`;
 
 				lineageDiv.addEventListener('click', () => {
-					const newTab = window.open(lineage.lineage, '_blank');
+					const newTab = window.open(`https://infinibrowser.wiki/item/${lineage.lineageId}`, '_blank');
 
 					if (newTab) {
 						newTab.focus();

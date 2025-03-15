@@ -1,4 +1,4 @@
-# Alternative Lineages | [Install](https://gameroman.pages.dev/userscripts/infinite-craft/users/gameroman/alt-lineages/index.user.js)
+# Alternative Lineages | [Install](https://roman.is-a.dev/userscripts/infinite-craft/users/gameroman/alt-lineages/index.user.js)
 
 Adds alternative lineages to InfiniBrowser
 

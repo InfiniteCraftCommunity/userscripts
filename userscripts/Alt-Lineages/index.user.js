@@ -5,7 +5,7 @@
 //
 // @match           https://infinibrowser.wiki/item*
 //
-// @version         3.0.0
+// @version         4.0.0
 // @author          GameRoMan
 // @description     Adds alternative lineages to InfiniBrowser
 //
@@ -28,13 +28,13 @@
 
 
 	async function loadLineages(type) {
-		const itemID = window.location.pathname.split('/')[2];
+		const urlParams = new URLSearchParams(window.location.search);
+		const itemId = urlParams.get('id') || window.location.pathname.split('/')[2];
 
-		return fetch(`https://ib.gameroman.workers.dev/alt-lineages/get?type=${type}&id=${itemID}`)
+		return fetch(`https://ib.gameroman.workers.dev/alt-lineages/get?type=${type}&id=${itemId}`)
 			.then(res => res.json())
 			.catch(() => []);
 	}
-
 
 	async function submitLineage() {
 		const statusText = document.getElementById('status-text');
@@ -48,32 +48,62 @@
 			return;
 		}
 
-		const lineageID = input.split('https://infinibrowser.wiki/item/')[1];
-		if (lineageID.length != 26) {
+		const lineageId = input.split('https://infinibrowser.wiki/item/')[1];
+		if (lineageId.length != 26) {
 			document.getElementById('status-text').textContent = 'Invalid input';
+			statusText.style.color = '#FFAAAA';
+			return;
+		}
+
+		// Retrieve data from localStorage or initialize it
+		let storedData = JSON.parse(localStorage.getItem('lineageData') || '{"submittedLineages": [], "errors": {}}');
+
+		// Check if the lineage has already been submitted
+		if (storedData.submittedLineages.includes(lineageId)) {
+			statusText.textContent = 'You have already submitted this lineage';
+			statusText.style.color = '#FFCC00';
+			return;
+		}
+
+		// Check if the lineage has an error cached
+		if (storedData.errors[lineageId]) {
+			statusText.textContent = storedData.errors[lineageId];
 			statusText.style.color = '#FFAAAA';
 			return;
 		}
 
 		document.getElementById('status-text').textContent = 'Processing...';
 		statusText.style.color = '#777777';
-		fetch(`https://ib.gameroman.workers.dev/alt-lineages/submit?id=${encodeURIComponent(lineageID)}`, {
+
+		fetch(`https://ib.gameroman.workers.dev/alt-lineages/submit?id=${encodeURIComponent(lineageId)}`, {
 			method: 'POST'
 		})
 			.then(response => response.json())
 			.then(data => {
-				if (data['OK']) {
-					document.getElementById('status-text').textContent = 'Submitted successfully!';
+				if (data.OK) {
+					statusText.textContent = data.message;
 					statusText.style.color = '#AAFFAA';
+
+					// Add the lineage to the list of submitted lineages
+					storedData.submittedLineages.push(lineageId);
+					localStorage.setItem('lineageData', JSON.stringify(storedData));
 				} else {
-					document.getElementById('status-text').textContent = 'Something when wrong!';
+					statusText.textContent = data.error;
 					statusText.style.color = '#FFAAAA';
+
+					// Store the error in the errors object
+					storedData.errors[lineageId] = data.error;
+					localStorage.setItem('lineageData', JSON.stringify(storedData));
 				}
 			})
 			.catch((e) => {
-				document.getElementById('status-text').textContent = 'Invalid input';
+				statusText.textContent = 'An error occurred';
 				statusText.style.color = '#FFAAAA';
-			})
+
+				// Store the error in the errors object
+				storedData.errors[lineageId] = e.message;
+				localStorage.setItem('lineageData', JSON.stringify(storedData));
+			});
 	}
 
 	function closeModal() {
@@ -177,6 +207,7 @@ width: 475px;
 
 		const statusText = document.createElement('p');
 		statusText.id = 'status-text';
+		statusText.style.margin = 0;
 		modal.appendChild(statusText);
 
 		const submitButton = document.createElement('button');
@@ -227,7 +258,7 @@ width: 475px;
 				lineageDiv.textContent = `${lineage.steps} steps`;
 
 				lineageDiv.addEventListener('click', () => {
-					const newTab = window.open(lineage.lineage, '_blank');
+					const newTab = window.open(`https://infinibrowser.wiki/item/${lineage.lineageId}`, '_blank');
 
 					if (newTab) {
 						newTab.focus();

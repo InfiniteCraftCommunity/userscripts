@@ -1,3 +1,9 @@
+> [!WARNING]
+> 
+> **Most user scripts are currently broken due to a recent client update.**  
+> Script authors are working their best to fix and update their scripts.  
+> Please make sure to update your scripts to their latest versions to ensure proper functionality.  
+
 # User Scripts
 
 A collection of community-made user scripts for [Infinite Craft](https://neal.fun/infinite-craft).

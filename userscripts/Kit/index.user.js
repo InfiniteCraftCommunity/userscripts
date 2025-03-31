@@ -4,21 +4,42 @@
 // @author        Catstone
 // @namespace     Catstone
 // @downloadURL   https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/Kit/index.user.js
-// @version       3.4
+// @version       3.5
 // @description   Kit can literally make anything, apart from some stuff. Open the Console (Ctrl + Shift + I) and type revive(`words`) in there. Seperate multiple elements by new lines. To modify tools used, check out the settings at the top of the code.
 // ==/UserScript==
+debugger;
 
 (function () {
     'use strict';
 
     // Settings
-    const spacingChars = new Set([' ', '-']); // the bot splits the line into chunks so its easier to revive: "A Cat Loves-Food" -> "A", "Cat", "Loves", "Food"
-    const parallelBots = 15; // more bots = less combining downtime, also means less understanding of what da hell is going on
-    const combineTime = 400; // 400ms
-    const addSuccessfulSpellingsToElements = true; // Adds Successful spellings to sidebar
-    const addFailedSpellingsToElements = true; // Adds Failed Spellings to sidebar
-    const logMessages = true; // wether it logs what its doing
-    const Window = unsafeWindow || window; // change this to window if you are on mobile i guess
+    const set = {
+        legitMode: true, // if you toggle this off, it will use tools that are NOT in your save. BE CAREFUL. (will also add everything it gets to the save)
+
+        spacingChars: new Set([' ', '-']), // the bot splits the line into chunks so its easier to revive: "A Cat Loves-Food" -> "A", "Cat", "Loves", "Food"
+
+        parallelBots: 15, // more bots means less combining downtime, also means less understanding of what da hell is going on
+        combineTime: 500, // milliseconds
+
+        addSuccessfulSpellingsToElements: true, // Adds Successful spellings to sidebar
+        addFailedSpellingsToElements: true, // Adds Failed Spellings to sidebar
+        addEverythingToElements: false,  // can be changed to true or false to add everything to sidebar
+
+        canMoveBackLetter: true,  // if it fails it goes back 1 letter first
+
+        deadcheckAndSkip: false,  // first deadchecks an element... if its alive, it gets skipped
+        deadcheckElements: ['?', '??', '???'],
+
+        logMessages: 2,  // 0 -> Off, 1 -> starting to revive and despell messages, 2 -> trying to combine messages, 3 -> debug info
+    }
+    // can also be modified ingame using `revive.settings.example = true`, but this will reset on refresh
+
+
+
+
+
+
+    const Window = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window;
 
     // (["Delete", "Remove"], ["The", null], ["Mr."]) -> ["Delete The Mr.", "Delete Mr.", "Remove The Mr.", "Remove Mr." ]
     function generateToolCombinations(...arrays) {
@@ -116,23 +137,23 @@
           return this.customAppendCharacterTools[char] || [];
         },
         quirkyQuote: (quote) => [
-          quote, quote.splice(-1, ' '), quote.splice(-1, 'quotation Mark'), quote.splice(-1, 'quotation Marks'), quote.splice(-1, 'put This In Quotation Marks'), quote.splice(-1, 'put Them In Quotation Marks'),
-          quote.splice(-1, 'prepend Quotation Mark'), quote.splice(-1, 'prepend Quotation Marks'), quote.splice(-1, 'prepend Quote'),
-          quote.splice(-1, 'prepend Quotation'), quote.splice(-1, '[/inst]'), quote.splice(-1, '[/st]'), quote.splice(-1, '[/nst]'),
-          ..."abcdefghijklmnopqrstuvwxyz!\"#$%&'()*+,-./0123456789".split('').flatMap(x => quote.splice(-1, x)), `Append(${quote})`,
+          quote, splice(quote, -1, ' '), splice(quote, -1, 'quotation Mark'), splice(quote, -1, 'quotation Marks'), splice(quote, -1, 'put This In Quotation Marks'), splice(quote, -1, 'put Them In Quotation Marks'),
+          splice(quote, 'prepend Quotation Mark'), splice(quote, 'prepend Quotation Marks'), splice(quote, 'prepend Quote'),
+          splice(quote, 'prepend Quotation'), splice(quote, '[/inst]'), splice(quote, '[/st]'), splice(quote, '[/nst]'),
+          ..."abcdefghijklmnopqrstuvwxyz!\"#$%&'()*+,-./0123456789".split('').flatMap(x => splice(quote, -1, x)), `Append(${quote})`,
         ],
         addParentheses: (parent) => [
-          parent, parent.splice(-1, 'prepend Left Parenthesis'), parent.splice(-1, 'prepend Left Parentheses'), parent.splice(-1, 'prepend Opening Parenthesis'), parent.splice(-1, 'prepend Opening Parentheses'),
-          ...generateToolCombinations(["Prepend"], ["Left", "Opening", null], ["Parenthesis", "Parentheses", "Bracket", "Braces"]), "Prepend " + parent.splice(-1, 'parenthesis'),
-          "Prepend " + parent.splice(-1, 'parentheses'), "Append " + parent.splice(-1, 'parenthesis'), "Append " + parent.splice(-1, 'parentheses'), parent.splice(-1, ' '), parent.splice(-1, 'parenthesis'),
-          parent.splice(-1, 'put This In Parenthesis'), parent.splice(-1, 'put This In Parentheses'),
+          parent, splice(parent, -1, 'prepend Left Parenthesis'), splice(parent, -1, 'prepend Left Parentheses'), splice(parent, -1, 'prepend Opening Parenthesis'), splice(parent, -1, 'prepend Opening Parentheses'),
+          ...generateToolCombinations(["Prepend"], ["Left", "Opening", null], ["Parenthesis", "Parentheses", "Bracket", "Braces"]), "Prepend " + splice(parent, -1, 'parenthesis'),
+          "Prepend " + splice(parent, -1, 'parentheses'), "Append " + splice(parent, -1, 'parenthesis'), "Append " + splice(parent, -1, 'parentheses'), splice(parent, -1, ' '),splice(parent, -1, 'parenthesis'),
+          splice(parent, -1, 'put This In Parenthesis'), splice(parent, -1, 'put This In Parentheses'),
         ]
 
     }
 
     // every single spellTech the bot uses is listed here.
     const spellTechs = [
-      { // convertable quote stuff
+      {     // convertable quote stuff
           trigger: (elem) => elem.startsWith('“') && elem.endsWith('”'),
           tech: '""',
           deSpell: (line) => [...tools.quirkyQuote('“”')],
@@ -140,19 +161,54 @@
           stopAfter: true,
           disabled: false,
       }, {
+          trigger: (elem) => elem.startsWith('“') && elem.endsWith('”'),
+          tech: '"a"',
+          modifyElement: (elem) => elem.slice(1, -1),
+          stopAfter: false,
+          disabled: false,
+          deSpell: (line) => [
+              {
+                  start: `"a${line}"`,
+                  goal: `"${line}"`,
+                  tools: [...tools.removeFirstCharacter, ...tools.removeChar("a")]
+              },
+              {
+                  start: `"${line}"`,
+                  tools: tools.quirkyQuote('“”'),
+              },
+          ],
+      }, {
           trigger: (elem) => elem.startsWith('❝') && elem.endsWith('❞'),
           tech: '""',
-          deSpell: (line) => [...tools.quirkyQuote('❝❞')],
+          deSpell: (line) => [{
+                    start: `"${line}"`,
+                    tools: [...tools.quirkyQuote('❝❞')]
+                }, {
+                    start: `"${line}"`,
+                    goal: `“${line}”`,
+                    tools: tools.quirkyQuote('“”'),
+                }, {
+                    start: `“${line}”`,
+                    tools: [...tools.quirkyQuote('❝❞')]
+                },],
           modifyElement: (elem) => elem.slice(1, -1),
           stopAfter: true,
           disabled: false,
       }, {
           trigger: (elem) => elem.startsWith('‘') && elem.endsWith('’'),
-          tech: '""',
+          tech: "''",
           deSpell: (line) => [...tools.quirkyQuote('‘’')],
           modifyElement: (elem) => elem.slice(1, -1),
           stopAfter: true,
           disabled: false,
+      }, {
+          trigger: (elem) => elem.startsWith('「') && elem.endsWith('」'),
+          tech: '""',
+          deSpell: (line) => [...tools.quirkyQuote('「」')],
+          modifyElement: (elem) => elem.slice(1, -1),
+          stopAfter: false,
+          disabled: false,
+
 
 
       }, {  // normal quote stuff!!
@@ -160,9 +216,42 @@
           tech: '""',
           deSpell: (line) => [],
           modifyElement: (elem) => elem.slice(1, -1),
-          stopAfter: true,
           disabled: false,
       }, {
+          trigger: (elem) => elem.startsWith('"') && elem.endsWith('"'),
+          tech: '"0"',
+          deSpell: (line) => [...tools.removeFirstCharacter, ...tools.removeChar('0')],
+          modifyElement: (elem) => elem.slice(1, -1),
+          disabled: false,
+      }, {
+          trigger: (elem) => elem.startsWith('"') && elem.endsWith('"'),
+          tech: '"a"',
+          deSpell: (line) => [...tools.removeFirstCharacter, ...tools.removeChar('a')],
+          modifyElement: (elem) => elem.slice(1, -1),
+          disabled: false,
+      },  {
+          trigger: (elem) => elem.startsWith('"') && elem.endsWith('"'),
+          tech: '"b"',
+          deSpell: (line) => [...tools.removeFirstCharacter, ...tools.removeChar('b')],
+          modifyElement: (elem) => elem.slice(1, -1),
+          disabled: false,
+      },  {
+          trigger: (elem) => elem.startsWith('"') && elem.endsWith('"'),
+          tech: '"c"',
+          deSpell: (line) => [...tools.removeFirstCharacter, ...tools.removeChar('c')],
+          modifyElement: (elem) => elem.slice(1, -1),
+          disabled: false,
+      },  {
+          trigger: (elem) => elem.startsWith('"') && elem.endsWith('"'),
+          tech: '"d"',
+          deSpell: (line) => [...tools.removeFirstCharacter, ...tools.removeChar('d')],
+          modifyElement: (elem) => elem.slice(1, -1),
+          stopAfter: true,
+          disabled: false,
+
+
+
+      }, {  // fancy quotes
           trigger: (elem) => elem.startsWith("'") && elem.endsWith("'"),
           tech: "''",
           deSpell: (line) => [],
@@ -194,27 +283,23 @@
           deSpell: (line) => [...tools.addParentheses('{}')],
           modifyElement: (elem) => elem.slice(1, -1),
           disabled: false,
-      },
 
 
 
 
-      {   // #element
+      },  {   // #element
           trigger: (elem) => elem.startsWith('#'),
           tech: '""',
           deSpell: () => [...tools.prependHashtag],
           modifyElement: (elem) => elem.slice(1),
           disabled: false,
-      },
-      {   // @element
+      },  {   // @element
           trigger: (elem) => elem.startsWith('@'),
           tech: '""',
           deSpell: (elem) => [...tools.prependAt, "@"+elem.slice(0, 1), "@"+elem.slice(0, 2)],
           modifyElement: (elem) => elem.slice(1),
           disabled: false,
-      },
-
-      {   // Mr. Element
+      },  {   // Mr. Element
           trigger: (elem) => elem.startsWith('Mr. '),
           tech: '"hi Mr. "',
           deSpell: (elem) => [...tools.removeHi],
@@ -234,13 +319,19 @@
           ],
           modifyElement: (elem) => elem.slice(4),
           disabled: false,
-      },
 
 
 
 
 
-      {
+
+
+
+
+
+
+
+      },  {   // completely normal spelling
           tech: '"hi Mr. "',
           deSpell: (elem) => [
               { start: `"hi Mr. ${elem}"`,
@@ -258,6 +349,10 @@
           tech: '"hi "',
           deSpell: (elem) => [...tools.removeHi],
           disabled: false,
+      }, {
+            tech: '"hi-"',
+            deSpell: (elem) => [...tools.removeHi],
+            disabled: false,
 
       }, {
           tech: '"abcd"',
@@ -279,6 +374,10 @@
 
       }, {
           tech: '"the "',
+          deSpell: (elem) => [...tools.removeThe],
+          disabled: false,
+      }, {
+          tech: '"the-"',
           deSpell: (elem) => [...tools.removeThe],
           disabled: false,
 
@@ -328,49 +427,70 @@
 
 
 
-    const recipesIng = {};
-    const recipesRes = new Map();
-    // const aliveSet = new Set();   // elements from results or ingredients of recipes (not implementing because zombies mess this up sometimes :(( )
-    const emojiMap = new Map();
-    const failedSpellingsMap = new Map();
-    let elementStorageSet = new Set();
 
-    const processedElementsList = [];
+
+    const o = {
+        recipesIng: new Map(),
+        recipesResPerElement: new Map(), // gets cleared
+        elementLineageMap: new Map(),
+
+        lastCombination: Date.now(),
+        currentRequests: new Map(),  // no duplicate requests
+
+        failedSpellingsMap: new Map(), // gets cleared
+        aliveSet: new Set(),
+        emojiMap: new Map(),
+        elementStorageMap: new Map(),    // stores every element with true, also stores icCase of every element with false
+        processedElementsList: [],
+
+        icCasedLookup: new Map(),  // optimization to store icCased Elements
+    }
+
+
+
+
+    if (set.legitMode) set.addEverythingToElements = true;
+
 
     window.addEventListener('load', () => {
-        if (addFailedSpellingsToElements || addSuccessfulSpellingsToElements) elementStorageSet = new Set(document.querySelector(".container").__vue__.elements.map(x => x.text));
+        if (set.addFailedSpellingsToElements || set.addSuccessfulSpellingsToElements || set.addEverythingToElements) {
+            o.elementStorageMap = new Map(document.querySelector(".container").__vue__.elements.map(x => [x.text, true]));
+            for (const element of o.elementStorageMap.keys()) {
+                const elementIC = icCase(element);
+                if (!o.elementStorageMap.has(elementIC)) o.elementStorageMap.set(icCase(element), false);
+            }
+        }
 
         Window.revive = async function (input) {
-            const elems = input.split('\n').filter(Boolean).map(x => x.trim());
+            const elems = input.split('\n').filter(Boolean).map(x => icCase(x.trim()));
             console.log("Revive called with words:", elems);
             console.time();
 
             await reviveElements(elems);
 
-            Window.revivingProgress();
             console.timeEnd();
+            Window.revive.progress();
         }
 
-        Window.revivingProgress = function () {
-            const groupLineages = ['%cLineages', 'background: purple; color: white']
-            const lineageMessage = processedElementsList.filter(x => resultExists(x)).map(x => `Revived: ${x}${makeLineage(x)}`).join('\n\n');
-            console.group(...groupLineages);
-            if (lineageMessage) console.log(lineageMessage);
-            console.groupEnd(...groupLineages);
-
-            const successMessage = processedElementsList.filter(x => resultExists(x));
-            const groupSuccess = [`%cSuccessfully Revived Elements: (${successMessage.length})`, 'background: green; color: white'];
-            console.group(...groupSuccess);
-            if (successMessage.length > 0) console.log(successMessage.join('\n'));
-            console.groupEnd(...groupSuccess);
-
-            const failedMessage = processedElementsList.filter(x => !resultExists(x));
-            const groupFailed = [`%cFailed to Revive Elements: (${failedMessage.length})`, 'background: red; color: white'];
-            console.group(...groupFailed);
-            if (failedMessage.length > 0) console.log(failedMessage.join('\n'));
-            console.groupEnd(...groupFailed);
+        Window.revive['progress'] = function () {
+            makeGroupMessage('Lineages', 'purple', o.processedElementsList.filter(x => isAlive(x) && o.elementLineageMap.has(x)), list => list.map(x => `Revived: ${x}${o.elementLineageMap.get(x)}`).join('\n\n'));
+            makeGroupMessage('Successfully Revived Elements', 'green', o.processedElementsList.filter(x => isAlive(x) && o.elementLineageMap.get(x)), list => list.join('\n'));
+            makeGroupMessage('Failed to Revived Elements', 'red', o.processedElementsList.filter(x => !isAlive(x)), list => list.join('\n'));
+            makeGroupMessage('Deadchecked And Alive', 'gray', o.processedElementsList.filter(x => isAlive(x) && !o.elementLineageMap.get(x)), list => list.join('\n'));
         }
+
+
+        Window.revive['variables'] = o;  // expose all structures
+        Window.revive['settings'] = set;  // expose all settings
     });
+
+    const makeGroupMessage = (name, color, list, listToMessage) => {
+        if (list.length > 0) {
+            console.group(`%c${name} (${list.length})`, `background: ${color}; color: white`);
+            if (list.length > 0) console.log(listToMessage(list));
+            console.groupEnd();
+        }
+    }
 
 
 
@@ -389,13 +509,24 @@
         async function worker() {
             while (queue.length > 0) {
                 const elem = queue.shift();
-                await reviveElement(elem);
-                processedElements++;
-                processedElementsList.push(elem);
+                if (!o.processedElementsList.includes(elem)) {
+                    if (!set.deadcheckAndSkip || !await deadcheck(elem)) {
+                        o.recipesResPerElement.set(elem, new Map());
+                        o.failedSpellingsMap.set(elem, new Set());
+
+                        await reviveElement(elem);
+
+                        o.elementLineageMap.set(elem, makeLineage(elem));
+                        o.recipesResPerElement.delete(elem);
+                        o.failedSpellingsMap.delete(elem);
+                    }
+                    processedElements++;
+                    o.processedElementsList.push(elem);
+                }
             }
         }
 
-        const workers = Array(parallelBots).fill().map(() => worker());
+        const workers = Array(set.parallelBots).fill().map(() => worker());
         await Promise.all(workers);
         clearInterval(interval);
     }
@@ -403,7 +534,7 @@
 
 
     async function reviveElement(element) {
-        if (logMessages) console.log("starting to revive element:", element);
+        if (set.logMessages >= 1) console.log("starting to revive element:", element);
 
         for (const spellTech of spellTechs) {
             const modifiedElement = spellTech.modifyElement ? spellTech.modifyElement(element) : element;
@@ -412,14 +543,16 @@
                 || (spellTech.trigger && !spellTech.trigger(icCase(element)))
                 || modifiedElement.length + spellTech.tech.length > 30) continue;
 
+            // defaults
+            spellTech.spliceNum ??= -1;
+            spellTech.aliveLength ??= 2;
+
+
             await chunkRevive(spellTech, modifiedElement, element);
             await deSpell(spellTech, modifiedElement, element);
 
             if (finishedSpelling(element)) return;
-            if (spellTech.stopAfter) {
-                failedToSpell(element);
-                return;
-            }
+            if (spellTech.stopAfter) break;
         }
         failedToSpell(element);
     }
@@ -427,38 +560,39 @@
 
 
     async function chunkRevive(spellTech, element, realElement) {
-        const goal = spellTech.tech.splice(-1, element);
-        let currentWordStart = 0;
-        let currentWordEnd = 0;
+        const goal = splice(spellTech.tech, spellTech.spliceNum, element);
 
-        let lastExistingSpelling = spellTech.tech;
-
+        const alives = Array(element.length).fill(false);
+        let movedBack = false;
 
         for (let i = 0; i < element.length; i++) {
 
             const char = element[i]; // Current character
-            if (spacingChars.has(char) || i === 0) {
-                currentWordStart = i + (i !== 0);
-                currentWordEnd = i + 1 + (element+" ").slice(i + 1).split('').findIndex(x => spacingChars.has(x));
-            }
+
+            const currentWordStart = element.slice(0, i+1).split``.findLastIndex(x => set.spacingChars.has(x)) + 1;  // -1 works in my favour
+	          let currentWordEnd = element.slice(i+1).split``.findIndex(x => set.spacingChars.has(x));
+	          currentWordEnd = currentWordEnd === -1 ? element.length : (i + currentWordEnd + 1)
 
             const word = element.slice(currentWordStart, currentWordEnd);   // current word
             const startWord = element.slice(currentWordStart, i);           // already spelled part of the word
             const finishWord = element.slice(i, currentWordEnd);            // Remaining part of the word
             const next2Chars = char + (element[i+1] || "");
             const lastChar = element[i-1] || "";
-            const currentSpelling = spellTech.tech.splice(-1, element.slice(0, i));
+            const currentSpelling = splice(spellTech.tech, spellTech.spliceNum, element.slice(0, i));
 
-            // console.log({spellTech: spellTech, element: element, realElement: realElement},
-            //             {word: word, goal: goal, lastExistingSpelling: lastExistingSpelling, startWord: startWord, finishWord: finishWord, char: char, next2Chars: next2Chars, lastChar: lastChar, currentSpelling: currentSpelling})
 
-            if (i === 0 || i < 2 || resultExists(currentSpelling)) {
-                await tryCombine(
+            if (set.logMessages >= 3) console.log({spellTech: spellTech, element: element, realElement: realElement},
+                                      {i: i, word: word, goal: goal, alives: alives, startWord: startWord, finishWord: finishWord, char: char, next2Chars: next2Chars, lastChar: lastChar, currentSpelling: currentSpelling})
+
+            if (i === 0 || i < spellTech.aliveLength || isAlive(currentSpelling)) {
+                alives[i] = true;
+                const checkAlive = alives[i+1];
+                if (await tryCombine(
                   [currentSpelling],
                   [
                     // only do the first 3 in each 'category'
                     word,                                                           // spelling "catstone" and KIT already spelled "cat"
-                    ...(spacingChars.has(lastChar) ? spellTools.letter2(lastChar + char).slice(0, 3) : []),
+                    ...(set.spacingChars.has(lastChar) ? spellTools.letter2(lastChar + char).slice(0, 3) : []),
                     ...tools.customAppendCharacter(char).slice(0, 3),               // "s"
                     ...spellTools.letter2(next2Chars).slice(0, 3),                  // "st"
                     ...spellTools.word(word).slice(1, 3),                           // "catstone"
@@ -471,7 +605,7 @@
                     ...spellTools.word(finishWord.slice(0, -1)).slice(0, 3),        // "ston"
 
                     // Again, but this time do EVERYTHING
-                    ...(spacingChars.has(lastChar) ? spellTools.letter2(lastChar + char).slice(3) : []),
+                    ...(set.spacingChars.has(lastChar) ? spellTools.letter2(lastChar + char).slice(3) : []),
                     ...tools.customAppendCharacter(char).slice(3),                  // "s"
                     ...spellTools.letter2(next2Chars).slice(3),                     // "st"
                     ...spellTools.word(word).slice(3),                              // "catstone"
@@ -483,13 +617,27 @@
                     ...spellTools.word(word.slice(0, -1)).slice(3),                 // "catston"
                     ...spellTools.word(finishWord.slice(0, -1)).slice(3),           // "ston"
                   ],
-                  [...allStringsFromAUntilB(currentSpelling.slice(1, -1), goal.slice(1, -1)).slice(1).map(x => spellTech.tech[0] + x + spellTech.tech[spellTech.tech.length - 1]), realElement]
-                );
+                  [...(allStrings(currentSpelling, spellTech.spliceNum, element.slice(i)).filter((x, index) => ((alives[i+1]) ? index : true))) /* <- filters first element out if next one was already visited */, realElement],
+                  realElement
+                )) {
+                    // successfull spelling cycle
+                    movedBack = false;
+                }
             }
-            if (resultExists(realElement) || resultExists(goal)) return;
-            if (resultExists(currentSpelling)) lastExistingSpelling = currentSpelling;
+            if (isAlive(realElement) || isAlive(goal)) return;
+
+
+            if (set.canMoveBackLetter && i === element.length - 1) {
+                if (movedBack) break;
+                else {
+                    movedBack = true;
+                    i = alives.findLastIndex(x => x) - 2; // 1 before last alive
+                    if (i < -1) break;
+                }
+            }
         }
         // if this point was reached, it failed.
+        const lastExistingSpelling = splice(spellTech.tech, spellTech.spliceNum, element.slice(0, alives.findLastIndex(x => x) - 1));
         addFailedSpelling(realElement, lastExistingSpelling);
     }
 
@@ -497,80 +645,94 @@
     async function deSpell(spellTech, element, realElement) {
         let deSpellSteps = spellTech.deSpell(element);
 
-        const currentElement = spellTech.tech.splice(-1, element);
+        const currentElement = splice(spellTech.tech, spellTech.spliceNum, element);
 
         // if there is no fancy deSpellStep stuff make it fancy
         if (!deSpellSteps[0] || !deSpellSteps[0].tools) deSpellSteps = [{ tools: deSpellSteps }];
 
         for (const deSpellStep of deSpellSteps) {
             const start = deSpellStep.start ? deSpellStep.start : currentElement;
-            const goal = deSpellStep.goal ? deSpellStep.goal : undefined;
+            const goal = deSpellStep.goal;  // can be undefined
 
-            if (resultExists(start)) {
-                if (logMessages) console.log("Attempting deSpell:", deSpellStep, "for", start, "->", goal);
-                await tryCombine([start], deSpellStep.tools, [goal, realElement].filter(Boolean));
+            if (isAlive(start)) {
+                if (set.logMessages >= 1) console.log("Attempting deSpell for", start, "->", goal);
+                await tryCombine([start], deSpellStep.tools, [...(goal ? goal : []), realElement], realElement);
                 addFailedSpelling(realElement, start);
             }
-            if (resultExists(realElement)) return;
+            if (isAlive(realElement)) return;
         }
     }
 
 
 
     function finishedSpelling(element) {
-        if (resultExists(element)) {
+        if (isAlive(element)) {
             element = icCase(element);
             console.log(`Finished spelling: ${element}${makeLineage(element)}`)
-            if (addSuccessfulSpellingsToElements) addElementToStorage(element);
+            if (set.addSuccessfulSpellingsToElements) addElementToStorage(element);
             return true;
         }
     }
 
     function addFailedSpelling(element, failedSpelling) {
         element = icCase(element);
-        if (!failedSpellingsMap.has(element)) failedSpellingsMap.set(element, [])
-        failedSpellingsMap.get(element).push(failedSpelling);
+        o.failedSpellingsMap.get(element).add(failedSpelling);
     }
 
     function failedToSpell(element) {
         element = icCase(element);
-        if (failedSpellingsMap.has(element)) {
-            const failedSpellings = [...new Set(failedSpellingsMap.get(element).map(x => icCase(x)))];
+        let failedSpellings = o.failedSpellingsMap.get(element);
+        if (failedSpellings.size > 0) {
+            failedSpellings = [...failedSpellings].map(icCase);
             console.log(`Failed to spell ${element} with all kinds of tools... I guess i'm not powerful enough :(\nThese were the failed spellings:\n${failedSpellings.join('\n')}`);
-            if (addFailedSpellingsToElements) failedSpellings.forEach(x => addElementToStorage(x));
+            if (set.addFailedSpellingsToElements) failedSpellings.forEach(addElementToStorage);
         }
     }
 
 
 
-    function makeLineage(element, visited=new Set()) {
+    function makeLineage(element, recursion={ recipeMap: o.recipesResPerElement.get(element), visited: new Set() }) {
         element = icCase(element);
-        if (recipesRes.has(element)) {
-            visited.add(element);
-            const [first, second] = recipesRes.get(element)[0].map(x => icCase(x));
-            if (first && second && (first !== element && second !== element) && (!visited.has(first) && !visited.has(second))) {
-                return (makeLineage(first, visited) +
-                        makeLineage(second, visited) +
-                        `\n${first} + ${second} = ${element}`);
+        const recipe = recursion.recipeMap.get(element);
+        if (recipe) {
+            recursion.visited.add(element);
+            const [first, second] = recipe.map(icCase);
+            if (first && second && first !== element && second !== element && !recursion.visited.has(first) && !recursion.visited.has(second)) {
+                const prevLineage = makeLineage(first, recursion) + makeLineage(second, recursion);
+                if (set.addEverythingToElements) addElementToStorage(element);
+                return prevLineage + `\n${first} + ${second} = ${element}`;
             }
         }
         return "";
     }
 
 
-    async function tryCombine(inputs1, inputs2, expected) {
-        for (let i = 0; i < expected.length; i++) {
-            if (resultExists(expected[i])) return true;
-            expected[i] = icCase(expected[i]);
-        }
-        inputs1 = inputs1.map(x => icCase(x));
-        inputs2 = inputs2.map(x => icCase(x));
 
-        if (logMessages) console.log("\nTrying", inputs1, "+", inputs2, "=", expected)
+    async function deadcheck(element) {
+        for (const deadcheckElement of set.deadcheckElements) {
+            if (await combine(element, deadcheckElement) !== 'Nothing') return true;
+        }
+    }
+
+
+    async function tryCombine(inputs1, inputs2, expected, element) {
+        if (expected.some(isAlive)) return true;
+        expected = expected.map(icCase);
+        inputs1 = inputs1.map(icCase).filter(x => x !== element).filter(x => !set.legitMode || o.elementStorageMap.has(x));
+        inputs2 = inputs2.map(icCase).filter(x => x !== element).filter(x => !set.legitMode || o.elementStorageMap.has(x));
+        if (inputs1.length === 0 || inputs2.length === 0) return false;
+
+        if (set.logMessages >= 2) console.log("\nTrying", inputs1, "+", inputs2, "=", expected);
         for (const input1 of inputs1) {
             for (const input2 of inputs2) {
                 const response = await combine(input1, input2);
-                if (response && expected.some(exp => response === exp)) return response;
+
+                const x = o.recipesResPerElement.get(element);
+                if (!x.get(response)) x.set(response, [input1, input2]);
+
+                if (response && expected.some(exp => response === exp)) {
+                    return response;
+                }
             }
         }
         return false;
@@ -578,63 +740,57 @@
 
 
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-    let lastCombination = Date.now();
-    const currentRequests = new Map();  // no duplicate requests
 
     async function combine(first, second) {
         // console.log("combine", first, "+", second);
-        if (!first || !second) return;
-        if (first.length > 30 || second.length > 30) return;
-        [first, second] = [first.trim(), second.trim()].sort();
+        if (!first || !second || first.length > 30 || second.length > 30) return;
 
+        [first, second] = [first.trim(), second.trim()].sort();
         const combString = `${first}=${second}`;
 
-        let recExists = recipeExists(first, second);
+        const recExists = o.recipesIng.get(combString);
         if (recExists) return recExists;
 
         // if recipe is already requested
-        if (currentRequests.has(combString)) {
-            return currentRequests.get(combString);
-        }
+        const requestExists = o.currentRequests.get(combString);
+        if (requestExists) return requestExists;
+
 
         const promise = (async () => {
-
-            const waitingDelay = Math.max(0, combineTime - (Date.now() - lastCombination));
-            lastCombination = Date.now() + waitingDelay;
+            const waitingDelay = Math.max(0, set.combineTime - (Date.now() - o.lastCombination));
+            o.lastCombination = Date.now() + waitingDelay;
             await delay(waitingDelay);
 
-            recExists = recipeExists(first, second);
-            if (recExists) return recExists;
-
             const response = await Window.$nuxt.$root.$children[1].$children[0].$children[0].getCraftResponse({ text: first }, { text: second });
-            const result = response?.result;
+            const result = response?.result ?? 'Nothing';
 
-            if (result) {
-                recipesIng[combString] = result;
-                if (!recipesRes.has(result)) recipesRes.set(result, []);
-                recipesRes.get(result).push([first, second]);
+            o.recipesIng.set(combString, result);
 
-                if (result !== "Nothing") {
-                    emojiMap.set(result, response);
-                }
-
-                return result;
+            if (result !== "Nothing") {
+                o.emojiMap.set(result, response);
+                o.aliveSet.add(result);
+                o.aliveSet.add(first);
+                o.aliveSet.add(second);
             }
+
+            return result;
         })();
 
-        currentRequests.set(combString, promise);
+        o.currentRequests.set(combString, promise);
         const result = await promise;
-        currentRequests.delete(combString);
+        o.currentRequests.delete(combString);
         return result;
     }
 
 
     function addElementToStorage(elementText) {
-        if (logMessages) console.log("adding to storage:", elementText, emojiMap.has(elementText))
-        if (!elementText || !emojiMap.has(elementText) || elementStorageSet.has(elementText)) return;
-        elementStorageSet.add(elementText);
+        if (set.logMessages >= 3) console.log("adding to storage:", elementText, o.emojiMap.has(elementText));
+        if (!elementText || !o.emojiMap.has(elementText) || o.elementStorageMap.get(elementText) === true) return;
+        o.elementStorageMap.set(elementText, true);
+        const elementTextIC = icCase(elementText);
+        if (!o.elementStorageMap.has(elementTextIC)) o.elementStorageMap.set(elementTextIC, false);
 
-        const element = emojiMap.get(elementText);
+        const element = o.emojiMap.get(elementText);
 
         Window.$nuxt._route.matched[0].instances.default.elements.push(element);
         Object.defineProperty(element, 'text', Object.getOwnPropertyDescriptor(element, 'result'));
@@ -649,28 +805,11 @@
     }
 
 
-    function recipeExists(first, second) {
-        // first and second have to already be in icCase() and Sorted
-        return recipesIng[`${first}=${second}`] || undefined;
-    }
-
-    function resultExists(result, ret=false) {
-        return ret ? recipesRes.get(icCase(result)) : recipesRes.has(icCase(result));
-    }
+    const isAlive = (element) => o.aliveSet.has(icCase(element));
 
 
-    function allStringsFromAUntilB(a, b) {
-        const aUntilB = [a];
-        for (let i = 0; i < b.length - a.length; i++) {
-            aUntilB.push(aUntilB[i] + b[a.length + i])
-        }
-        return aUntilB;
-    }
-
-
-    const icCasedLookup = new Map();  // optimization to store icCased Elements
     function icCase(input) {
-        if (icCasedLookup.has(input)) return icCasedLookup.get(input);
+        if (o.icCasedLookup.has(input)) return o.icCasedLookup.get(input);
 
         let result = '';
         const len = input.length;
@@ -680,11 +819,13 @@
             result += (i === 0 || input[i - 1] === ' ') ? char.toUpperCase() : char.toLowerCase()
         }
 
-        icCasedLookup.set(input, result);
+        o.icCasedLookup.set(input, result);
         return result;
     };
 
-    String.prototype.splice = function(start, newSubStr, delCount = 0) {
-        return this.slice(0, start) + newSubStr + this.slice(start + Math.abs(delCount));
-    };
+    // splice("abcde", 2, '69')  -> "ab69cde"
+    const splice = (str, i, newSubStr, delCount=0) => str.slice(0, i) + newSubStr + str.slice(i + Math.abs(delCount));
+
+    // allStrings("abcde", 4, "420")    -> ["abcd4e", "abcd42e", "abcd420e"]
+    const allStrings = (string, i, insertedStr) => Array.from(insertedStr, (_, index) => splice(string, i, insertedStr.slice(0, index + 1)));
 })();

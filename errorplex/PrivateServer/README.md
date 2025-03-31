@@ -1,4 +1,4 @@
-# Private Server | [Install](https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/PrivateServer/index.user.js)
+# Private Server | [Install](https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/errorplex/PrivateServer/index.user.js)
 
 Use a private server for Infinite Craft. Updated for new Infinite Craft client.
 

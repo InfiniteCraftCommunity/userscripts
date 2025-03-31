@@ -8,6 +8,7 @@
 
 A collection of community-made user scripts for [Infinite Craft](https://neal.fun/infinite-craft).
 
+<!--
 ## ✨ Popular Userscripts
 
 Name | Description
@@ -18,6 +19,7 @@ Name | Description
 [gm_abuse](userscripts/gm_abuse) | Moves your savefile to the script's storage, allowing bigger savefiles to be used
 [AdjustInfiniBrowserLineages](userscripts/AdjustInfiniBrowserLineages) | Adjusts lineages on InfiniBrowser, removing steps for elements that you already have
 [TextOnBoard](userscripts/TextOnBoard) | Allows you to write text messages on the board
+-->
 
 ## How To Install Userscripts
 

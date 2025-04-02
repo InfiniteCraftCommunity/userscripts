@@ -27,7 +27,7 @@ const settings = {
 
 	// misc
 	elementPinning: true,		// alt + left click to pin elements on side bar
-	removeDeps: true,			// if anything breaks then try disabling this first
+	removeDeps: false,			// removes some reactivity of vue for performance (MAY BREAK THINGS)
 	oldMouseControls: true,		// middle click to duplicate, ctrl + left click to pan
 	disableParticles: true,		// honestly they don't affect performance as much now
 	variation: true				// allows you to obtain an element in multiple casings, yay

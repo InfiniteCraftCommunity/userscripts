@@ -3,6 +3,7 @@
 // @namespace	nat.is-a.dev
 // @match		https://neal.fun/infinite-craft/*
 // @grant		GM.addStyle
+// @grant		unsafeWindow
 // @run-at		document-start
 // @version		1.0
 // @author		Natasquare
@@ -342,6 +343,9 @@ const css = `
 }
 `
 
+const exported = {};
+exported.settings = settings;
+
 function initSearchDebounce({ v_sidebar }) {
 	const oldInput = v_sidebar.$refs.search;
 	v_sidebar.$refs.search = oldInput.cloneNode(true);
@@ -425,6 +429,7 @@ function createItemElement(item, wrap = false) {
 
 	return itemDiv;
 }
+exported.createItemElement = createItemElement;
 
 function initRecipeLookup({ v_container, v_sidebar }) {
 	const modal = document.createElement("dialog");
@@ -485,6 +490,7 @@ function initRecipeLookup({ v_container, v_sidebar }) {
 
 		modal.showModal();
 	}
+	exported.openRecipeModal = openRecipeModal;
 
 	[v_sidebar.$el, modal].forEach((x) => x.addEventListener("contextmenu", function(e) {
 		const item = traverseUntil(e.target, ".item");
@@ -560,6 +566,7 @@ function initPinnedContainer({ v_container, v_sidebar }) {
 			localStorage.setItem("pinned-elements", JSON.stringify(d));
 		}
 	}
+	exported.pinElements = pinElements;
 
 	function unpinElements(elements, updateStorage = true) {
 		if (!Array.isArray(elements)) elements = [elements];
@@ -581,6 +588,7 @@ function initPinnedContainer({ v_container, v_sidebar }) {
 			localStorage.setItem("pinned-elements", JSON.stringify(d));
 		}
 	}
+	exported.unpinElements = unpinElements;
 
 	const pinnedElements = JSON.parse(localStorage.getItem("pinned-elements") ?? "[]"),
 		curPinnedElements = pinnedElements[v_container.currSave];
@@ -710,6 +718,8 @@ function init() {
 			return result;
 		}
 	}
+
+	unsafeWindow.ICHelper = exported;
 }
 
 window.addEventListener("load", init);

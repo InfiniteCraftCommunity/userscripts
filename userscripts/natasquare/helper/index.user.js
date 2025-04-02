@@ -577,6 +577,7 @@ function initPinnedContainer({ v_container, v_sidebar }) {
 			if (!pinnedIds.has(e.id)) continue;
 			const d = pinnedContainer.querySelector(`.item[data-item-id="${e.id}"]`)?.parentNode;
 			if (!d) continue;
+			pinnedIds.delete(e.id);
 			if (updateStorage) removed.add(e.id);
 			d.remove();
 		}

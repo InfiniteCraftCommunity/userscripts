@@ -395,6 +395,9 @@ function initSearchDebounce({ v_sidebar }) {
 	v_sidebar.$refs.search.addEventListener("input", debounce(function(e) {
 		if (!e.target.composing) v_sidebar.searchQuery = e.target.value;
 	}, settings.searchDebounceDelay));
+	v_sidebar.$refs.search.parentNode.querySelector(".sidebar-input-close")?.addEventListener("click", function() {
+		v_sidebar.$refs.search.value = "";
+	});
 
 	window.addEventListener("keydown", function(e) {
 		if (e.key === "Escape") {

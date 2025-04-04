@@ -303,16 +303,16 @@ const css = `
 }
 .items-pinned {
 	line-height: .5em;
-	margin-left: auto;
-	margin-right: auto;
 	max-width: 900px;
-	padding: 9px;
 	background-color: var(--sidebar-bg);
-	position: sticky;
-	top: 0;
-	z-index: 1;
-	overflow: auto;
+	position: relative;
 	border-bottom: 1px solid var(--border-color);
+	flex-shrink: 0; /* exorcism. i spent an hour debugging the container shrinking thinking it was js */
+	max-height: 75%; /* surely nobody needs more than this right? */
+}
+.items-pinned-inner {
+	padding: 9px;
+	overflow: hidden auto;
 }
 .items-pinned:not(:has(.item)) {
 	display: none;
@@ -320,9 +320,9 @@ const css = `
 .items-pinned .resize-handle-vertical {
 	height: 3px;
 	width: 100%;
-	left: -1px; /* also clashes with the border somehow.. */
-	bottom: 0;
-	position: absolute;
+	left: 0;
+	top: 100%;
+	position: sticky;
 	cursor: ns-resize;
 	z-index: 1;
 }
@@ -335,13 +335,55 @@ const css = `
 .items {
 	min-height: unset !important;
 }
+@media screen and (min-width:1150px) {
+	.item {
+		padding: 9px 10px 8px;
+	}
+	.item, .item-emoji {
+		font-size: 16.4px;
+	}
+}
+@media screen and (max-width: 1150px) {
+	.item {
+		max-width: 267px;
+	}
+}
+@media screen and (max-width:800px) {
+	.item {
+		line-height: 32px;
+		min-height: 32px;
+		padding: 1px 9px 0;
+		width: auto;
+	}
+}
+
+/* fix overflow mess */
 .sidebar {
 	overflow: hidden;
 }
 .sidebar-inner {
-	overflow: auto;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
 }
-`
+.sidebar-inner .items {
+	position: relative;
+	height: 100%;
+	margin: unset !important;
+	overflow: auto;
+	padding: 0 !important;
+}
+.sidebar-inner .items > div {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	top: 0px;
+	left: 0px;
+	padding: 9px;
+}
+.sidebar-inner .items > .bottom-spacer {
+	display: none;
+}`
 
 const exported = {};
 exported.settings = settings;
@@ -512,17 +554,30 @@ function initRecipeLogging({ v_container }) {
 }
 
 function initPinnedContainer({ v_container, v_sidebar }) {
+	const pinnedContainerContainer = document.createElement("div");
+	pinnedContainerContainer.classList.add("items-pinned");
 	const pinnedContainer = document.createElement("div");
-	pinnedContainer.classList.add("items-pinned");
+	pinnedContainer.classList.add("items-pinned-inner");
+	pinnedContainerContainer.appendChild(pinnedContainer);
 	const resizeHandle = document.createElement("div")
 	resizeHandle.classList.add("resize-handle-vertical");
+
+	const saveContainerHeight = debounce(function(v) {
+		return localStorage.setItem("pinned-container-height", v);
+	}, 50);
+
+	const savedHeight = localStorage.getItem("pinned-container-height");
+	if (savedHeight)
+		pinnedContainer.style.height = savedHeight + "px";
 
 	let resizing = false,
 		startY = 0,
 		startHeight = 0;
 	function handleResize(e) {
 		if (!resizing) return;
-		pinnedContainer.style.height = startHeight + e.clientY - startY + "px";
+		const newHeight = startHeight + e.clientY - startY;
+		saveContainerHeight(newHeight);
+		pinnedContainer.style.height = newHeight + "px";
 	}
 	resizeHandle.addEventListener("mousedown", function(e) {
 		resizing = true;
@@ -535,13 +590,7 @@ function initPinnedContainer({ v_container, v_sidebar }) {
 		});
 	});
 
-	// i wish there was some sort of elegant css-only solution for this
-	pinnedContainer.addEventListener("scroll", function() {
-		const scrollOffset = pinnedContainer.scrollTop;
-		resizeHandle.style.transform = `translateY(${scrollOffset}px)`;
-	});
-
-	pinnedContainer.appendChild(resizeHandle);
+	pinnedContainerContainer.appendChild(resizeHandle);
 
 	const pinnedIds = new Set();
 
@@ -597,7 +646,7 @@ function initPinnedContainer({ v_container, v_sidebar }) {
 		pinElements(curPinnedElements, false);
 
 	const itemsContainer = v_sidebar.$el.querySelector(".items");
-	itemsContainer.before(pinnedContainer);
+	itemsContainer.before(pinnedContainerContainer);
 
 	pinnedContainer.addEventListener("mousedown", function(e) {
 		if (e.altKey && e.button === 0) {
@@ -680,12 +729,31 @@ function initOldMouseControls() {
 	}, true);
 }
 
+function initSidebarUpdates({ v_sidebar }) {
+	const items = v_sidebar.$el.querySelector(".items");
+	Object.defineProperty(v_sidebar.$el, "scrollTop", {
+		get() {
+			return items.scrollTop;
+		},
+		set(value) {
+			items.scrollTop = value;
+		},
+		configurable: true
+	});
+	items.addEventListener("scroll", function(e) {
+		const scrollPercentage = (items.scrollTop + items.clientHeight)/items.scrollHeight;
+		if (scrollPercentage > .8727) v_sidebar.limit += 300;
+	});
+}
+
 function init() {
 	GM.addStyle(css);
 
 	const v_container = document.querySelector(".container").__vue__,
 		v_sidebar = document.querySelector("#sidebar").__vue__,
 		v = { v_container, v_sidebar };
+
+	initSidebarUpdates(v);
 
 	if (settings.searchDebounceDelay > 0) initSearchDebounce(v);
 	if (settings.searchRelevancy) initSearchRelevancy(v);

@@ -757,6 +757,12 @@ function initSidebarUpdates({ v_sidebar }) {
 		const scrollPercentage = (items.scrollTop + items.clientHeight) / items.scrollHeight;
 		if (scrollPercentage > .8727) v_sidebar.limit += 300;
 	});
+
+	const oldFilteredElementsCut = v_sidebar._computedWatchers.filteredElementsCut.getter;
+	v_sidebar._computedWatchers.filteredElementsCut.getter = function(...a) {
+		if (this.searchQuery) return [];
+		return oldFilteredElementsCut.apply(this, a);
+	}
 }
 
 function choose(a) {

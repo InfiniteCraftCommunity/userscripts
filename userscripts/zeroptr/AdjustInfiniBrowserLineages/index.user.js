@@ -43,11 +43,9 @@ async function adjustLineage(stepSelector) {
 
   const stepList = document.querySelectorAll(stepSelector);
   const steps = new Set(stepList);
-
   if (!steps.size) return;
 
   const elements = new Set((await GM.getValue("elements", "")).split("\x00"));
-
   const resultStep = stepList[stepList.length - 1];
   const result = resultStep.children[3].getAttribute("data-id");
 
@@ -56,8 +54,8 @@ async function adjustLineage(stepSelector) {
     return;
   }
 
+  // remove steps for elements that you already have
   let removedSteps = 0;
-
   for (const step of steps) {
     const result = step.children[3].getAttribute("data-id");
     if (elements.has(result.toLowerCase())) {
@@ -69,8 +67,9 @@ async function adjustLineage(stepSelector) {
     }
   }
 
-  if (!removedSteps) return;
-
+  if (removedSteps == 0) return;
+  
+  // remove all unused steps
   while (true) {
     const unused = new Map();
     for (const step of steps) {
@@ -83,7 +82,6 @@ async function adjustLineage(stepSelector) {
     }
     
     if (!unused.size) break;
-    console.log(unused);
     for (const step of unused.values()) {
       step.style.display = "none";
       steps.delete(step);
@@ -91,7 +89,7 @@ async function adjustLineage(stepSelector) {
     }
   }
 
-  // fix step numbers
+  // update step numbers
   let n = 0;
   for (const step of steps) {
     step.children[0].textContent = `${++n}.`;

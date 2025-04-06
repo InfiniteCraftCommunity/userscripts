@@ -7,10 +7,10 @@
 // @grant         GM.getValue
 // @grant         GM.setValue
 // @run-at        document-end
-// @version       0.4.1
+// @version       0.5.0
 // @author        zeroptr
 // @downloadURL   https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/AdjustInfiniBrowserLineages/index.user.js
-// @description   Adjust lineages on InfiniBrowser, removing steps for elements that you already have in the game.
+// @description   Adjusts lineages on InfiniBrowser, removing steps for elements that you already have in the game.
 // ==/UserScript==
 
 window.addEventListener("load", () => {
@@ -23,6 +23,7 @@ window.addEventListener("load", () => {
   }
 });
 
+/** Add a footer to the element on InfiniBrowser */
 function setFooter(...content) {
   document.querySelectorAll(".aib_footer").forEach((x) => x.remove());
   if (!content.length) return;
@@ -54,7 +55,7 @@ async function adjustLineage(stepSelector) {
     return;
   }
 
-  // remove steps for elements that you already have
+  // remove all steps for elements that the player has
   let removedSteps = 0;
   for (const step of steps) {
     const result = step.children[3].getAttribute("data-id");
@@ -111,7 +112,7 @@ async function adjustLineage(stepSelector) {
   setFooter(`Removed ${removedSteps} steps. `, btn);
 }
 
-/** Initialize on InfiniBrowser at /item */
+/** Initialize on InfiniBrowser's element view page */
 function $initIBItemView() {
   const recipeTree = document.getElementById("recipe_tree");
   if (document.getElementById("lineage_loader")) {
@@ -128,7 +129,7 @@ function $initIBItemView() {
   }
 }
 
-/** Initialize on InfiniBrowser at /search */
+/** Initialize on InfiniBrowser's search page */
 function $initIBSearch() {
   if (!document.getElementById("recipes")) return;
   if (document.getElementById("item_descr")) item_descr.remove();

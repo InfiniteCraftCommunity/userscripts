@@ -1,12 +1,27 @@
-> [!WARNING]
-> 
-> **Most user scripts are currently broken due to a recent client update.**  
-> Script authors are working their best to fix and update their scripts.  
-> Please make sure to update your scripts to their latest versions to ensure proper functionality.  
-
 # User Scripts
 
 A collection of community-made user scripts for [Infinite Craft](https://neal.fun/infinite-craft).
+
+> [!WARNING]
+> 
+> **Most user scripts are currently broken due to a recent client update.**
+> Script authors are working their best to fix and update their scripts.
+> Please make sure to update your scripts to their latest versions to ensure proper functionality.
+
+## Update Status
+
+Name | Status
+-----|--------
+Helper Script | 🔁 **Partially obsolete; replaced by [Helper](userscripts/natasquare/helper)**
+MBS | 🔁 **Partially obsolete; replaced by [Helper](userscripts/natasquare/helper)**
+BetterRandomButton | 🔁 **Replaced by [Helper](userscripts/natasquare/helper)**
+gm_abuse | 🔁 **Obsolete**
+AdjustInfiniBrowserLineages | ✅ **Updated**
+PrivateServer | ✅ **Updated**
+Chromatic_themes | ✅ **Updated**
+MakeFolders | ✅ **Updated**
+Alt-Lineages | ✅ **Updated**
+ColorProven | ✅ **Updated**
 
 <!--
 ## ✨ Popular Userscripts

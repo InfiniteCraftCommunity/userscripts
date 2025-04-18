@@ -12,9 +12,8 @@ A collection of community-made user scripts for [Infinite Craft](https://neal.fu
 
 Name | Status
 -----|--------
-Helper Script | 🔁 **Partially obsolete; replaced by [Helper](userscripts/natasquare/helper)**
-MBS | 🔁 **Partially obsolete; replaced by [Helper](userscripts/natasquare/helper)**
-BetterRandomButton | 🔁 **Replaced by [Helper](userscripts/natasquare/helper)**
+Helper Script & MBS | 🔁 **Partially obsolete; replaced by [Helper](userscripts/natasquare/helper)**
+BetterRandomButton & DBounce | 🔁 **Replaced by [Helper](userscripts/natasquare/helper)**
 gm_abuse | 🔁 **Obsolete**
 AdjustInfiniBrowserLineages | ✅ **Updated**
 PrivateServer | ✅ **Updated**

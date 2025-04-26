@@ -9,7 +9,9 @@
 // @version       2.0
 // @author        Catstone
 // @license       MIT
-// @description   22.4.2025, 17:49:47
+// @description   Adds a ton of utility functionality:  Selection, Tab, Spawn, Unicode Utils!
+// @downloadURL   https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/catstone/Sandwhich%20Utils%20Mod/index.user.js
+// @updateURL     https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/catstone/Sandwhich%20Utils%20Mod/index.user.js
 // ==/UserScript==
 
 

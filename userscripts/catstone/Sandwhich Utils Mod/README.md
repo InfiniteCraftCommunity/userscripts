@@ -1,4 +1,4 @@
-# Utils Mod | [Install](https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/Utils_Mod/index.user.js)
+# Utils Mod | [Install](https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/catstone/Sandwhich%20Utils%20Mod/index.user.js)
 
 Adds a ton of utility functionality.
 and yes, everything can be turned On/Off!

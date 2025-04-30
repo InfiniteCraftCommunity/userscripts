@@ -6,8 +6,8 @@
 // @grant		GM.addStyle
 // @grant		unsafeWindow
 // @run-at		document-start
-// @version		1.1.1
-// @author		Natasquare/Alexander
+// @version		1.1.0
+// @author		Natasquare
 // @description	Adds various QoL features to Infinite Craft - a port of Mikarific's Infinite Craft Helper.
 // @updateURL	https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/natasquare/helper/index.user.js
 // ==/UserScript==
@@ -523,38 +523,14 @@ function initRecipeLookup({ v_container, v_sidebar }) {
     const usageMap = new Map();
     function openRecipeModal(itemText) {
         let itemId;
-        if (usageMap.get(itemText) == null) {
-            usageMap.set(itemText, []);
-        }
+        usageMap.set(itemText, []);
         //first you need map to be able to use it for usages
         for (const item of v_container.items) {
             idMap.set(item.id, item);
             if (item.text === itemText) itemId = item.id;
         }
 
-        for (const item of v_container.items) {
-            if (item.recipes) {
-                for (const r of item.recipes) {
-                    if (r[0] == itemId) {
-                        var usage = usageMap.get(itemText);
-                        usage.push([item.id, r[1]]);
 
-                        usageMap.set(itemText, usage);
-
-                    }
-                    else
-                        if (r[1] == itemId) {
-                            var usage = usageMap.get(itemText);
-                            usage.push([item.id, r[0]]);
-
-                            usageMap.set(itemText, usage);
-
-                        }
-                }
-            }
-
-        }
-        console.log(usageMap.get(itemText))
 
         const item = idMap.get(itemId);
         const button = tabButton.cloneNode();
@@ -564,10 +540,29 @@ function initRecipeLookup({ v_container, v_sidebar }) {
         tabButton = button;
         tabButton.addEventListener("click", () => {
 
-
             if (tabIcon.src == nextIcon) {
                 tabIcon.src = backIcon;
+
                 modalBody.innerHTML = "";
+                if (usageMap.get(itemText).length==0)
+                  {
+                for (const it of v_container.items) {
+               if (it.recipes) {
+                for (const r of it.recipes) {
+                    if (r[0] == itemId) {
+                        var usage = usageMap.get(itemText);
+                        usage.push([it.id, r[1]]);
+                    }
+                    else
+                        if (r[1] == itemId) {
+                            var usage = usageMap.get(itemText);
+                            usage.push([it.id, r[0]]);
+                        }
+                 }
+              }
+
+               }}
+                 console.log(usageMap.get(itemText))
                 const myUsages = usageMap.get(itemText);
                 recipeCount.innerHTML = "";
                 recipeCount.append(document.createTextNode(` ${(myUsages && myUsages.length > 0) ? myUsages.length : 0} Usages`));

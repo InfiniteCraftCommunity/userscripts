@@ -157,6 +157,7 @@
                     if (tooltips.length > 0) {
                         let tooltipDiv = document.createElement("div");
                         tooltipDiv.textContent = tooltips[0];
+                        tooltipDiv.style.fontSize="19px";
                         tooltip.appendChild(tooltipDiv);
                         height += 1;
                     }
@@ -164,7 +165,7 @@
                 }
             }
 
-            height = height * 60;
+            height = (height-1) *10+ 60;
             tooltip.style.position = "relative";
             tooltip.style.top = "-" + height.toString() + "px";
             tooltip.style.left = "-50%";

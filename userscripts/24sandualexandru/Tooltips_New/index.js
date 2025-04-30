@@ -95,6 +95,16 @@
         handle(element, tooltips) {
             tooltips.push("\" Quoted")
         }
+    }, {
+        id: "Dead element",
+        name: "Dead",
+        priority: 2,
+        description: "more than 30 characters.",
+        enabled: false,
+        condition: (e) => e.text.length>=30,
+        handle(element, tooltips) {
+            tooltips.push("💀 Dead")
+        }
     },
     {
         id: "fromcharcode",
@@ -165,7 +175,7 @@
                 }
             }
 
-            height = (height-1) *10+ 60;
+            height = (height-1) *10+ 65;
             tooltip.style.position = "relative";
             tooltip.style.top = "-" + height.toString() + "px";
             tooltip.style.left = "-50%";

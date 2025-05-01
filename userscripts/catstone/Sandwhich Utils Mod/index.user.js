@@ -6,7 +6,7 @@
 // @grant         GM_setValue
 // @grant         GM_addStyle
 // @grant         GM.xmlHttpRequest
-// @version       2.1
+// @version       2.2
 // @author        Catstone
 // @license       MIT
 // @description   Adds a ton of utility functionality:  Selection, Tab, Spawn, Unicode Utils!
@@ -931,8 +931,10 @@ const mods = {
               this.performSearch();
           });
 
-          const v_sidebar = document.querySelector('#sidebar').__vue__;
+          document.querySelector('.sidebar-input').addEventListener('input', this.updateSearch.bind(this));
+
           const modsUnicode = this;
+          const v_sidebar = document.querySelector('#sidebar').__vue__;
           const changeSort = v_sidebar.changeSort;
           v_sidebar.changeSort = function (...args) {
               setTimeout(() => {
@@ -963,11 +965,9 @@ const mods = {
 
       enableCheckbox: function () {
           this.updateUnicodeElements();
-          document.querySelector('.sidebar-input').addEventListener('input', this.updateSearch);
       },
       disableCheckbox: function () {
           document.querySelector('.sandwhich-unicode-items-inner').innerHTML = '';
-          document.querySelector('.sidebar-input').removeEventListener('input', this.updateSearch);
           document.querySelector('.sandwhich-unicode-header-label').textContent = `Unicode Search`;
           this.unicodeElements = null;
       },
@@ -1206,7 +1206,8 @@ const mods = {
       updateSearch: function () {
           clearTimeout(this.updateSearchTimeoutId);
 
-          this.updateSearchTimeoutId = setTimeout(this.performSearch, settings.unicode.searchDebounceDelay);
+          const modsUnicode = this;
+          this.updateSearchTimeoutId = setTimeout(() => modsUnicode.performSearch(), settings.unicode.searchDebounceDelay);
       },
 
 
@@ -1228,7 +1229,7 @@ const mods = {
               if (this.searchDiscoveries && !element.discovery) continue;
 
               const elementText = element.text;
-              if (elementText.toUpperCase() === upperSearchQuery) isMatch = true;
+              if (elementText.toUpperCase().includes(upperSearchQuery)) isMatch = true;
 
               else {
                   const codepoint = elementText.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
@@ -2083,7 +2084,4 @@ body.sandwhich-sel-active .instance-selected::before {
 	  opacity: 1;
 }
 `);
-
-
-
 })();

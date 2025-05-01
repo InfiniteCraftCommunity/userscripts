@@ -231,10 +231,12 @@ const mods = {
                           copyText = selectedInstances.map(element => `${element.text}  ${(element.x - x).toFixed(2)} ${(element.y - y).toFixed(2)}`).join('\n');
                       }
                   }
-                  navigator.clipboard.writeText(copyText);
-                  console.log(`copied to clipboard: "${copyText}"`);
+                  if (copyText) {
+                      navigator.clipboard.writeText(copyText);
+                      console.log(`copied to clipboard: "${copyText}"`);
+                      e.preventDefault();
+                  }
                   ctrlCHandled = true;
-                  e.preventDefault();
               }
 
               if (settings.spawn.fromSelected && e.ctrlKey && e.key.toUpperCase() === 'B') {

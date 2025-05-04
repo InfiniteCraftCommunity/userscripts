@@ -6,7 +6,7 @@
 // @grant         GM_setValue
 // @grant         GM_addStyle
 // @grant         GM.xmlHttpRequest
-// @version       2.0
+// @version       2.2
 // @author        Catstone
 // @license       MIT
 // @description   Adds a ton of utility functionality:  Selection, Tab, Spawn, Unicode Utils!
@@ -20,20 +20,6 @@
 (function () {
     'use strict';
 
-    function mergeSettings(saved, defaults) {
-        for (let key in defaults) {
-            if (defaults.hasOwnProperty(key)) {
-                if (typeof defaults[key] === 'object' && !Array.isArray(defaults[key])) {
-                    saved[key] = mergeSettings(saved[key] || {}, defaults[key]);
-                } else if (saved[key] === undefined) {
-                    saved[key] = defaults[key];
-                }
-            }
-        }
-        return saved;
-    }
-
-
     let saveTimeout;
     function saveSettings() {
         clearTimeout(saveTimeout);
@@ -42,38 +28,6 @@
             // console.log("SandwhichMod: Settings saved.");
         }, 500);
     }
-
-    // --- Reactive Proxy ---
-    const createReactiveProxy = (target, onChange) => {
-        if (typeof target !== 'object' || target === null) return target;
-        const handler = {
-            set(obj, prop, value) {
-                if (obj[prop] !== value) {
-                    const success = Reflect.set(obj, prop, value);
-                    if (success) onChange();
-                    return success;
-                }
-                return true;
-            },
-            get(obj, prop, receiver) {
-                const value = Reflect.get(obj, prop, receiver);
-                if (typeof value === 'object' && value !== null) {
-                    return createReactiveProxy(value, onChange);
-                }
-                return value;
-            },
-            deleteProperty(obj, prop) {
-                 if (prop in obj) {
-                    const success = Reflect.deleteProperty(obj, prop);
-                    if (success) onChange();
-                    return success;
-                 }
-                 return true;
-             }
-        };
-        return new Proxy(target, handler);
-    };
-
 
     const defaultSettings = {
         selection: {
@@ -113,6 +67,49 @@
         saveSettings
     );
     saveSettings(); // Initial save
+
+
+
+    function mergeSettings(saved, defaults) {
+        for (let key in defaults) {
+            if (defaults.hasOwnProperty(key)) {
+                if (typeof defaults[key] === 'object' && !Array.isArray(defaults[key])) saved[key] = mergeSettings(saved[key] || {}, defaults[key]);
+                else if (saved[key] === undefined) saved[key] = defaults[key];
+            }
+        }
+        return saved;
+    }
+
+    // --- Reactive Proxy ---
+    function createReactiveProxy (target, onChange) {
+        if (typeof target !== 'object' || target === null) return target;
+        const handler = {
+            set(obj, prop, value) {
+                if (obj[prop] !== value) {
+                    const success = Reflect.set(obj, prop, value);
+                    if (success) onChange();
+                    return success;
+                }
+                return true;
+            },
+            get(obj, prop, receiver) {
+                const value = Reflect.get(obj, prop, receiver);
+                if (typeof value === 'object' && value !== null) {
+                    return createReactiveProxy(value, onChange);
+                }
+                return value;
+            },
+            deleteProperty(obj, prop) {
+                 if (prop in obj) {
+                    const success = Reflect.deleteProperty(obj, prop);
+                    if (success) onChange();
+                    return success;
+                 }
+                 return true;
+             }
+        };
+        return new Proxy(target, handler);
+    };
 
 
 
@@ -206,21 +203,21 @@ const mods = {
 
 
       init: function () {
-          document.addEventListener('mousemove', function(e) {
-              mods.spawn.mouseData.x = e.clientX;
-              mods.spawn.mouseData.y = e.clientY;
+          document.addEventListener('mousemove', (e) => {
+              this.mouseData.x = e.clientX;
+              this.mouseData.y = e.clientY;
           });
 
           let ctrlCHandled = false;
           let ctrlVHandled = false;
-          document.addEventListener('keydown', function(e) {
+          document.addEventListener('keydown', (e) => {
               if (settings.spawn.paste && e.ctrlKey && e.shiftKey && e.key.toUpperCase() === 'V' && !ctrlVHandled) {
-                  navigator.clipboard.readText().then(text => mods.spawn.handleClipboardPaste(text));
+                  navigator.clipboard.readText().then(text => this.handleClipboardPaste(text));
                   ctrlVHandled = true;
                   e.preventDefault();
               }
               if (settings.spawn.copy && e.ctrlKey && e.key.toUpperCase() === 'C' && !ctrlCHandled) {
-                  const hoveredElement = document.elementFromPoint(mods.spawn.mouseData.x, mods.spawn.mouseData.y);
+                  const hoveredElement = document.elementFromPoint(this.mouseData.x, this.mouseData.y);
 
                   let copyText;
                   if (hoveredElement.matches('.item')) {
@@ -230,18 +227,20 @@ const mods = {
                       const selectedInstances = unsafeWindow.IC.getInstances().filter(x => x.element.classList.contains('instance-selected'));
                       if (selectedInstances.length <= 1) copyText = hoveredElement.childNodes[1].textContent.trim();
                       else {
-                          let { x, y } = unsafeWindow.IC.screenToWorld(mods.spawn.mouseData.x, mods.spawn.mouseData.y);
+                          let { x, y } = unsafeWindow.IC.screenToWorld(this.mouseData.x, this.mouseData.y);
                           copyText = selectedInstances.map(element => `${element.text}  ${(element.x - x).toFixed(2)} ${(element.y - y).toFixed(2)}`).join('\n');
                       }
                   }
-                  navigator.clipboard.writeText(copyText);
-                  console.log(`copied to clipboard: "${copyText}"`);
+                  if (copyText) {
+                      navigator.clipboard.writeText(copyText);
+                      console.log(`copied to clipboard: "${copyText}"`);
+                      e.preventDefault();
+                  }
                   ctrlCHandled = true;
-                  e.preventDefault();
               }
 
               if (settings.spawn.fromSelected && e.ctrlKey && e.key.toUpperCase() === 'B') {
-                  mods.spawn.handleSpawnFromSelected();
+                  this.handleSpawnFromSelected();
                   e.preventDefault();
               }
           });
@@ -515,11 +514,11 @@ const mods = {
           addButton.className = 'sandwhich-tab-add-button';
           addButton.textContent = '+';
           addButton.title = 'Add New Tab';
-          addButton.onclick = () => mods.tabs.addTab();
+          addButton.onclick = () => this.addTab();
           addButton.oncontextmenu = (e) => {
               e.preventDefault();
-              mods.tabs.showContextMenu(e, [
-                  ['Upload Tab', () => mods.tabs.uploadTab()],
+              this.showContextMenu(e, [
+                  ['Upload Tab', () => this.uploadTab()],
               ]);
           }
           container.appendChild(addButton);
@@ -622,9 +621,9 @@ const mods = {
       },
 
       switchTab: function (index) {
+          this.updateCurrentTabElements();
           if (this.tabData.currTab == index) return;
 
-          this.updateCurrentTabElements();
           this.loadTab(index);
           document.querySelectorAll('.sandwhich-tab').forEach(button => button.classList.remove('active'));
           this.getVisualTabFromId(index).classList.add('active');
@@ -634,16 +633,20 @@ const mods = {
 
 
       deleteTab: function (index) {
-          unsafeWindow.IC.clearInstances();
-
           if (this.tabData.tabs.length <= 1) {
+              unsafeWindow.IC.clearInstances();
               this.tabData.tabs = this.defaultTabData;
               this.refreshVisualTabButtons();
           }
           else {
               this.tabData.tabs.splice(index, 1);
-              if (this.tabData.currTab > 0) this.tabData.currTab--;
-              this.loadTab(this.tabData.currTab);
+              if (this.tabData.currTab > index) {
+                  this.tabData.currTab--;
+              }
+              else if (this.tabData.currTab === index) {
+                  if (this.tabData.currTab > 0) this.tabData.currTab--;
+                  this.loadTab(this.tabData.currTab);
+              }
 
               const deletedTabWidth = this.getVisualTabFromId(index).offsetWidth;
               this.refreshVisualTabButtons();
@@ -651,13 +654,9 @@ const mods = {
               const sizer = document.createElement('div');
               sizer.className = 'sandwhich-tab-sizer';
               sizer.style.width = `${deletedTabWidth}px`;
-              setTimeout(() => {
-                  sizer.style.width = '0';
-                  sizer.style.transition = `width ${settings.tabs.animationSpeed / 50}s ease-out`;
-                  sizer.addEventListener('transitionend', () => {
-                      sizer.remove();
-                  });
-              }, 0);
+              sizer.style.transition = `width ${settings.tabs.animationSpeed / 50}s ease-out`;
+              sizer.addEventListener('transitionend', () => sizer.remove());
+              setTimeout(() => sizer.style.width = '0', 0);
 
               const tabList = document.querySelector('#sandwhich-tab-list');
               tabList.insertBefore(sizer, this.getVisualTabFromId(index) ?? tabList.querySelector('.addButton'));
@@ -668,7 +667,7 @@ const mods = {
 
 
       duplicateTab: function (index) {
-          this.updateCurrentTabElements();
+          this.switchTab(index);
           const toDuplicateTab = this.tabData.tabs[index];
           this.addTab(index + 1, { elements: toDuplicateTab.elements.slice(), name: toDuplicateTab.name });   // .slice() -> cloning
 
@@ -722,7 +721,7 @@ const mods = {
                   try {
                       const tab = JSON.parse(e.target.result);
                       // Success!
-                      mods.tabs.addTab(undefined, tab)
+                      this.addTab(undefined, tab)
 
                   } catch (error) {
                       onError(`Error parsing JSON file: ${error.message}`);
@@ -756,12 +755,12 @@ const mods = {
 
 
           tabButton.addEventListener('dragstart', (e) => {
-              mods.tabs.draggedTabIndex = index;
+              this.draggedTabIndex = index;
           });
           tabButton.addEventListener('dragover', (e) => {
               e.preventDefault();
               const targetTab = event.target.closest('.sandwhich-tab');
-              if (targetTab && parseInt(targetTab.dataset.tabId, 10) !== mods.tabs.draggedTabIndex) {
+              if (targetTab && parseInt(targetTab.dataset.tabId, 10) !== this.draggedTabIndex) {
                   targetTab.classList.add('drag-over');
               }
           });
@@ -771,23 +770,23 @@ const mods = {
           });
           tabButton.addEventListener('drop', (e) => {
               event.preventDefault();
-              const draggedTab = mods.tabs.tabData.tabs.splice(mods.tabs.draggedTabIndex, 1)[0]
-              mods.tabs.tabData.tabs.splice(index, 0, draggedTab);
-              mods.tabs.tabData.currTab = index;
+              const draggedTab = this.tabData.tabs.splice(this.draggedTabIndex, 1)[0]
+              this.tabData.tabs.splice(index, 0, draggedTab);
+              this.tabData.currTab = index;
 
-              mods.tabs.refreshVisualTabButtons();
-              mods.tabs.saveTabData();
+              this.refreshVisualTabButtons();
+              this.saveTabData();
           });
 
 
-          tabButton.onmousedown = () => mods.tabs.switchTab(index);
+          tabButton.onmousedown = () => this.switchTab(index);
           tabButton.oncontextmenu = (e) => {
               e.preventDefault();
-              mods.tabs.showContextMenu(e, [
-                  ['Rename', () => mods.tabs.renameTab(index)],
-                  ['Duplicate', () => mods.tabs.duplicateTab(index)],
-                  ['Download', () => mods.tabs.downloadTab(index)],
-                  ['Delete', () => mods.tabs.deleteTab(index)],
+              this.showContextMenu(e, [
+                  ['Rename', () => this.renameTab(index)],
+                  ['Duplicate', () => this.duplicateTab(index)],
+                  ['Download', () => this.downloadTab(index)],
+                  ['Delete', () => this.deleteTab(index)],
               ]);
           };
 
@@ -804,7 +803,7 @@ const mods = {
           const tabList = document.querySelector('#sandwhich-tab-list');
           // clear all children
           tabList.innerHTML = '';
-          this.tabData.tabs.forEach((tab, index) => mods.tabs.createVisualTabButton(index, tab.name));
+          this.tabData.tabs.forEach((tab, index) => this.createVisualTabButton(index, tab.name));
       },
 
 
@@ -816,7 +815,7 @@ const mods = {
               const contextmenuOption = document.createElement('div');
               contextmenuOption.className = 'sandwhich-tab-contextmenu-option ' + name.toLowerCase();
               contextmenuOption.textContent = name;
-              contextmenuOption.onclick = () => { func(); contextMenu.style.display = 'none'; };
+              contextmenuOption.onclick = () => { func.call(this); contextMenu.style.display = 'none'; };
               contextMenu.appendChild(contextmenuOption);
           }
 
@@ -934,8 +933,10 @@ const mods = {
               this.performSearch();
           });
 
-          const v_sidebar = document.querySelector('#sidebar').__vue__;
+          document.querySelector('.sidebar-input').addEventListener('input', this.updateSearch.bind(this));
+
           const modsUnicode = this;
+          const v_sidebar = document.querySelector('#sidebar').__vue__;
           const changeSort = v_sidebar.changeSort;
           v_sidebar.changeSort = function (...args) {
               setTimeout(() => {
@@ -966,11 +967,9 @@ const mods = {
 
       enableCheckbox: function () {
           this.updateUnicodeElements();
-          document.querySelector('.sidebar-input').addEventListener('input', this.updateSearch);
       },
       disableCheckbox: function () {
           document.querySelector('.sandwhich-unicode-items-inner').innerHTML = '';
-          document.querySelector('.sidebar-input').removeEventListener('input', this.updateSearch);
           document.querySelector('.sandwhich-unicode-header-label').textContent = `Unicode Search`;
           this.unicodeElements = null;
       },
@@ -978,8 +977,6 @@ const mods = {
 
 
       enableSearch: function () {
-          const modsUnicode = this;
-
           const unicodeContainer = document.createElement("div");
 	        unicodeContainer.className = 'sandwhich-unicode-items';
 	        const itemContainer = document.createElement("div");
@@ -997,8 +994,8 @@ const mods = {
 
           checkbox.addEventListener('change', (e) => {
               settings.unicode.searchCheckbox = e.target.checked;
-              if (e.target.checked) modsUnicode.enableCheckbox();
-              else modsUnicode.disableCheckbox();
+              if (e.target.checked) this.enableCheckbox();
+              else this.disableCheckbox();
           });
 
           const label = document.createElement("label");
@@ -1019,6 +1016,7 @@ const mods = {
           this.fetchUnicodeData();
           if (unsafeWindow.IC) this.enableCheckbox();
           else {
+              const modsUnicode = this;
               const v_container = document.querySelector(".container").__vue__;
               const addAPI = v_container.addAPI;
               v_container.addAPI = function() {
@@ -1047,7 +1045,6 @@ const mods = {
 
       startRecipeModalObserver: function() {
           if (this.recipeModalObserver) return;
-          const modsUnicode = this;
 
           const modalElement = document.querySelector("dialog.recipe-modal");
           if (!modalElement) {
@@ -1065,9 +1062,9 @@ const mods = {
               subtitleElement.innerHTML = Array.from(itemText)
                   .map(char => {
                       const codepoint = char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
-                      const unicodeName = mods.unicode.unicodeData[codepoint]?.[0] ?? 'no name found...';
-                      const unicodeCategory = mods.unicode.categoryMap[mods.unicode.unicodeData[codepoint]?.[1]] ?? 'no category found...';
-                      return `U+${codepoint} - ${unicodeName} - ${unicodeCategory}`;
+                      const unicodeName = this.unicodeData[codepoint]?.[0] ?? 'no name found...';
+                      const unicodeCategory = this.categoryMap[this.unicodeData[codepoint]?.[1]] ?? 'no category found...';
+                      return `${char}${unicodeCategory === 'Mark, Nonspacing' ? ' ' : ''} - U+${codepoint} - ${unicodeName} - ${unicodeCategory}`;
                   })
                   .join('<br>');
               subtitleElement.classList.add('sandwhich-unicode-info-expanded');
@@ -1101,11 +1098,11 @@ const mods = {
           GM.xmlHttpRequest({
               method: "GET",
               url: "https://unicode.org/Public/UNIDATA/UnicodeData.txt",
-              onload: function(response) {
-                  if (response.status === 200) mods.unicode.unicodeData = mods.unicode.parseUnicodeData(response.responseText);
+              onload: (response) => {
+                  if (response.status === 200) this.unicodeData = this.parseUnicodeData(response.responseText);
                   else console.error("Failed to load Unicode data:", response.status, response.statusText);
               },
-              onerror: function(error) {
+              onerror: (error) => {
                   console.error("Error fetching Unicode data:", error);
               }
           });
@@ -1148,36 +1145,38 @@ const mods = {
 
 
       updateUnicodeElementsSort: function () {
+          if (!settings.unicode.searchCheckbox) return;
+
           const v_sidebar = document.querySelector('#sidebar').__vue__;
           const sortBy = v_sidebar.sortBy?.name;
           const sortFunction = this.nealSortFunctions[sortBy];
-          if (sortFunction && sortBy !== 'time') {
+          if (sortFunction) {
               this.unicodeElements = this.unicodeElements.sort(sortFunction);
           }
-          else if (sortBy !== "time") console.log('could not find sortFunction', sortBy);
+          else console.log('could not find sortFunction', sortBy);
       },
 
 
 
 
       findItemScopedDataAttribute: function () {
-          if (!mods.unicode.itemScopedDataAttribute) {
+          if (!this.itemScopedDataAttribute) {
               const sampleItem = document.querySelector('.item');
               if (!sampleItem) console.warn("SandwichMod: No '.item' element found to determine scoped attribute.");
 
               for (const attr of sampleItem.attributes) {
                   if (attr.name.startsWith('data-v-')) {
-                      mods.unicode.itemScopedDataAttribute = attr.name;
+                      this.itemScopedDataAttribute = attr.name;
                       break;
                   }
               }
           }
-          return mods.unicode.itemScopedDataAttribute;
+          return this.itemScopedDataAttribute;
       },
 
       createItemElement: function (item, wrap = false) {
       	  const itemDiv = document.createElement("div");
-          itemDiv.setAttribute(mods.unicode.findItemScopedDataAttribute(), '');
+          itemDiv.setAttribute(this.findItemScopedDataAttribute(), '');
       	  itemDiv.setAttribute("data-item-emoji", item.emoji);
       	  itemDiv.setAttribute("data-item-text", item.text);
       	  itemDiv.setAttribute("data-item-id", item.id);
@@ -1209,14 +1208,14 @@ const mods = {
       updateSearch: function () {
           clearTimeout(this.updateSearchTimeoutId);
 
-          this.updateSearchTimeoutId = setTimeout(mods.unicode.performSearch, settings.unicode.searchDebounceDelay);
+          const modsUnicode = this;
+          this.updateSearchTimeoutId = setTimeout(() => modsUnicode.performSearch(), settings.unicode.searchDebounceDelay);
       },
 
 
       performSearch: function (amount=settings.unicode.searchAmount) {
           if (!settings.unicode.searchCheckbox) return;
 
-          console.time('performSearch');
           const searchQuery = document.querySelector('#sidebar').__vue__.searchQuery;
           const upperSearchQuery = searchQuery.toUpperCase();
           const itemsContainer = document.querySelector('.sandwhich-unicode-items-inner');
@@ -1226,29 +1225,29 @@ const mods = {
           const fragment = document.createDocumentFragment();
           let added = 0;
 
-          for (const element of mods.unicode.unicodeElements) {
+          for (const element of this.unicodeElements) {
               let isMatch = false;
 
-              if (mods.unicode.searchDiscoveries && !element.discovery) continue;
+              if (this.searchDiscoveries && !element.discovery) continue;
 
               const elementText = element.text;
-              if (elementText.toUpperCase() === upperSearchQuery) isMatch = true;
+              if (elementText.toUpperCase().includes(upperSearchQuery)) isMatch = true;
 
               else {
                   const codepoint = elementText.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
                   if (codepoint.includes(upperSearchQuery)) isMatch = true;
 
                   else {
-                      const unicodeEntry = mods.unicode.unicodeData[codepoint] ?? [];   // [name, category]
+                      const unicodeEntry = this.unicodeData[codepoint] ?? [];   // [name, category]
                       if (
                           unicodeEntry[0]?.includes(upperSearchQuery)
-                          || mods.unicode.categoryMap[unicodeEntry[1]]?.toUpperCase()?.includes(upperSearchQuery)
+                          || this.categoryMap[unicodeEntry[1]]?.toUpperCase()?.includes(upperSearchQuery)
                       ) isMatch = true;
                   }
               }
 
               if (isMatch && added++ < amount) {
-                  fragment.appendChild(mods.unicode.createItemElement(element, !settings.unicode.searchCompact));
+                  fragment.appendChild(this.createItemElement(element, !settings.unicode.searchCompact));
               }
           }
 
@@ -1259,11 +1258,9 @@ const mods = {
               const showAll = document.createElement('a');
               showAll.className = 'sandwhich-unicode-showall';
               showAll.textContent = 'Show All';
-              showAll.addEventListener('click', () => mods.unicode.performSearch(Infinity));
+              showAll.addEventListener('click', () => this.performSearch(Infinity));
               itemsContainer.appendChild(showAll);
           }
-
-          console.timeEnd('performSearch');
       },
   },
 }
@@ -1749,15 +1746,11 @@ GM_addStyle(`
     overflow: hidden;
 }
 .sandwhich-inputs-container.sandwhich-inputs-collapsed {
-    /* --- Styles for the collapsed state --- */
     max-height: 0;
     opacity: 0;
     padding-top: 0;
     padding-bottom: 0;
     margin-top: 0;
-    /* Optional: Add border-top to visually separate when collapsed */
-    /* border-top: 1px solid #444; */
-    /* margin-top: 5px; */ /* Add space before border if using */
 }
 .sandwhich-input-row {
     display: flex;
@@ -1780,30 +1773,29 @@ GM_addStyle(`
     margin-right: 10px;
 }
 .sandwhich-input-row input[type="number"] {
-   width: 60px; /* Specific width for numbers */
+   width: 60px;
 }
 .sandwich-input-row input[type="color"] {
-    min-width: 40px; /* Ensure color picker is usable */
+    min-width: 40px;
     height: 30px;
     padding: 2px;
 }
 .sandwhich-input-description {
     font-size: 0.85em;
     color: #777;
-    margin: 5px 0 0 20px; /* Align with inputs */
-    flex-basis: 100%; /* Ensure it takes full width */
+    margin: 5px 0 0 20px;
+    flex-basis: 100%;
     line-height: 1.3;
 }
 
-/* Toggle Switch Styles */
 .sandwhich-toggle-switch {
     position: relative;
     display: inline-block;
-    width: 50px; /* Width of the switch */
-    height: 24px; /* Height of the switch */
+    width: 50px;
+    height: 24px;
     margin-left: 10px;
 }
-.sandwhich-toggle-switch.small { /* Smaller version for input rows */
+.sandwhich-toggle-switch.small {
      width: 40px;
      height: 20px;
 }
@@ -1821,7 +1813,7 @@ GM_addStyle(`
     bottom: 0;
     background-color: #ccc;
     transition: .4s;
-    border-radius: 24px; /* Rounded corners */
+    border-radius: 24px;
 }
 .sandwhich-toggle-switch.small .sandwhich-slider {
      border-radius: 20px;
@@ -1829,10 +1821,10 @@ GM_addStyle(`
 .sandwhich-slider:before {
     position: absolute;
     content: "";
-    height: 18px; /* Size of the circle */
-    width: 18px; /* Size of the circle */
-    left: 3px; /* Position from left */
-    bottom: 3px; /* Position from bottom */
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
     background-color: white;
     transition: .4s;
     border-radius: 50%; /* Make it a circle */
@@ -1845,7 +1837,7 @@ GM_addStyle(`
 }
 
 input:checked + .sandwhich-slider {
-    background-color: #2196F3; /* Color when ON */
+    background-color: #2196F3;
 }
 input:checked + .sandwhich-slider:before {
     transform: translateX(26px); /* Move circle to the right */
@@ -2016,7 +2008,8 @@ body.sandwhich-sel-active .instance-selected::before {
     user-select: none;
 }
 .recipe-modal-subtitle.sandwhich-unicode-info-expanded {
-    font: caption;
+    font-family: monospace;
+    white-space: pre-wrap;
     user-select: text;
 }
 .recipe-modal-subtitle:hover {
@@ -2093,7 +2086,4 @@ body.sandwhich-sel-active .instance-selected::before {
 	  opacity: 1;
 }
 `);
-
-
-
 })();

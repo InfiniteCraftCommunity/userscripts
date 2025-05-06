@@ -59,9 +59,18 @@
         priority: 1,
         description: "Translates kana into romaji whenever possible.",
         enabled: false,
-        condition: (e) => wanakana.toRomaji(e.text) !== e.text,
+        condition: (e) => {
+         var text=e.text;
+         var truncatedtext=(text.replace( /^\s+|\s+$/g, '' ))
+         const romaji= wanakana.toRomaji(truncatedtext)
+         const romajiTruncated=romaji.replace( /^\s+|\s+$/g, '' );
+         return romajiTruncated !== truncatedtext
+
+        },
+
+
         handle(e, tooltips) {
-            tooltips.push(`🇯🇵 ${wanakana.toRomaji(element.text)}`);
+            tooltips.push(`🇯🇵 ${wanakana.toRomaji(e.text.trim())}`);
         }
     }
         , {
@@ -70,7 +79,7 @@
         priority: 0,
         description: "Displays the UTF-16 code of the character.",
         enabled: false,
-        condition: (e) => [...e.text].length === 1,
+        condition: (e) => Array.from(e.text.trim()).length === 1,
         handle(element, tooltips) {
             tooltips.push(`🔡 U+${element.text.codePointAt().toString(16).toUpperCase().padStart(4, "0")}`);
         }

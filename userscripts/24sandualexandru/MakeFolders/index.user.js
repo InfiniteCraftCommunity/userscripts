@@ -711,24 +711,6 @@
 			font-size: 16.4px;
 		}
 
-		.item {
-			padding: 9px 10px 8px;
-			background: var(--item-bg);
-			border: 1px solid var(--border-color);
-			border-radius: 5px;
-			contain: layout style paint;
-			cursor: pointer;
-			font-size: 15.4px;
-			line-height: 1em;
-			overflow-x: hidden;
-			padding: 8px 8px 7px;
-			text-overflow: ellipsis;
-			transition: background .15s linear;
-			-webkit-user-select: none;
-			-moz-user-select: none;
-			user-select: none;
-			white-space: nowrap;
-		}
 		`;
 
 		let style = document.createElement("style");
@@ -741,34 +723,140 @@
 	}
 
 	function set_up_Folder_create_button() {
-		let theme_settings_container = document.createElement("div");
-		ThemeButton = theme_settings_container;
 
-		let settings = document.querySelector(".container");
-		theme_settings_container.style.background = "#777";
-		theme_settings_container.style.position = "absolute";
-		theme_settings_container.style.left = "150px";
-		theme_settings_container.style.top = "20px";
-		theme_settings_container.style.width = "500px";
-		theme_settings_container.style.height = "50px";
+		let menu = document.querySelector(".menu");
+		menu.addEventListener("click", () => {
+			let interval = setInterval(
+				() => {
 
-		theme_settings_container.classList.add("theme_settings_cont");
+					let settings = document.querySelector(".modal-tabs");
+					if (settings == null)
+						return;
 
-		ParentSource = settings;
+					clearInterval(interval);
 
-		theme_settings_container.appendChild(document.createTextNode("Folder Settings 📁"));
+					let modal1 = document.querySelector(".modal");
+					modal1.style.maxWidth = "650px";
+					let theme_settings_container = document.createElement("div");
+					ThemeButton = theme_settings_container;
+					if (settings == null) {
+
+
+						settings = document.querySelector(".container");
+						theme_settings_container.style.position = 'absolute';
+						theme_settings_container.style.left = '20px';
+						theme_settings_container.style.top = '100px';
+						theme_settings_container.style.width = '50px';
+						theme_settings_container.style.height = '50px';
+
+						theme_settings_container.classList.add('theme_settings_cont');
+
+
+
+					}
+					else {
+						theme_settings_container.classList.add('setting');
+						theme_settings_container.classList.add("modal-tab-wrapper");
+						theme_settings_container.setAttribute("data-v-885fff84", "");
+						theme_settings_container.classList.add("folder_settings_cont");
+						ParentSource = settings;
+					}
+
+
+
+					var title = document.createElement("div");
+
+
+					title.classList.add("modal-tab");
+					title.setAttribute("data-v-885fff84", "");
+					var textSpacer = document.createElement("div");
+					var textDiv = document.createElement("div");
+					textDiv.classList.add("modal-tab-text");
+					textDiv.textContent = "Folder Settings 📁";
+					textDiv.setAttribute("data-v-885fff84", "");
+					textSpacer.textContent = "/";
+					textSpacer.classList.add('spacer');
+					textSpacer.setAttribute("data-v-885fff84", "");
+					theme_settings_container.appendChild(textSpacer);
+					title.appendChild(textDiv);
+
+					theme_settings_container.appendChild(title);
+					settings.appendChild(theme_settings_container);
+					var parentElement = document.querySelector(".modal");
+
+
+					title.addEventListener("click", () => {
+
+						while (parentElement.children[1].children.length > 1)
+							parentElement.children[1].removeChild(parentElement.children[1].lastChild);
+						if (parentElement.children[1].lastChild && parentElement.children[1].lastChild.style) {
+							parentElement.children[1].lastChild.style.display = "none";
+						} else
+							if (parentElement.children[1].lastChild) {
+								parentElement.children[1].children[0].style.display = "none";
+							}
+
+						title.classList.add("modal-tab-selected");
+
+						var titleTabs = document.querySelector(".modal-tabs");
+            var content = document.querySelector(".folder-setting-content");
+            if (content == null) {
+
+			          content = document.createElement("div");
+			          content.setAttribute("data-v-885fff84", "");
+			          content.classList.add("about");
+
+			          content.classList.add("folder-setting-content");
+			          parentElement.appendChild(content);
+
+		          }else
+                {
+                   content.innerHTML = "";
+                }
+
+						for (var tab of titleTabs.children) {
+
+							if (tab.querySelector(".modal-tab").querySelector(".modal-tab-text").textContent != title.textContent) {
+								tab.querySelector(".modal-tab").addEventListener("click", () => {
+
+									title.classList.remove("modal-tab-selected");
+									if (parentElement.contains(content)) {
+										parentElement.removeChild(content);
+									}
+								})
+							}
+
+
+						}
+						updateContent();
+
+					});
+				}, 100)
+		});
+
+	}
+	function updateContent() {
+		var content = document.querySelector(".folder-setting-content");
+    var parentElement = document.querySelector(".modal");
+    content.innerHTML = "";
+
+		var selected = document.querySelectorAll(".modal-tab-selected");
+		selected.forEach(x => x.classList.remove("modal-tab-selected"));
+
+
+
 		let optionsdiv = document.createElement("div");
 		let selectedP = document.createElement("span");
 
 		selectedP.textContent = folders[mode];
 		selectedPrompt = selectedP;
 
-		optionsdiv.classList.add("theme_settings_opt");
+		//optionsdiv.classList.add("theme_settings_opt");
 		let dropdown = optionsdiv;
 
-		optionsdiv.style.height = "100px";
+		optionsdiv.style.height = "200px";
 
-		optionsdiv.style.overflowY = "scroll";
+		optionsdiv.style.overflowY = "auto";
 		dropdown.id = "dropdown_theme";
 
 		let index = 0;
@@ -811,7 +899,7 @@
 		dropMenu = optionsdiv;
 		let selectionDiv = document.createElement("div");
 		selectionDiv.id = 'selectionDiv';
-		selectionDiv.style.background = "#777";
+
 
 		selectedP.addEventListener(
 			"click",
@@ -827,6 +915,7 @@
 		let makeButton = document.createElement("button");
 		makeButton.textContent = "New";
 		makeButton.style.maxHeight = "50px";
+		makeButton.style.marginBottom = "50px";
 		makeButton.addEventListener("click", function () {
 			let parent = document.querySelector(".container");
 
@@ -845,12 +934,12 @@
 
 				localStorage.setItem("foldersNames", JSON.stringify(folders));
 				let settings = ParentSource;
-				settings.removeChild(ThemeButton);
-				set_up_Folder_create_button();
+				updateContent();
 				dialog.close();
 			});
 
 			closeButton.addEventListener("click", function () {
+				updateContent();
 				dialog.close();
 			});
 			dialog.appendChild(label);
@@ -872,29 +961,11 @@
 			dialog.showModal();
 		});
 
-		theme_settings_container.appendChild(makeButton);
-		theme_settings_container.addEventListener(
-			"click",
-			function () {
-				console.log("hidden here:", hidden);
+		content.appendChild(makeButton);
 
-				if (hidden == 1) {
-					if (!theme_settings_container.contains(selectionDiv)) theme_settings_container.appendChild(selectionDiv);
+		if (!content.contains(selectionDiv)) content.appendChild(selectionDiv);
 
-					hidden = 0;
-				} else {
-					if (selectionDiv.contains(optionsdiv)) selectionDiv.removeChild(optionsdiv);
-
-					if (theme_settings_container.contains(selectionDiv)) theme_settings_container.removeChild(selectionDiv);
-					hidden = 1;
-				}
-			},
-			false
-		);
-
-		settings.appendChild(theme_settings_container);
 	}
-
 	function initFolders() {
 		if (localStorage.getItem("foldersNames") != null) {
 			folders = JSON.parse(localStorage.getItem("foldersNames"));

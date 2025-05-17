@@ -5,7 +5,7 @@
 // @grant		GM.addStyle
 // @grant		unsafeWindow
 // @run-at		document-start
-// @version		1.1.0
+// @version		1.1.1
 // @author		Natasquare
 // @description	Adds various QoL features to Infinite Craft - a port of Mikarific's Infinite Craft Helper.
 // @updateURL	https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/natasquare/helper/index.user.js

@@ -558,14 +558,11 @@ function initRecipeLookup({ v_container, v_sidebar }) {
 	}));
 }
 
-function initRecipeLogging({ v_container }) {
-	const oldCraft = v_container.craftApi;
-	v_container.craftApi = async function(a, b) {
-		[a, b] = [a, b].sort();
-		const result = await oldCraft.apply(this, [a, b]);
+function initRecipeLogging() {
+	window.addEventListener("ic-craftapi", function(e) {
+		const { a, b, result } = e.detail;
 		if (result) console.log(`${a} + ${b} = ${result.text}`);
-		return result;
-	}
+	});
 }
 
 function initPinnedContainer({ v_container, v_sidebar }) {
@@ -859,7 +856,15 @@ function initEvents({ v_container }) {
 	const switchSave = v_container.switchSave;
 	v_container.switchSave = function(id) {
 		dispatchEvent(new CustomEvent("ic-switchsave", { detail: { currentId: v_container.currSave, newId: id } }));
-		return switchSave(id);
+		return switchSave.apply(this, [id]);
+	}
+
+	const craftApi = v_container.craftApi;
+	v_container.craftApi = async function(a, b) {
+		[a, b] = [a, b].sort();
+		const result = await craftApi.apply(this, [a, b]);
+		dispatchEvent(new CustomEvent("ic-craftapi", { detail: { a, b, result} }));
+		return result;
 	}
 }
 

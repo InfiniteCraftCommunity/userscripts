@@ -383,7 +383,8 @@ const css = `
 	left: 0px;
 	padding: 9px;
 }
-.sidebar-inner .items > .bottom-spacer {
+.sidebar-inner .items > .bottom-spacer,
+.sidebar-inner .items > .instruction {
 	display: none;
 }
 

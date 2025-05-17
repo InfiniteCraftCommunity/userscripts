@@ -413,7 +413,7 @@ function initSearchDebounce({ v_sidebar }) {
 		if (e.key === "Escape") {
 			v_sidebar.searchQuery = "";
 			v_sidebar.$refs.search.value = "";
-		} else if (document.activeElement !== v_sidebar.$refs.search)
+		} else if (document.activeElement?.nodeName !== "INPUT")
 			v_sidebar.$refs.search.focus();
 	});
 

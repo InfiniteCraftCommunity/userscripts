@@ -863,7 +863,7 @@ function initEvents({ v_container }) {
 	v_container.craftApi = async function(a, b) {
 		[a, b] = [a, b].sort();
 		const result = await craftApi.apply(this, [a, b]);
-		dispatchEvent(new CustomEvent("ic-craftapi", { detail: { a, b, result} }));
+		dispatchEvent(new CustomEvent("ic-craftapi", { detail: { a, b, result } }));
 		return result;
 	}
 }

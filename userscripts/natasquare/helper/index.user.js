@@ -466,6 +466,7 @@ function createItemElement(item, wrap = false) {
 	itemDiv.setAttribute("data-item-emoji", item.emoji);
 	itemDiv.setAttribute("data-item-text", item.text);
 	itemDiv.setAttribute("data-item-id", item.id);
+	if (item.discovery) itemDiv.setAttribute("data-item-discovery", "");
 	itemDiv.setAttribute("data-item", "");
 	itemDiv.classList.add("item");
 
@@ -653,10 +654,22 @@ function initPinnedContainer({ v_container, v_sidebar }) {
 	}
 	exported.unpinElements = unpinElements;
 
-	const pinnedElements = JSON.parse(localStorage.getItem("pinned-elements") ?? "[]"),
-		curPinnedElements = pinnedElements[v_container.currSave];
-	if (curPinnedElements?.length > 0)
-		pinElements(curPinnedElements, false);
+	// note: does not update storage
+	function resetPinnedElements() {
+		pinnedIds.clear();
+		pinnedContainer.innerHTML = "";
+	}
+	exported.resetPinnedElements = resetPinnedElements;
+
+	function loadPinnedElements(saveId) {
+		const pinnedElements = JSON.parse(localStorage.getItem("pinned-elements") ?? "[]"),
+			curPinnedElements = pinnedElements[saveId];
+		if (curPinnedElements?.length > 0)
+			pinElements(curPinnedElements, false);
+	}
+	exported.loadPinnedElements = loadPinnedElements;
+
+	loadPinnedElements(v_container.currSave);
 
 	const itemsContainer = v_sidebar.$el.querySelector(".items");
 	itemsContainer.before(pinnedContainerContainer);
@@ -670,7 +683,8 @@ function initPinnedContainer({ v_container, v_sidebar }) {
 			unpinElements({
 				id: item.getAttribute("data-item-id"),
 				text: item.getAttribute("data-item-text"),
-				emoji: item.getAttribute("data-item-emoji")
+				emoji: item.getAttribute("data-item-emoji"),
+				discovery: item.getAttribute("data-item-discovery") !== null
 			});
 		}
 	});
@@ -684,10 +698,16 @@ function initPinnedContainer({ v_container, v_sidebar }) {
 			pinElements({
 				id: item.getAttribute("data-item-id"),
 				text: item.getAttribute("data-item-text"),
-				emoji: item.getAttribute("data-item-emoji")
+				emoji: item.getAttribute("data-item-emoji"),
+				discovery: item.getAttribute("data-item-discovery") !== null
 			});
 		}
 	});
+
+	window.addEventListener("ic-switchsave", function(e) {
+		resetPinnedElements();
+		loadPinnedElements(e.detail.newId);
+	})
 }
 
 function traverseUntil(element, selector) {
@@ -834,6 +854,14 @@ function initRandomButton({ v_container, v_sidebar }) {
 	});
 }
 
+function initEvents({ v_container }) {
+	const switchSave = v_container.switchSave;
+	v_container.switchSave = function(id) {
+		dispatchEvent(new CustomEvent("ic-switchsave", { detail: { currentId: v_container.currSave, newId: id } }));
+		return switchSave(id);
+	}
+}
+
 function init() {
 	GM.addStyle(css);
 
@@ -876,6 +904,8 @@ function init() {
 			return result;
 		}
 	}
+
+	initEvents(v);
 
 	unsafeWindow.ICHelper = exported;
 }

@@ -564,6 +564,7 @@ function initRecipeLookup({ v_container, v_sidebar }) {
 
 	let hidden = false;
 	modal.addEventListener("mousedown", function(e) {
+		if (e.target === e.currentTarget) return modal.close();
 		if (e.button === 2) return;
 		const item = traverseUntil(e.target, ".item");
 		if (!item) return;

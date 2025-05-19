@@ -781,6 +781,18 @@ function initSidebarUpdates({ v_sidebar }) {
 		if (this.searchQuery) return [];
 		return oldFilteredElementsCut.apply(this, a);
 	}
+
+	// fix for sort by emoji (neal where are you)
+	const oldSortedELements = v_sidebar._computedWatchers.sortedElements.getter;
+	v_sidebar._computedWatchers.sortedElements.getter = function(...a) {
+		if (this.sortBy.name === "emoji") {
+			const sortFn = this.sortBy.asc ?
+				(a, b) => (b.emoji ?? "⬜").localeCompare(a.emoji ?? "⬜") :
+				(a, b) => (a.emoji ?? "⬜").localeCompare(b.emoji ?? "⬜");
+			return this.items.toSorted(sortFn);
+		}
+		return oldSortedELements.apply(this, a);
+	}
 }
 
 function choose(a) {

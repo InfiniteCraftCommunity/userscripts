@@ -202,10 +202,15 @@ const css = `
 	border: 1px solid var(--border-color);
 	padding: 0;
 	background-color: var(--background-color);
+	transition: 0.2s ease-in-out opacity;
 }
 
 .recipe-modal[open] {
 	display: grid;
+}
+
+.recipe-modal.hidden {
+	opacity: 0;
 }
 
 .recipe-modal-header {
@@ -556,6 +561,20 @@ function initRecipeLookup({ v_container, v_sidebar }) {
 			openRecipeModal(item.getAttribute("data-item-text"));
 		}
 	}));
+
+	let hidden = false;
+	modal.addEventListener("mousedown", function(e) {
+		if (e.button === 2) return;
+		const item = traverseUntil(e.target, ".item");
+		if (!item) return;
+		modal.classList.add("hidden");
+		hidden = true;
+	});
+	document.addEventListener("mouseup", function() {
+		if (!hidden) return;
+		modal.classList.remove("hidden");
+		hidden = false;
+	});
 }
 
 function initRecipeLogging() {
@@ -875,7 +894,7 @@ function initEvents({ v_container }) {
 	v_container.craftApi = async function(a, b) {
 		[a, b] = [a, b].sort();
 		const result = await craftApi.apply(this, [a, b]);
-		dispatchEvent(new CustomEvent("ic-craftapi", { detail: { a, b, result } }));
+		dispatchEvent(new CustomEvent("ic-craftapi", { detail: { a, b, result} }));
 		return result;
 	}
 }

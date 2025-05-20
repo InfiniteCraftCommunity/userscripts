@@ -538,6 +538,7 @@ function initRecipeLookup({ v_container, v_sidebar }) {
         modalHeader.replaceChild(button, tabButton);
 
         tabButton = button;
+		tabIcon.src=nextIcon;
         tabButton.addEventListener("click", () => {
 
             if (tabIcon.src == nextIcon) {

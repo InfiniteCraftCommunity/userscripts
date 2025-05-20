@@ -1,4 +1,3 @@
-
 // ==UserScript==
 // @name		Helper: Not-so-budget Edition
 // @namespace	nat.is-a.dev
@@ -6,7 +5,7 @@
 // @grant		GM.addStyle
 // @grant		unsafeWindow
 // @run-at		document-start
-// @version		1.1.0
+// @version		1.1.2.1
 // @author		Natasquare
 // @description	Adds various QoL features to Infinite Craft - a port of Mikarific's Infinite Craft Helper.
 // @updateURL	https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/natasquare/helper/index.user.js
@@ -19,25 +18,25 @@
 */
 
 const settings = {
-    // search
-    searchDebounceDelay: 200,	// basically waits for you to finish inputting before searching, set to 0 to disable
-    searchRelevancy: true,		// will override other sorting modes if searching
+	// search
+	searchDebounceDelay: 200,	// basically waits for you to finish inputting before searching, set to 0 to disable
+	searchRelevancy: true,		// will override other sorting modes if searching
 
-    // recipes
-    recipeLookup: true,			// if you can't wait until neal actually implements it
-    recipeLogging: true,		// log the raw result of recipes in console
+	// recipes
+	recipeLookup: true,			// if you can't wait until neal actually implements it
+	recipeLogging: true,		// log the raw result of recipes in console
 
-    // misc
-    randomButton: 2,			// 0 - disable	1 - classic algorithm	2 - better random button
-    elementPinning: true,		// alt + left click to pin elements on side bar
-    removeDeps: false,			// removes some reactivity of vue for performance (MAY BREAK THINGS)
-    oldMouseControls: true,		// middle click to duplicate, ctrl + left click to pan
-    disableParticles: false,		// honestly they don't affect performance as much now
-    variation: true				// allows you to obtain an element in multiple casings, yay
+	// misc
+	randomButton: 2,			// 0 - disable	1 - classic algorithm	2 - better random button
+	elementPinning: true,		// alt + left click to pin elements on side bar
+	removeDeps: false,			// removes some reactivity of vue for performance (MAY BREAK THINGS)
+	oldMouseControls: true,		// middle click to duplicate, ctrl + left click to pan
+	disableParticles: true,		// honestly they don't affect performance as much now
+	variation: true				// allows you to obtain an element in multiple casings, yay
 }
 
 const closeIconSrc = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJhIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MDAgNjAwIj48cGF0aCBkPSJNMzAwLjAwMDAyLDM0OS44MzIzM0w2MC4xMDc4Miw1ODkuNzIzMzJjLTYuNTQ2ODksNi41NDc2OS0xNC43NzY0Myw5Ljg5NzE4LTI0LjY4ODYsMTAuMDQ4NTEtOS45MTEzOCwuMTUyMS0xOC4yOTIyNC0zLjE5NzQtMjUuMTQyNTYtMTAuMDQ4NTFDMy40MjU1Nyw1ODIuODcyOTgsLjAwMDAyLDU3NC41Njc4LDAsNTY0LjgwNzc0Yy4wMDAwMi05Ljc2MDA3LDMuNDI1NTctMTguMDY1MjYsMTAuMjc2NjYtMjQuOTE1NTZsMjM5Ljg5MTAxLTIzOS44OTIyTDEwLjI3NjY4LDYwLjEwNzc4QzMuNzI4OTksNTMuNTYwOTIsLjM3OTUsNDUuMzMxMzYsLjIyODE3LDM1LjQxOTIyLC4wNzYwNywyNS41MDc4OCwzLjQyNTU3LDE3LjEyNywxMC4yNzY2OCwxMC4yNzY2NiwxNy4xMjcwMiwzLjQyNTUzLDI1LjQzMjIsMCwzNS4xOTIyNiwwczE4LjA2NTI2LDMuNDI1NTMsMjQuOTE1NTYsMTAuMjc2NjZsMjM5Ljg5MjIsMjM5Ljg5MDk3TDUzOS44OTIyMiwxMC4yNzY1OWM2LjU0Njg2LTYuNTQ3NzIsMTQuNzc2NDMtOS44OTcyLDI0LjY4ODU2LTEwLjA0ODUxLDkuOTExMzQtLjE1MjE3LDE4LjI5MjIyLDMuMTk3MzgsMjUuMTQyNTYsMTAuMDQ4NTEsNi44NTExMyw2Ljg1MDI3LDEwLjI3NjY2LDE1LjE1NTUyLDEwLjI3NjY2LDI0LjkxNTU2cy0zLjQyNTUzLDE4LjA2NTIyLTEwLjI3NjY2LDI0LjkxNTU2bC0yMzkuODkwOTcsMjM5Ljg5MjI3LDIzOS44OTEwNSwyMzkuODkyMmM2LjU0NzcyLDYuNTQ2ODksOS44OTcyLDE0Ljc3NjQzLDEwLjA0ODUxLDI0LjY4ODYsLjE1MjE3LDkuOTExMzgtMy4xOTczOCwxOC4yOTIyNC0xMC4wNDg1MSwyNS4xNDI1Ni02Ljg1MDI3LDYuODUxMS0xNS4xNTU1MiwxMC4yNzY2NC0yNC45MTU1NiwxMC4yNzY2Ni05Ljc2MDA0LS4wMDAwMi0xOC4wNjUyMi0zLjQyNTU3LTI0LjkxNTU2LTEwLjI3NjY2bC0yMzkuODkyMjctMjM5Ljg5MTAxWiIvPjwvc3ZnPg==",
-    randomIcon = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJhIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MDAgNjAwIj48cGF0aCBkPSJNNjAuNTc2NTcsNjAwYy0xNy4yNTkzOCwwLTMxLjY3MDMyLTUuNzgxMjUtNDMuMjMyODItMTcuMzQzNzVTMCw1NTYuNjgyODEsMCw1MzkuNDIzNDN2LTEwOC4xNzM0M2MwLTUuMzM2MjQsMS43OTA5NC05Ljc5NTMxLDUuMzcyODItMTMuMzc3MiwzLjU4MTI2LTMuNTgxODksOC4wNDAzLTUuMzcyOCwxMy4zNzcxOC01LjM3MjgsNS4zMzYyNSwwLDkuNzk1MywxLjc5MDkxLDEzLjM3NzE4LDUuMzcyOCwzLjU4MTg3LDMuNTgxODYsNS4zNzI4Miw4LjA0MDkzLDUuMzcyODIsMTMuMzc3MnYxMDguMTczNDVjMCw1Ljc2ODc0LDIuNDAzNzYsMTEuMDU3MTgsNy4yMTEyNSwxNS44NjUzMiw0LjgwODEyLDQuODA3NDgsMTAuMDk2NTYsNy4yMTEyNCwxNS44NjUzMiw3LjIxMTI0aDEwOC4xNzM0M2M1LjMzNjI0LDAsOS43OTUzMSwxLjc5MDk0LDEzLjM3NzIsNS4zNzI4MiwzLjU4MTg5LDMuNTgxODksNS4zNzI4LDguMDQwOTMsNS4zNzI4LDEzLjM3NzE4LDAsNS4zMzY4OC0xLjc5MDkxLDkuNzk1OTMtNS4zNzI4LDEzLjM3NzE4LTMuNTgxODksMy41ODE4Ny04LjA0MDk2LDUuMzcyODItMTMuMzc3Miw1LjM3MjgySDYwLjU3NjU3Wm00NzguODQ2ODgsMGgtMTA4LjE3MzQ1Yy01LjMzNjI3LDAtOS43OTUyOC0xLjc5MDk0LTEzLjM3NzE3LTUuMzcyODItMy41ODE4OS0zLjU4MTI2LTUuMzcyODMtOC4wNDAzLTUuMzcyODMtMTMuMzc3MTgsMC01LjMzNjI1LDEuNzkwOTQtOS43OTUzLDUuMzcyODMtMTMuMzc3MTgsMy41ODE4OS0zLjU4MTg3LDguMDQwOTYtNS4zNzI4MiwxMy4zNzcxNy01LjM3MjgyaDEwOC4xNzM0NWM1Ljc2ODc0LDAsMTEuMDU3MjItMi40MDM3NiwxNS44NjUyOS03LjIxMTI1LDQuODA3NTUtNC44MDgxMiw3LjIxMTI3LTEwLjA5NjU2LDcuMjExMjctMTUuODY1MzJ2LTEwOC4xNzM0M2MwLTUuMzM2MjQsMS43OTA5NC05Ljc5NTMxLDUuMzcyODMtMTMuMzc3MiwzLjU4MTg5LTMuNTgxODksOC4wNDA5Ni01LjM3MjgsMTMuMzc3MTctNS4zNzI4LDUuMzM2ODksMCw5Ljc5NTkxLDEuNzkwOTEsMTMuMzc3MTcsNS4zNzI4LDMuNTgxODksMy41ODE4OSw1LjM3MjgzLDguMDQwOTYsNS4zNzI4MywxMy4zNzcydjEwOC4xNzM0NWMwLDE3LjI1OTM2LTUuNzgxMjcsMzEuNjcwMzEtMTcuMzQzNzUsNDMuMjMyOC0xMS41NjI0OCwxMS41NjI1LTI1Ljk3MzQ1LDE3LjM0Mzc1LTQzLjIzMjgsMTcuMzQzNzVaTTAsNjAuNTc2NTVDMCw0My4zMTcyLDUuNzgxMjUsMjguOTA2MjMsMTcuMzQzNzUsMTcuMzQzNzUsMjguOTA2MjUsNS43ODEyNyw0My4zMTcxOSwwLDYwLjU3NjU3LDBoMTA4LjE3MzQzYzUuMzM2MjQsMCw5Ljc5NTMxLDEuNzkwOTQsMTMuMzc3Miw1LjM3MjgzLDMuNTgxODksMy41ODEyNiw1LjM3MjgsOC4wNDAyOCw1LjM3MjgsMTMuMzc3MTcsMCw1LjMzNjMyLTEuNzkwOTEsOS43OTUyOC01LjM3MjgsMTMuMzc3MTctMy41ODE4NiwzLjU4MTgzLTguMDQwOTMsNS4zNzI4My0xMy4zNzcyLDUuMzcyODNINjAuNTc2NTdjLTUuNzY4NzUsMC0xMS4wNTcxOCwyLjQwMzcyLTE1Ljg2NTMyLDcuMjExMjctNC44MDc0OSw0LjgwODA2LTcuMjExMjUsMTAuMDk2NTUtNy4yMTEyNSwxNS44NjUyOXYxMDguMTczNDVjMCw1LjMzNjI3LTEuNzkwOTQsOS43OTUyOC01LjM3MjgyLDEzLjM3NzE3LTMuNTgxODksMy41ODE4My04LjA0MDkzLDUuMzcyNzctMTMuMzc3MTgsNS4zNzI4My01LjMzNjg4LDAtOS43OTU5My0xLjc5MDk0LTEzLjM3NzE4LTUuMzcyODMtMy41ODE4Ny0zLjU4MTg5LTUuMzcyODItOC4wNDA5LTUuMzcyODItMTMuMzc3MTdWNjAuNTc2NTVabTYwMCwwdjEwOC4xNzM0NWMwLDUuMzM2MjctMS43OTA5NCw5Ljc5NTI4LTUuMzcyODMsMTMuMzc3MTctMy41ODEyNiwzLjU4MTg5LTguMDQwMjgsNS4zNzI4My0xMy4zNzcxNyw1LjM3MjgzLTUuMzM2MzIsMC05Ljc5NTI4LTEuNzkwOTQtMTMuMzc3MTctNS4zNzI4My0zLjU4MTgzLTMuNTgxODktNS4zNzI4My04LjA0MDk2LTUuMzcyODMtMTMuMzc3MTdWNjAuNTc2NTVjMC01Ljc2ODc0LTIuNDAzNzItMTEuMDU3MjItNy4yMTEyNy0xNS44NjUyOS00LjgwODA2LTQuODA3NTUtMTAuMDk2NTUtNy4yMTEyNy0xNS44NjUyOS03LjIxMTI3aC0xMDguMTczNDVjLTUuMzM2MjcsMC05Ljc5NTI4LTEuNzkwOTQtMTMuMzc3MTctNS4zNzI4My0zLjU4MTgzLTMuNTgxODktNS4zNzI3Ny04LjA0MDk2LTUuMzcyODMtMTMuMzc3MTcsMC01LjMzNjg5LDEuNzkwOTQtOS43OTU5MSw1LjM3MjgzLTEzLjM3NzE3LDMuNTgxODktMy41ODE4OSw4LjA0MDktNS4zNzI4MywxMy4zNzcxNy01LjM3MjgzaDEwOC4xNzM0NWMxNy4yNTkzNSwwLDMxLjY3MDMyLDUuNzgxMjcsNDMuMjMyOCwxNy4zNDM3NXMxNy4zNDM3NSwyNS45NzM0NSwxNy4zNDM3NSw0My4yMzI4Wk0zMDEuNDQxODcsNDk1LjQzMzEzYzguMzE3NTEsMCwxNS4zMjUwMS0yLjg0ODc1LDIxLjAyMjUxLTguNTQ2MjUsNS42OTY5LTUuNjk2ODcsOC41NDUzMy0xMi43MDQwNiw4LjU0NTMzLTIxLjAyMTU3cy0yLjg0ODQzLTE1LjMyNDctOC41NDUzLTIxLjAyMTU3Yy01LjY5NzUzLTUuNjk2ODctMTIuNzA1LTguNTQ1My0yMS4wMjI1MS04LjU0NTMtOC4zMTY5MSwwLTE1LjMyNDA3LDIuODQ4NDMtMjEuMDIxNTcsOC41NDUzLTUuNjk2OSw1LjY5Njg3LTguNTQ1MzMsMTIuNzA0MDYtOC41NDUzMywyMS4wMjE1N3MyLjg0ODQzLDE1LjMyNDcsOC41NDUzLDIxLjAyMTU3YzUuNjk3NDcsNS42OTc1LDEyLjcwNDY5LDguNTQ2MjUsMjEuMDIxNTcsOC41NDYyNVptMC0zNTUuOTYyMTVjMTkuMTM0OTgsMCwzNS42Mzc1LDYuMDgxODUsNDkuNTA3NTEsMTguMjQ1NiwxMy44NzAwMSwxMi4xNjMxMiwyMC44MDUwMiwyNy40OTk2OSwyMC44MDUwMiw0Ni4wMDk3MSwwLDEzLjQxMzE2LTMuOTMwMywyNS42MjQ2OS0xMS43OTA5NiwzNi42MzQ3MS03Ljg2MDAzLDExLjAwOTM5LTE2Ljg2MjE4LDIwLjk2MTIzLTI3LjAwNjU3LDI5Ljg1NTYzLTE2LjI1MDAxLDE0Ljg1NTYtMjguMzUzNDUsMjguNjg5NjgtMzYuMzEwMyw0MS41MDIyLTcuOTU2ODgsMTIuODEyNDktMTIuNTYwMjksMjYuODM5MDYtMTMuODEwMyw0Mi4wNzk3LS42MjQ5OSw0LjkwMzc0LC44MTc0OCw5LjA3NDM5LDQuMzI3NSwxMi41MTE4OCwzLjUwOTM5LDMuNDM3NTIsNy43ODgxMSw1LjE1NjI1LDEyLjgzNjI0LDUuMTU2MjUsNC45MDM3NiwwLDkuMTQ2NTgtMS42ODI4LDEyLjcyODQzLTUuMDQ4NDUsMy41ODE4OS0zLjM2NTAyLDUuNzU3NTItNy41NzE1NSw2LjUyNjg4LTEyLjYxOTY5LDEuNzMwNjMtMTAuNjI1MDEsNS40ODA2My0yMC4xMjAzMiwxMS4yNS0yOC40ODU5NSw1Ljc2ODc0LTguMzY1NjMsMTQuODMxMi0xOC43MjYyNSwyNy4xODc1LTMxLjA4MTg3LDE4Ljk4OTk4LTE4Ljk5MDYxLDMyLjA3ODctMzQuOTY0MDgsMzkuMjY2MjItNDcuOTIwMzMsNy4xODc1Mi0xMi45NTY4OSwxMC43ODEyNS0yNy4zNjgxNCwxMC43ODEyNS00My4yMzM3OCwwLTI4Ljk0MTg4LTkuNzgzNzMtNTIuNTk1NjctMjkuMzUxMjMtNzAuOTYxMjctMTkuNTY2ODgtMTguMzY1NjUtNDQuNzM1MDEtMjcuNTQ4NDUtNzUuNTA0MzctMjcuNTQ4NDUtMjEuMjk4MTEsMC00MC43ODEyNSw0LjgxOTY4LTU4LjQ0OTM4LDE0LjQ1OTA0LTE3LjY2ODc2LDkuNjM5MzYtMzEuODE1NjEsMjMuNjQxODMtNDIuNDQwNjEsNDIuMDA3NDgtMi4zMDc1LDQuMTM1MDQtMi41ODM3Niw4LjU0NjI4LS44Mjg3NSwxMy4yMzM3OHM1LjAxMjIsNy44NzI1MSw5Ljc3MTU3LDkuNTU1MDJjNC4yNzg3NSwxLjY4MjUxLDguODM0MDcsMS44MDI4NSwxMy42NjU5MywuMzYwOTUsNC44MzE4Ny0xLjQ0MjQ3LDguNzg2MjMtNC4xNTkwNywxMS44NjMxMi04LjE0OTY4LDguMzE3NTEtMTAuNjczMTYsMTcuODQ4NzUtMTkuNDM1MDQsMjguNTkzNzUtMjYuMjg1NjUsMTAuNzQ0OTctNi44NTEyMywyMi44NzIxNi0xMC4yNzY4NSwzNi4zODE1Ny0xMC4yNzY4NVoiLz48L3N2Zz4=",
+	randomIcon = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJhIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MDAgNjAwIj48cGF0aCBkPSJNNjAuNTc2NTcsNjAwYy0xNy4yNTkzOCwwLTMxLjY3MDMyLTUuNzgxMjUtNDMuMjMyODItMTcuMzQzNzVTMCw1NTYuNjgyODEsMCw1MzkuNDIzNDN2LTEwOC4xNzM0M2MwLTUuMzM2MjQsMS43OTA5NC05Ljc5NTMxLDUuMzcyODItMTMuMzc3MiwzLjU4MTI2LTMuNTgxODksOC4wNDAzLTUuMzcyOCwxMy4zNzcxOC01LjM3MjgsNS4zMzYyNSwwLDkuNzk1MywxLjc5MDkxLDEzLjM3NzE4LDUuMzcyOCwzLjU4MTg3LDMuNTgxODYsNS4zNzI4Miw4LjA0MDkzLDUuMzcyODIsMTMuMzc3MnYxMDguMTczNDVjMCw1Ljc2ODc0LDIuNDAzNzYsMTEuMDU3MTgsNy4yMTEyNSwxNS44NjUzMiw0LjgwODEyLDQuODA3NDgsMTAuMDk2NTYsNy4yMTEyNCwxNS44NjUzMiw3LjIxMTI0aDEwOC4xNzM0M2M1LjMzNjI0LDAsOS43OTUzMSwxLjc5MDk0LDEzLjM3NzIsNS4zNzI4MiwzLjU4MTg5LDMuNTgxODksNS4zNzI4LDguMDQwOTMsNS4zNzI4LDEzLjM3NzE4LDAsNS4zMzY4OC0xLjc5MDkxLDkuNzk1OTMtNS4zNzI4LDEzLjM3NzE4LTMuNTgxODksMy41ODE4Ny04LjA0MDk2LDUuMzcyODItMTMuMzc3Miw1LjM3MjgySDYwLjU3NjU3Wm00NzguODQ2ODgsMGgtMTA4LjE3MzQ1Yy01LjMzNjI3LDAtOS43OTUyOC0xLjc5MDk0LTEzLjM3NzE3LTUuMzcyODItMy41ODE4OS0zLjU4MTI2LTUuMzcyODMtOC4wNDAzLTUuMzcyODMtMTMuMzc3MTgsMC01LjMzNjI1LDEuNzkwOTQtOS43OTUzLDUuMzcyODMtMTMuMzc3MTgsMy41ODE4OS0zLjU4MTg3LDguMDQwOTYtNS4zNzI4MiwxMy4zNzcxNy01LjM3MjgyaDEwOC4xNzM0NWM1Ljc2ODc0LDAsMTEuMDU3MjItMi40MDM3NiwxNS44NjUyOS03LjIxMTI1LDQuODA3NTUtNC44MDgxMiw3LjIxMTI3LTEwLjA5NjU2LDcuMjExMjctMTUuODY1MzJ2LTEwOC4xNzM0M2MwLTUuMzM2MjQsMS43OTA5NC05Ljc5NTMxLDUuMzcyODMtMTMuMzc3MiwzLjU4MTg5LTMuNTgxODksOC4wNDA5Ni01LjM3MjgsMTMuMzc3MTctNS4zNzI4LDUuMzM2ODksMCw5Ljc5NTkxLDEuNzkwOTEsMTMuMzc3MTcsNS4zNzI4LDMuNTgxODksMy41ODE4OSw1LjM3MjgzLDguMDQwOTYsNS4zNzI4MywxMy4zNzcydjEwOC4xNzM0NWMwLDE3LjI1OTM2LTUuNzgxMjcsMzEuNjcwMzEtMTcuMzQzNzUsNDMuMjMyOC0xMS41NjI0OCwxMS41NjI1LTI1Ljk3MzQ1LDE3LjM0Mzc1LTQzLjIzMjgsMTcuMzQzNzVaTTAsNjAuNTc2NTVDMCw0My4zMTcyLDUuNzgxMjUsMjguOTA2MjMsMTcuMzQzNzUsMTcuMzQzNzUsMjguOTA2MjUsNS43ODEyNyw0My4zMTcxOSwwLDYwLjU3NjU3LDBoMTA4LjE3MzQzYzUuMzM2MjQsMCw5Ljc5NTMxLDEuNzkwOTQsMTMuMzc3Miw1LjM3MjgzLDMuNTgxODksMy41ODEyNiw1LjM3MjgsOC4wNDAyOCw1LjM3MjgsMTMuMzc3MTcsMCw1LjMzNjMyLTEuNzkwOTEsOS43OTUyOC01LjM3MjgsMTMuMzc3MTctMy41ODE4NiwzLjU4MTgzLTguMDQwOTMsNS4zNzI4My0xMy4zNzcyLDUuMzcyODNINjAuNTc2NTdjLTUuNzY4NzUsMC0xMS4wNTcxOCwyLjQwMzcyLTE1Ljg2NTMyLDcuMjExMjctNC44MDc0OSw0LjgwODA2LTcuMjExMjUsMTAuMDk2NTUtNy4yMTEyNSwxNS44NjUyOXYxMDguMTczNDVjMCw1LjMzNjI3LTEuNzkwOTQsOS43OTUyOC01LjM3MjgyLDEzLjM3NzE3LTMuNTgxODksMy41ODE4My04LjA0MDkzLDUuMzcyNzctMTMuMzc3MTgsNS4zNzI4My01LjMzNjg4LDAtOS43OTU5My0xLjc5MDk0LTEzLjM3NzE4LTUuMzcyODMtMy41ODE4Ny0zLjU4MTg5LTUuMzcyODItOC4wNDA5LTUuMzcyODItMTMuMzc3MTdWNjAuNTc2NTVabTYwMCwwdjEwOC4xNzM0NWMwLDUuMzM2MjctMS43OTA5NCw5Ljc5NTI4LTUuMzcyODMsMTMuMzc3MTctMy41ODEyNiwzLjU4MTg5LTguMDQwMjgsNS4zNzI4My0xMy4zNzcxNyw1LjM3MjgzLTUuMzM2MzIsMC05Ljc5NTI4LTEuNzkwOTQtMTMuMzc3MTctNS4zNzI4My0zLjU4MTgzLTMuNTgxODktNS4zNzI4My04LjA0MDk2LTUuMzcyODMtMTMuMzc3MTdWNjAuNTc2NTVjMC01Ljc2ODc0LTIuNDAzNzItMTEuMDU3MjItNy4yMTEyNy0xNS44NjUyOS00LjgwODA2LTQuODA3NTUtMTAuMDk2NTUtNy4yMTEyNy0xNS44NjUyOS03LjIxMTI3aC0xMDguMTczNDVjLTUuMzM2MjcsMC05Ljc5NTI4LTEuNzkwOTQtMTMuMzc3MTctNS4zNzI4My0zLjU4MTgzLTMuNTgxODktNS4zNzI3Ny04LjA0MDk2LTUuMzcyODMtMTMuMzc3MTcsMC01LjMzNjg5LDEuNzkwOTQtOS43OTU5MSw1LjM3MjgzLTEzLjM3NzE3LDMuNTgxODktMy41ODE4OSw4LjA0MDktNS4zNzI4MywxMy4zNzcxNy01LjM3MjgzaDEwOC4xNzM0NWMxNy4yNTkzNSwwLDMxLjY3MDMyLDUuNzgxMjcsNDMuMjMyOCwxNy4zNDM3NXMxNy4zNDM3NSwyNS45NzM0NSwxNy4zNDM3NSw0My4yMzI4Wk0zMDEuNDQxODcsNDk1LjQzMzEzYzguMzE3NTEsMCwxNS4zMjUwMS0yLjg0ODc1LDIxLjAyMjUxLTguNTQ2MjUsNS42OTY5LTUuNjk2ODcsOC41NDUzMy0xMi43MDQwNiw4LjU0NTMzLTIxLjAyMTU3cy0yLjg0ODQzLTE1LjMyNDctOC41NDUzLTIxLjAyMTU3Yy01LjY5NzUzLTUuNjk2ODctMTIuNzA1LTguNTQ1My0yMS4wMjI1MS04LjU0NTMtOC4zMTY5MSwwLTE1LjMyNDA3LDIuODQ4NDMtMjEuMDIxNTcsOC41NDUzLTUuNjk2OSw1LjY5Njg3LTguNTQ1MzMsMTIuNzA0MDYtOC41NDUzMywyMS4wMjE1N3MyLjg0ODQzLDE1LjMyNDcsOC41NDUzLDIxLjAyMTU3YzUuNjk3NDcsNS42OTc1LDEyLjcwNDY5LDguNTQ2MjUsMjEuMDIxNTcsOC41NDYyNVptMC0zNTUuOTYyMTVjMTkuMTM0OTgsMCwzNS42Mzc1LDYuMDgxODUsNDkuNTA3NTEsMTguMjQ1NiwxMy44NzAwMSwxMi4xNjMxMiwyMC44MDUwMiwyNy40OTk2OSwyMC44MDUwMiw0Ni4wMDk3MSwwLDEzLjQxMzE2LTMuOTMwMywyNS42MjQ2OS0xMS43OTA5NiwzNi42MzQ3MS03Ljg2MDAzLDExLjAwOTM5LTE2Ljg2MjE4LDIwLjk2MTIzLTI3LjAwNjU3LDI5Ljg1NTYzLTE2LjI1MDAxLDE0Ljg1NTYtMjguMzUzNDUsMjguNjg5NjgtMzYuMzEwMyw0MS41MDIyLTcuOTU2ODgsMTIuODEyNDktMTIuNTYwMjksMjYuODM5MDYtMTMuODEwMyw0Mi4wNzk3LS42MjQ5OSw0LjkwMzc0LC44MTc0OCw5LjA3NDM5LDQuMzI3NSwxMi41MTE4OCwzLjUwOTM5LDMuNDM3NTIsNy43ODgxMSw1LjE1NjI1LDEyLjgzNjI0LDUuMTU2MjUsNC45MDM3NiwwLDkuMTQ2NTgtMS42ODI4LDEyLjcyODQzLTUuMDQ4NDUsMy41ODE4OS0zLjM2NTAyLDUuNzU3NTItNy41NzE1NSw2LjUyNjg4LTEyLjYxOTY5LDEuNzMwNjMtMTAuNjI1MDEsNS40ODA2My0yMC4xMjAzMiwxMS4yNS0yOC40ODU5NSw1Ljc2ODc0LTguMzY1NjMsMTQuODMxMi0xOC43MjYyNSwyNy4xODc1LTMxLjA4MTg3LDE4Ljk4OTk4LTE4Ljk5MDYxLDMyLjA3ODctMzQuOTY0MDgsMzkuMjY2MjItNDcuOTIwMzMsNy4xODc1Mi0xMi45NTY4OSwxMC43ODEyNS0yNy4zNjgxNCwxMC43ODEyNS00My4yMzM3OCwwLTI4Ljk0MTg4LTkuNzgzNzMtNTIuNTk1NjctMjkuMzUxMjMtNzAuOTYxMjctMTkuNTY2ODgtMTguMzY1NjUtNDQuNzM1MDEtMjcuNTQ4NDUtNzUuNTA0MzctMjcuNTQ4NDUtMjEuMjk4MTEsMC00MC43ODEyNSw0LjgxOTY4LTU4LjQ0OTM4LDE0LjQ1OTA0LTE3LjY2ODc2LDkuNjM5MzYtMzEuODE1NjEsMjMuNjQxODMtNDIuNDQwNjEsNDIuMDA3NDgtMi4zMDc1LDQuMTM1MDQtMi41ODM3Niw4LjU0NjI4LS44Mjg3NSwxMy4yMzM3OHM1LjAxMjIsNy44NzI1MSw5Ljc3MTU3LDkuNTU1MDJjNC4yNzg3NSwxLjY4MjUxLDguODM0MDcsMS44MDI4NSwxMy42NjU5MywuMzYwOTUsNC44MzE4Ny0xLjQ0MjQ3LDguNzg2MjMtNC4xNTkwNywxMS44NjMxMi04LjE0OTY4LDguMzE3NTEtMTAuNjczMTYsMTcuODQ4NzUtMTkuNDM1MDQsMjguNTkzNzUtMjYuMjg1NjUsMTAuNzQ0OTctNi44NTEyMywyMi44NzIxNi0xMC4yNzY4NSwzNi4zODE1Ny0xMC4yNzY4NVoiLz48L3N2Zz4=",
     nextIcon = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IiB2aWV3Qm94PSIwIDAgMTIyLjg4IDEyMi44OCIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgMTIyLjg4IDEyMi44OCIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+PGc+PHBhdGggZD0iTTM3Ljk1LDQuNjZDNDUuMTksMS42Niw1My4xMywwLDYxLjQ0LDBjMTYuOTYsMCwzMi4zMyw2Ljg4LDQzLjQ0LDE4YzUuNjYsNS42NiwxMC4yMiwxMi40MywxMy4zNCwxOS45NSBjMyw3LjI0LDQuNjYsMTUuMTgsNC42NiwyMy40OWMwLDE2Ljk2LTYuODgsMzIuMzMtMTgsNDMuNDRjLTUuNjYsNS42Ni0xMi40MywxMC4yMi0xOS45NSwxMy4zNGMtNy4yNCwzLTE1LjE4LDQuNjYtMjMuNDksNC42NiBjLTguMzEsMC0xNi4yNS0xLjY2LTIzLjQ5LTQuNjZjLTcuNTMtMy4xMi0xNC4yOS03LjY4LTE5Ljk1LTEzLjM0QzEyLjM0LDk5LjIyLDcuNzcsOTIuNDYsNC42Niw4NC45M0MxLjY2LDc3LjY5LDAsNjkuNzUsMCw2MS40NCBjMC04LjMxLDEuNjYtMTYuMjUsNC42Ni0yMy40OUM3Ljc3LDMwLjQyLDEyLjM0LDIzLjY2LDE4LDE4QzIzLjY1LDEyLjM0LDMwLjQyLDcuNzcsMzcuOTUsNC42NkwzNy45NSw0LjY2eiBNNDMuMTEsNjcuNzYgYy0zLjU0LTAuMDMtNi4zOC0yLjkyLTYuMzUtNi40NmMwLjAzLTMuNTQsMi45Mi02LjM4LDYuNDYtNi4zNWwyMS42MywwLjEzbC03LjgyLTcuOTVjLTIuNDgtMi41Mi0yLjQ1LTYuNTgsMC4wNy05LjA1IGMyLjUyLTIuNDgsNi41Ny0yLjQ1LDkuMDUsMC4wOGwxOC42NywxOC45N2MyLjQ1LDIuNSwyLjQ1LDYuNDksMCw4Ljk4TDY2LjUyLDg0LjcyYy0yLjQ4LDIuNTItNi41MywyLjU1LTkuMDUsMC4wOCBjLTIuNTItMi40OC0yLjU1LTYuNTMtMC4wOC05LjA1bDcuNzMtNy44NUw0My4xMSw2Ny43Nkw0My4xMSw2Ny43NnogTTQyLjg2LDE2LjU1Yy01LjkzLDIuNDYtMTEuMjgsNi4wNy0xNS43NiwxMC41NSBjLTQuNDgsNC40OC04LjA5LDkuODMtMTAuNTUsMTUuNzZjLTIuMzcsNS43MS0zLjY3LDExLjk5LTMuNjcsMTguNThjMCw2LjU5LDEuMzEsMTIuODYsMy42NywxOC41OCBjMi40Niw1LjkzLDYuMDcsMTEuMjgsMTAuNTUsMTUuNzZjNC40OCw0LjQ4LDkuODMsOC4wOSwxNS43NiwxMC41NWM1LjcyLDIuMzcsMTEuOTksMy42NywxOC41OCwzLjY3YzYuNTksMCwxMi44Ni0xLjMxLDE4LjU4LTMuNjcgYzUuOTMtMi40NiwxMS4yOC02LjA3LDE1Ljc2LTEwLjU1YzQuNDgtNC40OCw4LjA5LTkuODIsMTAuNTUtMTUuNzZjMi4zNy01LjcxLDMuNjctMTEuOTksMy42Ny0xOC41OGMwLTYuNTktMS4zMS0xMi44Ni0zLjY3LTE4LjU4IGMtMi40Ni01LjkzLTYuMDctMTEuMjgtMTAuNTUtMTUuNzZjLTQuNDgtNC40OC05LjgzLTguMDktMTUuNzYtMTAuNTVjLTUuNzEtMi4zNy0xMS45OS0zLjY3LTE4LjU4LTMuNjdTNDguNTgsMTQuMTksNDIuODYsMTYuNTUgTDQyLjg2LDE2LjU1eiIvPjwvZz48L3N2Zz4=",
     backIcon = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pg0KPCEtLSBVcGxvYWRlZCB0bzogU1ZHIFJlcG8sIHd3dy5zdmdyZXBvLmNvbSwgR2VuZXJhdG9yOiBTVkcgUmVwbyBNaXhlciBUb29scyAtLT4NCjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+DQo8c3ZnIGZpbGw9IiMwMDAwMDAiIGhlaWdodD0iODAwcHgiIHdpZHRoPSI4MDBweCIgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiANCgkgdmlld0JveD0iMCAwIDIxOS4xNTEgMjE5LjE1MSIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8Zz4NCgk8cGF0aCBkPSJNMTA5LjU3NiwyMTkuMTUxYzYwLjQxOSwwLDEwOS41NzMtNDkuMTU2LDEwOS41NzMtMTA5LjU3NkMyMTkuMTQ5LDQ5LjE1NiwxNjkuOTk1LDAsMTA5LjU3NiwwUzAuMDAyLDQ5LjE1NiwwLjAwMiwxMDkuNTc1DQoJCUMwLjAwMiwxNjkuOTk1LDQ5LjE1NywyMTkuMTUxLDEwOS41NzYsMjE5LjE1MXogTTEwOS41NzYsMTVjNTIuMTQ4LDAsOTQuNTczLDQyLjQyNiw5NC41NzQsOTQuNTc1DQoJCWMwLDUyLjE0OS00Mi40MjUsOTQuNTc1LTk0LjU3NCw5NC41NzZjLTUyLjE0OC0wLjAwMS05NC41NzMtNDIuNDI3LTk0LjU3My05NC41NzdDMTUuMDAzLDU3LjQyNyw1Ny40MjgsMTUsMTA5LjU3NiwxNXoiLz4NCgk8cGF0aCBkPSJNOTQuODYxLDE1Ni41MDdjMi45MjksMi45MjgsNy42NzgsMi45MjcsMTAuNjA2LDBjMi45My0yLjkzLDIuOTMtNy42NzgtMC4wMDEtMTAuNjA4bC0yOC44Mi0yOC44MTlsODMuNDU3LTAuMDA4DQoJCWM0LjE0Mi0wLjAwMSw3LjQ5OS0zLjM1OCw3LjQ5OS03LjUwMmMtMC4wMDEtNC4xNDItMy4zNTgtNy40OTgtNy41LTcuNDk4bC04My40NiwwLjAwOGwyOC44MjctMjguODI1DQoJCWMyLjkyOS0yLjkyOSwyLjkyOS03LjY3OSwwLTEwLjYwN2MtMS40NjUtMS40NjQtMy4zODQtMi4xOTctNS4zMDQtMi4xOTdjLTEuOTE5LDAtMy44MzgsMC43MzMtNS4zMDMsMi4xOTZsLTQxLjYyOSw0MS42MjgNCgkJYy0xLjQwNywxLjQwNi0yLjE5NywzLjMxMy0yLjE5Nyw1LjMwM2MwLjAwMSwxLjk5LDAuNzkxLDMuODk2LDIuMTk4LDUuMzA1TDk0Ljg2MSwxNTYuNTA3eiIvPg0KPC9nPg0KPC9zdmc+"
 const css = `
@@ -204,10 +203,15 @@ const css = `
 	border: 1px solid var(--border-color);
 	padding: 0;
 	background-color: var(--background-color);
+	transition: 0.2s ease-in-out opacity;
 }
 
 .recipe-modal[open] {
 	display: grid;
+}
+
+.recipe-modal.hidden {
+	opacity: 0;
 }
 
 .recipe-modal-header {
@@ -232,7 +236,6 @@ const css = `
 	width: 16px;
 	height: 16px;
 }
-
 
 .dark-mode .recipe-modal-header .recipe-modal-close-button img {
 	filter: invert(1);
@@ -386,7 +389,8 @@ const css = `
 	left: 0px;
 	padding: 9px;
 }
-.sidebar-inner .items > .bottom-spacer {
+.sidebar-inner .items > .bottom-spacer,
+.sidebar-inner .items > .instruction {
 	display: none;
 }
 
@@ -402,142 +406,139 @@ const exported = {};
 exported.settings = settings;
 
 function initSearchDebounce({ v_sidebar }) {
-    const oldInput = v_sidebar.$refs.search;
-    v_sidebar.$refs.search = oldInput.cloneNode(true);
-    oldInput.parentNode.replaceChild(v_sidebar.$refs.search, oldInput);
-    v_sidebar.$refs.search.addEventListener("input", debounce(function (e) {
-        if (!e.target.composing) v_sidebar.searchQuery = e.target.value;
-    }, settings.searchDebounceDelay));
-    v_sidebar.$refs.search.parentNode.querySelector(".sidebar-input-close")?.addEventListener("click", function (e) {
-        v_sidebar.$refs.search.value = "";
-    });
+	const oldInput = v_sidebar.$refs.search;
+	v_sidebar.$refs.search = oldInput.cloneNode(true);
+	oldInput.parentNode.replaceChild(v_sidebar.$refs.search, oldInput);
+	v_sidebar.$refs.search.addEventListener("input", debounce(function(e) {
+		if (!e.target.composing) v_sidebar.searchQuery = e.target.value;
+	}, settings.searchDebounceDelay));
+	v_sidebar.$refs.search.parentNode.querySelector(".sidebar-input-close")?.addEventListener("click", function(e) {
+		v_sidebar.$refs.search.value = "";
+	});
 
-    window.addEventListener("keydown", function (e) {
-        if (e.key === "Escape") {
-            v_sidebar.searchQuery = "";
-            v_sidebar.$refs.search.value = "";
-        } else if (document.activeElement !== v_sidebar.$refs.search)
-            v_sidebar.$refs.search.focus();
-    });
+	window.addEventListener("keydown", function(e) {
+		if (e.key === "Escape") {
+			v_sidebar.searchQuery = "";
+			v_sidebar.$refs.search.value = "";
+		} else if (document.activeElement?.nodeName !== "INPUT")
+			v_sidebar.$refs.search.focus();
+	});
 
-    const oldFiltered = v_sidebar._computedWatchers.filteredElements.getter;
-    v_sidebar._computedWatchers.filteredElements.getter = function () {
-        const filtered = oldFiltered.apply(this);
-        v_sidebar.$refs.search.placeholder = `Search ${this.items?.length > 1 ? `(${filtered.length.toLocaleString()}) ` : ""}items...`;
-        return filtered;
-    }
+	const oldFiltered = v_sidebar._computedWatchers.filteredElements.getter;
+	v_sidebar._computedWatchers.filteredElements.getter = function() {
+		const filtered = oldFiltered.apply(this);
+		v_sidebar.$refs.search.placeholder = `Search ${this.items?.length > 1 ? `(${filtered.length.toLocaleString()}) ` : ""}items...`;
+		return filtered;
+	}
 }
 
 function initSearchRelevancy({ v_sidebar }) {
-    const oldSorted = v_sidebar._computedWatchers.sortedElements.getter;
-    v_sidebar._computedWatchers.sortedElements.getter = function () {
-        return this.searchQuery ? this.items : oldSorted.apply(this);
-    }
+	const oldSorted = v_sidebar._computedWatchers.sortedElements.getter;
+	v_sidebar._computedWatchers.sortedElements.getter = function() {
+		return this.searchQuery ? this.items : oldSorted.apply(this);
+	}
 
-    let lastQuery, lastResults, lastElementCount;
-    v_sidebar._computedWatchers.searchResults.getter = function () {
-        if (!this.searchQuery) return [];
+	let lastQuery, lastResults, lastElementCount;
+	v_sidebar._computedWatchers.searchResults.getter = function() {
+		if (!this.searchQuery) return [];
 
-        // using items length is ok 99% of the time
-        if (this.searchQuery === lastQuery && this.items.length === lastElementCount)
-            return lastResults.slice(0, this.limit);
+		// using items length is ok 99% of the time
+		if (this.searchQuery === lastQuery && this.items.length === lastElementCount)
+			return lastResults.slice(0, this.limit);
 
-        lastQuery = this.searchQuery;
-        lastElementCount = this.items.length;
+		lastQuery = this.searchQuery;
+		lastElementCount = this.items.length;
 
-        const lowerQuery = this.searchQuery.toLowerCase(),
-            elements = this.filteredElements,
-            results = [];
+		const lowerQuery = this.searchQuery.toLowerCase(),
+			elements = this.filteredElements,
+			results = [];
 
-        for (let i = elements.length; i--;) {
-            const e = elements[i];
-            if (e.text.toLowerCase().indexOf(lowerQuery) > -1)
-                results.push(e);
-        }
+		for (let i = elements.length; i--;) {
+			const e = elements[i];
+			if (e.text.toLowerCase().indexOf(lowerQuery) > -1)
+				results.push(e);
+		}
 
-        lastResults = matchSorter(results, this.searchQuery, {
-            keys: ["text"],
-            baseSort: (a, b) => a.rankedValue < b.rankedValue ? -1 : 1
-        });
+		lastResults = matchSorter(results, this.searchQuery, {
+			keys: ["text"],
+			baseSort: (a, b) => a.rankedValue < b.rankedValue ? -1 : 1
+		});
 
-        return lastResults.slice(0, this.limit);
-    }
+		return lastResults.slice(0, this.limit);
+	}
 }
 
 function createItemElement(item, wrap = false) {
-    const itemDiv = document.createElement("div");
-    itemDiv.setAttribute("data-item-emoji", item.emoji);
-    itemDiv.setAttribute("data-item-text", item.text);
-    itemDiv.setAttribute("data-item-id", item.id);
-    itemDiv.setAttribute("data-item", "");
-    itemDiv.classList.add("item");
+	const itemDiv = document.createElement("div");
+	itemDiv.setAttribute("data-item-emoji", item.emoji);
+	itemDiv.setAttribute("data-item-text", item.text);
+	itemDiv.setAttribute("data-item-id", item.id);
+	if (item.discovery) itemDiv.setAttribute("data-item-discovery", "");
+	itemDiv.setAttribute("data-item", "");
+	itemDiv.classList.add("item");
 
-    const emoji = document.createElement("span");
-    emoji.classList.add("item-emoji");
-    emoji.appendChild(document.createTextNode(item.emoji ?? "⬜"));
+	const emoji = document.createElement("span");
+	emoji.classList.add("item-emoji");
+	emoji.appendChild(document.createTextNode(item.emoji ?? "⬜"));
 
-    itemDiv.append(emoji, document.createTextNode(` ${item.text} `));
+	itemDiv.append(emoji, document.createTextNode(` ${item.text} `));
 
-    if (wrap) {
-        const wrapper = document.createElement("div");
-        wrapper.classList.add("item-wrapper");
-        wrapper.appendChild(itemDiv);
-        return wrapper;
-    }
+	if (wrap) {
+		const wrapper = document.createElement("div");
+		wrapper.classList.add("item-wrapper");
+		wrapper.appendChild(itemDiv);
+		return wrapper;
+	}
 
-    return itemDiv;
+	return itemDiv;
 }
 exported.createItemElement = createItemElement;
 
 function initRecipeLookup({ v_container, v_sidebar }) {
-    const modal = document.createElement("dialog");
-    modal.classList.add("recipe-modal");
-    const modalTitle = document.createElement("h1");
-    modalTitle.classList.add("recipe-modal-title");
-    const closeButton = document.createElement("button");
-    closeButton.classList.add("recipe-modal-close-button");
-    const closeIcon = document.createElement("img");
-    closeIcon.src = closeIconSrc
-    closeButton.appendChild(closeIcon);
-    closeButton.addEventListener("click", _ => modal.close());
-    const recipeCount = document.createElement("div");
+	const modal = document.createElement("dialog");
+	modal.classList.add("recipe-modal");
+	const modalTitle = document.createElement("h1");
+	modalTitle.classList.add("recipe-modal-title");
+	const closeButton = document.createElement("button");
+	closeButton.classList.add("recipe-modal-close-button");
+	const closeIcon = document.createElement("img");
+	closeIcon.src = closeIconSrc
+	closeButton.appendChild(closeIcon);
+	closeButton.addEventListener("click", _ => modal.close());
+	const recipeCount = document.createElement("div");
     let tabButton = document.createElement("button");
     const tabIcon = document.createElement("img");
     tabIcon.src = nextIcon;
     tabButton.classList.add("recipe-modal-close-button");
     tabButton.appendChild(tabIcon);
-    const modalHeader = document.createElement("div");
-    modalHeader.classList.add("recipe-modal-header");
-    modalHeader.append(modalTitle, tabButton, closeButton, recipeCount);
-    const modalBody = document.createElement("div");
-    modalBody.classList.add("recipe-modal-body");
-    modal.append(modalHeader, modalBody);
-    v_container.$el.appendChild(modal);
+	const modalHeader = document.createElement("div");
+	modalHeader.classList.add("recipe-modal-header");
+	modalHeader.append(modalTitle,tabButton, closeButton, closeButton,recipeCount);
+	const modalBody = document.createElement("div");
+	modalBody.classList.add("recipe-modal-body");
+	modal.append(modalHeader, modalBody);
+	v_container.$el.appendChild(modal);
 
+	["wheel", "scroll"].forEach((x) => modal.addEventListener(x, (e) => e.stopImmediatePropagation(), true));
 
+	const idMap = new Map();
+	const usageMap = new Map();
+	function openRecipeModal(itemText) {
+		let itemId;
+		usageMap.set(itemText, []);
+		for (const item of v_container.items) {
+			idMap.set(item.id, item);
+			if (item.text === itemText) itemId = item.id;
+		}
+		const item = idMap.get(itemId);
 
-
-    ["wheel", "scroll"].forEach((x) => modal.addEventListener(x, (e) => e.stopImmediatePropagation(), true));
-
-    const idMap = new Map();
-    const usageMap = new Map();
-    function openRecipeModal(itemText) {
-        let itemId;
-        usageMap.set(itemText, []);
-        //first you need map to be able to use it for usages
-        for (const item of v_container.items) {
-            idMap.set(item.id, item);
-            if (item.text === itemText) itemId = item.id;
-        }
-
-
-
-        const item = idMap.get(itemId);
-        const button = tabButton.cloneNode();
+		if (!item) throw new Error("this shouldn't be possible in normal gameplay");
+          const button = tabButton.cloneNode();
         button.appendChild(tabIcon);
         modalHeader.replaceChild(button, tabButton);
 
         tabButton = button;
+		tabIcon.src=nextIcon;
         tabButton.addEventListener("click", () => {
 
             if (tabIcon.src == nextIcon) {
@@ -621,387 +622,445 @@ function initRecipeLookup({ v_container, v_sidebar }) {
 
         })
 
-        if (!item) throw new Error("this shouldn't be possible in normal gameplay");
+		const itemEmoji = document.createElement("span");
+		itemEmoji.classList.add("item-emoji");
+		itemEmoji.appendChild(document.createTextNode(item.emoji ?? "⬜"));
+		modalTitle.innerHTML = "";
+		modalTitle.append(itemEmoji, document.createTextNode(` ${item.text} `));
 
-        const itemEmoji = document.createElement("span");
-        itemEmoji.classList.add("item-emoji");
-        itemEmoji.appendChild(document.createTextNode(item.emoji ?? "⬜"));
-        modalTitle.innerHTML = "";
-        modalTitle.append(itemEmoji, document.createTextNode(` ${item.text} `));
-        recipeCount.innerHTML = "";
+		recipeCount.innerHTML = "";
+   	    recipeCount.append(document.createTextNode(` ${(item.recipes && item.recipes.length > 0) ? item.recipes.length : 0} Recipes `))
 
+		modalBody.innerHTML = "";
+		if (!item.recipes || item.recipes.length < 1)
+			modalBody.appendChild(document.createTextNode("No recipes recorded for this element."));
+		else for (const r of item.recipes) {
+			const recipe = document.createElement("div");
+			recipe.classList.add("recipe");
+			const [itemA, itemB] = r.map((id) => idMap.get(id));
+			if (!itemA || !itemB) {
+				console.warn("Invalid recipe for " + item.text, r);
+				continue;
+			}
+			recipe.append(
+				createItemElement(itemA),
+				document.createTextNode("+"),
+				createItemElement(itemB)
+			);
+			modalBody.appendChild(recipe);
+		}
 
-        recipeCount.append(document.createTextNode(` ${(item.recipes && item.recipes.length > 0) ? item.recipes.length : 0} Recipes `))
-        modalBody.innerHTML = "";
+		modal.showModal();
+	}
+	exported.openRecipeModal = openRecipeModal;
 
-        if (!item.recipes || item.recipes.length < 1)
-            modalBody.appendChild(document.createTextNode("No recipes recorded for this element."));
-        else for (const r of item.recipes) {
-            const recipe = document.createElement("div");
-            recipe.classList.add("recipe");
-            const [itemA, itemB] = r.map((id) => idMap.get(id));
-            if (!itemA || !itemB) {
-                console.warn("Invalid recipe for " + item.text, r);
-                continue;
-            }
-            recipe.append(
-                createItemElement(itemA),
-                document.createTextNode("+"),
-                createItemElement(itemB)
-            );
-            modalBody.appendChild(recipe);
-        }
+	[v_sidebar.$el, modal].forEach((x) => x.addEventListener("contextmenu", function(e) {
+		const item = traverseUntil(e.target, ".item");
+		if (item) {
+			e.preventDefault();
+			openRecipeModal(item.getAttribute("data-item-text"));
+		}
+	}));
 
-        modal.showModal();
-    }
-    exported.openRecipeModal = openRecipeModal;
-
-    [v_sidebar.$el, modal].forEach((x) => x.addEventListener("contextmenu", function (e) {
-        const item = traverseUntil(e.target, ".item");
-        if (item) {
-            e.preventDefault();
-            openRecipeModal(item.getAttribute("data-item-text"));
-        }
-    }));
+	let hidden = false;
+	modal.addEventListener("mousedown", function(e) {
+		if (e.target === e.currentTarget) return modal.close();
+		if (e.button === 2) return;
+		const item = traverseUntil(e.target, ".item");
+		if (!item) return;
+		modal.classList.add("hidden");
+		hidden = true;
+	});
+	document.addEventListener("mouseup", function() {
+		if (!hidden) return;
+		modal.classList.remove("hidden");
+		hidden = false;
+	});
 }
 
-function initRecipeLogging({ v_container }) {
-    const oldCraft = v_container.craftApi;
-    v_container.craftApi = async function (a, b) {
-        [a, b] = [a, b].sort();
-        const result = await oldCraft.apply(this, [a, b]);
-        if (result) console.log(`${a} + ${b} = ${result.text}`);
-        return result;
-    }
+function initRecipeLogging() {
+	window.addEventListener("ic-craftapi", function(e) {
+		const { a, b, result } = e.detail;
+		if (result) console.log(`${a} + ${b} = ${result.text}`);
+	});
 }
 
 function initPinnedContainer({ v_container, v_sidebar }) {
-    const pinnedContainerContainer = document.createElement("div");
-    pinnedContainerContainer.classList.add("items-pinned");
-    const pinnedContainer = document.createElement("div");
-    pinnedContainer.classList.add("items-pinned-inner");
-    pinnedContainerContainer.appendChild(pinnedContainer);
-    const resizeHandle = document.createElement("div")
-    resizeHandle.classList.add("resize-handle-vertical");
+	const pinnedContainerContainer = document.createElement("div");
+	pinnedContainerContainer.classList.add("items-pinned");
+	const pinnedContainer = document.createElement("div");
+	pinnedContainer.classList.add("items-pinned-inner");
+	pinnedContainerContainer.appendChild(pinnedContainer);
+	const resizeHandle = document.createElement("div")
+	resizeHandle.classList.add("resize-handle-vertical");
 
-    const saveContainerHeight = debounce(function (v) {
-        return localStorage.setItem("pinned-container-height", v);
-    }, 50);
+	const saveContainerHeight = debounce(function(v) {
+		return localStorage.setItem("pinned-container-height", v);
+	}, 50);
 
-    const savedHeight = localStorage.getItem("pinned-container-height");
-    if (savedHeight)
-        pinnedContainer.style.height = savedHeight + "px";
+	const savedHeight = localStorage.getItem("pinned-container-height");
+	if (savedHeight)
+		pinnedContainer.style.height = savedHeight + "px";
 
-    let resizing = false,
-        startY = 0,
-        startHeight = 0;
-    function handleResize(e) {
-        if (!resizing) return;
-        const newHeight = startHeight + e.clientY - startY;
-        saveContainerHeight(newHeight);
-        pinnedContainer.style.height = newHeight + "px";
-    }
-    resizeHandle.addEventListener("mousedown", function (e) {
-        resizing = true;
-        startY = e.clientY;
-        startHeight = pinnedContainer.offsetHeight;
-        document.addEventListener("mousemove", handleResize);
-        document.addEventListener("mouseup", function () {
-            resizing = false;
-            document.removeEventListener("mousemove", handleResize);
-        });
-    });
+	let resizing = false,
+		startY = 0,
+		startHeight = 0;
+	function handleResize(e) {
+		if (!resizing) return;
+		const newHeight = startHeight + e.clientY - startY;
+		saveContainerHeight(newHeight);
+		pinnedContainer.style.height = newHeight + "px";
+	}
+	resizeHandle.addEventListener("mousedown", function(e) {
+		resizing = true;
+		startY = e.clientY;
+		startHeight = pinnedContainer.offsetHeight;
+		document.addEventListener("mousemove", handleResize);
+		document.addEventListener("mouseup", function() {
+			resizing = false;
+			document.removeEventListener("mousemove", handleResize);
+		});
+	});
 
-    pinnedContainerContainer.appendChild(resizeHandle);
+	pinnedContainerContainer.appendChild(resizeHandle);
 
-    const pinnedIds = new Set();
+	const pinnedIds = new Set();
 
-    function pinElements(elements, updateStorage = true) {
-        if (!Array.isArray(elements)) elements = [elements];
+	function pinElements(elements, updateStorage = true) {
+		if (!Array.isArray(elements)) elements = [elements];
 
-        const es = [],
-            newElements = [];
-        for (const e of elements) {
-            if (pinnedIds.has(e.id)) continue;
-            pinnedIds.add(e.id);
-            if (updateStorage) newElements.push(e);
-            es.push(createItemElement(e, true));
-        }
-        pinnedContainer.append(...es);
+		const es = [],
+			newElements = [];
+		for (const e of elements) {
+			if (pinnedIds.has(e.id)) continue;
+			pinnedIds.add(e.id);
+			if (updateStorage) newElements.push(e);
+			es.push(createItemElement(e, true));
+		}
+		pinnedContainer.append(...es);
 
-        if (updateStorage) {
-            const d = JSON.parse(localStorage.getItem("pinned-elements") ?? "{}"),
-                pinnedElements = d[v_container.currSave] ?? [];
-            pinnedElements.push(...newElements);
-            d[v_container.currSave] = pinnedElements;
-            localStorage.setItem("pinned-elements", JSON.stringify(d));
-        }
-    }
-    exported.pinElements = pinElements;
+		if (updateStorage) {
+			const d = JSON.parse(localStorage.getItem("pinned-elements") ?? "{}"),
+				pinnedElements = d[v_container.currSave] ?? [];
+			pinnedElements.push(...newElements);
+			d[v_container.currSave] = pinnedElements;
+			localStorage.setItem("pinned-elements", JSON.stringify(d));
+		}
+	}
+	exported.pinElements = pinElements;
 
-    function unpinElements(elements, updateStorage = true) {
-        if (!Array.isArray(elements)) elements = [elements];
+	function unpinElements(elements, updateStorage = true) {
+		if (!Array.isArray(elements)) elements = [elements];
 
-        const removed = new Set();
+		const removed = new Set();
 
-        for (const e of elements) {
-            if (!pinnedIds.has(e.id)) continue;
-            const d = pinnedContainer.querySelector(`.item[data-item-id="${e.id}"]`)?.parentNode;
-            if (!d) continue;
-            pinnedIds.delete(e.id);
-            if (updateStorage) removed.add(e.id);
-            d.remove();
-        }
+		for (const e of elements) {
+			if (!pinnedIds.has(e.id)) continue;
+			const d = pinnedContainer.querySelector(`.item[data-item-id="${e.id}"]`)?.parentNode;
+			if (!d) continue;
+			pinnedIds.delete(e.id);
+			if (updateStorage) removed.add(e.id);
+			d.remove();
+		}
 
-        if (updateStorage) {
-            const d = JSON.parse(localStorage.getItem("pinned-elements") ?? "{}"),
-                pinnedElements = d[v_container.currSave] ?? [];
-            d[v_container.currSave] = pinnedElements.filter((e) => !removed.has(e.id))
-            localStorage.setItem("pinned-elements", JSON.stringify(d));
-        }
-    }
-    exported.unpinElements = unpinElements;
+		if (updateStorage) {
+			const d = JSON.parse(localStorage.getItem("pinned-elements") ?? "{}"),
+				pinnedElements = d[v_container.currSave] ?? [];
+			d[v_container.currSave] = pinnedElements.filter((e) => !removed.has(e.id))
+			localStorage.setItem("pinned-elements", JSON.stringify(d));
+		}
+	}
+	exported.unpinElements = unpinElements;
 
-    const pinnedElements = JSON.parse(localStorage.getItem("pinned-elements") ?? "[]"),
-        curPinnedElements = pinnedElements[v_container.currSave];
-    if (curPinnedElements?.length > 0)
-        pinElements(curPinnedElements, false);
+	// note: does not update storage
+	function resetPinnedElements() {
+		pinnedIds.clear();
+		pinnedContainer.innerHTML = "";
+	}
+	exported.resetPinnedElements = resetPinnedElements;
 
-    const itemsContainer = v_sidebar.$el.querySelector(".items");
-    itemsContainer.before(pinnedContainerContainer);
+	function loadPinnedElements(saveId) {
+		const pinnedElements = JSON.parse(localStorage.getItem("pinned-elements") ?? "[]"),
+			curPinnedElements = pinnedElements[saveId];
+		if (curPinnedElements?.length > 0)
+			pinElements(curPinnedElements, false);
+	}
+	exported.loadPinnedElements = loadPinnedElements;
 
-    pinnedContainer.addEventListener("mousedown", function (e) {
-        if (e.altKey && e.button === 0) {
-            const item = traverseUntil(e.target, ".item");
-            if (!item) return;
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            unpinElements({
-                id: item.getAttribute("data-item-id"),
-                text: item.getAttribute("data-item-text"),
-                emoji: item.getAttribute("data-item-emoji")
-            });
-        }
-    });
+	loadPinnedElements(v_container.currSave);
 
-    itemsContainer.addEventListener("mousedown", function (e) {
-        if (e.altKey && e.button === 0) {
-            const item = traverseUntil(e.target, ".item");
-            if (!item) return;
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            pinElements({
-                id: item.getAttribute("data-item-id"),
-                text: item.getAttribute("data-item-text"),
-                emoji: item.getAttribute("data-item-emoji")
-            });
-        }
-    });
+	const itemsContainer = v_sidebar.$el.querySelector(".items");
+	itemsContainer.before(pinnedContainerContainer);
+
+	pinnedContainer.addEventListener("mousedown", function(e) {
+		if (e.altKey && e.button === 0) {
+			const item = traverseUntil(e.target, ".item");
+			if (!item) return;
+			e.preventDefault();
+			e.stopImmediatePropagation();
+			unpinElements({
+				id: item.getAttribute("data-item-id"),
+				text: item.getAttribute("data-item-text"),
+				emoji: item.getAttribute("data-item-emoji"),
+				discovery: item.getAttribute("data-item-discovery") !== null
+			});
+		}
+	});
+
+	itemsContainer.addEventListener("mousedown", function(e) {
+		if (e.altKey && e.button === 0) {
+			const item = traverseUntil(e.target, ".item");
+			if (!item) return;
+			e.preventDefault();
+			e.stopImmediatePropagation();
+			pinElements({
+				id: item.getAttribute("data-item-id"),
+				text: item.getAttribute("data-item-text"),
+				emoji: item.getAttribute("data-item-emoji"),
+				discovery: item.getAttribute("data-item-discovery") !== null
+			});
+		}
+	});
+
+	window.addEventListener("ic-switchsave", function(e) {
+		resetPinnedElements();
+		loadPinnedElements(e.detail.newId);
+	})
 }
 
 function traverseUntil(element, selector) {
-    let result = element;
-    while (true) {
-        if (result?.matches(selector)) return result;
-        if (!result?.parentElement) return null;
-        result = result.parentElement;
-    }
+	let result = element;
+	while (true) {
+		if (result?.matches(selector)) return result;
+		if (!result?.parentElement) return null;
+		result = result.parentElement;
+	}
 }
 
 function interceptMouseEvent(e, type, options = {}) {
-    e.preventDefault();
-    e.stopImmediatePropagation();
+	e.preventDefault();
+	e.stopImmediatePropagation();
 
-    const syntheticEvent = new MouseEvent(type, {
-        bubbles: true,
-        cancelable: true,
-        clientX: e.clientX,
-        clientY: e.clientY,
-        screenX: e.screenX,
-        screenY: e.screenY,
-        button: e.button,
-        shiftKey: e.shiftKey,
-        ctrlKey: e.ctrlKey,
-        ...options
-    });
+	const syntheticEvent = new MouseEvent(type, {
+		bubbles: true,
+		cancelable: true,
+		clientX: e.clientX,
+		clientY: e.clientY,
+		screenX: e.screenX,
+		screenY: e.screenY,
+		button: e.button,
+		shiftKey: e.shiftKey,
+		ctrlKey: e.ctrlKey,
+		...options
+	});
 
-    syntheticEvent.synthetic = true;
+	syntheticEvent.synthetic = true;
 
-    e.target.dispatchEvent(syntheticEvent);
+	e.target.dispatchEvent(syntheticEvent);
 }
 
 function initOldMouseControls() {
-    let isCtrlDragging = false;
+	let isCtrlDragging = false;
 
-    window.addEventListener("mousedown", (e) => {
-        if (e.synthetic) return;
+	window.addEventListener("mousedown", (e) => {
+		if (e.synthetic) return;
 
-        if (e.button === 1 && traverseUntil(e.target, ".instance, .item")) {
-            interceptMouseEvent(e, "mousedown", { button: 0, shiftKey: true });
-        } else if (e.button === 0 && e.ctrlKey) {
-            isCtrlDragging = true;
-            interceptMouseEvent(e, "mousedown", { button: 1 });
-        }
-    }, true);
+		if (e.button === 1 && traverseUntil(e.target, ".instance, .item")) {
+			interceptMouseEvent(e, "mousedown", { button: 0, shiftKey: true });
+		} else if (e.button === 0 && e.ctrlKey) {
+			isCtrlDragging = true;
+			interceptMouseEvent(e, "mousedown", { button: 1 });
+		}
+	}, true);
 
-    window.addEventListener("mouseup", (e) => {
-        if (!isCtrlDragging) return;
-        isCtrlDragging = false;
-        interceptMouseEvent(e, "mouseup", { button: 1 });
-    }, true);
+	window.addEventListener("mouseup", (e) => {
+		if (!isCtrlDragging) return;
+		isCtrlDragging = false;
+		interceptMouseEvent(e, "mouseup", { button: 1 });
+	}, true);
 }
 
 function initSidebarUpdates({ v_sidebar }) {
-    const items = v_sidebar.$el.querySelector(".items");
-    Object.defineProperty(v_sidebar.$el, "scrollTop", {
-        get() {
-            return items.scrollTop;
-        },
-        set(value) {
-            items.scrollTop = value;
-        },
-        configurable: true
-    });
-    items.addEventListener("scroll", function (e) {
-        const scrollPercentage = (items.scrollTop + items.clientHeight) / items.scrollHeight;
-        if (scrollPercentage > .8727) v_sidebar.limit += 300;
-    });
+	const items = v_sidebar.$el.querySelector(".items");
+	Object.defineProperty(v_sidebar.$el, "scrollTop", {
+		get() {
+			return items.scrollTop;
+		},
+		set(value) {
+			items.scrollTop = value;
+		},
+		configurable: true
+	});
+	items.addEventListener("scroll", function(e) {
+		const scrollPercentage = (items.scrollTop + items.clientHeight) / items.scrollHeight;
+		if (scrollPercentage > .8727) v_sidebar.limit += 300;
+	});
 
-    const oldFilteredElementsCut = v_sidebar._computedWatchers.filteredElementsCut.getter;
-    v_sidebar._computedWatchers.filteredElementsCut.getter = function (...a) {
-        if (this.searchQuery) return [];
-        return oldFilteredElementsCut.apply(this, a);
-    }
+	const oldFilteredElementsCut = v_sidebar._computedWatchers.filteredElementsCut.getter;
+	v_sidebar._computedWatchers.filteredElementsCut.getter = function(...a) {
+		if (this.searchQuery) return [];
+		return oldFilteredElementsCut.apply(this, a);
+	}
+
+	// fix for sort by emoji (neal where are you)
+	const oldSortedELements = v_sidebar._computedWatchers.sortedElements.getter;
+	v_sidebar._computedWatchers.sortedElements.getter = function(...a) {
+		if (this.sortBy.name === "emoji") {
+			const sortFn = this.sortBy.asc ?
+				(a, b) => (b.emoji ?? "⬜").localeCompare(a.emoji ?? "⬜") :
+				(a, b) => (a.emoji ?? "⬜").localeCompare(b.emoji ?? "⬜");
+			return this.items.toSorted(sortFn);
+		}
+		return oldSortedELements.apply(this, a);
+	}
 }
 
 function choose(a) {
-    return a[Math.floor(Math.random() * a.length)]
+	return a[Math.floor(Math.random() * a.length)]
 }
 
 function getRandomCirclePos(center, radius) {
-    const angle = Math.random() * Math.PI * 2,
-        r = Math.sqrt(Math.random()) * radius
-    return {
-        x: center.x + Math.cos(angle) * r,
-        y: center.y + Math.sin(angle) * r
-    }
+	const angle = Math.random() * Math.PI * 2,
+		r = Math.sqrt(Math.random()) * radius
+	return {
+		x: center.x + Math.cos(angle) * r,
+		y: center.y + Math.sin(angle) * r
+	}
 }
 
 function initRandomButton({ v_container, v_sidebar }) {
-    const sideControls = v_container.$el.querySelector(".side-controls"),
-        randomButton = document.createElement("img");
-    randomButton.classList.add("random", "tool-icon");
-    randomButton.src = randomIcon;
-    sideControls.appendChild(randomButton);
+	const sideControls = v_container.$el.querySelector(".side-controls"),
+		randomButton = document.createElement("img");
+	randomButton.classList.add("random", "tool-icon");
+	randomButton.src = randomIcon;
+	sideControls.appendChild(randomButton);
 
-    function chooseRandomElement() {
-        let _f;
-        const items = (_f = v_sidebar.searchResults).length > 0 ? _f :
-            (_f = v_sidebar.filteredElements).length > 0 ? _f :
-                v_sidebar.items;
-        if (items.length < 1) return null;
-        if (settings.randomButton === 1) return choose(items);
-        if (items.length < 32768) {
-            const filtered = items.filter((x) => !x.hide && x.text.length < 31);
-            return choose(filtered.length > 0 ? filtered : items);
-        } else {
-            for (let i = 100; i--;) {
-                const choice = choose(items);
-                if (!choice.hide && choice.text.length < 31)
-                    return choice;
-            }
-            return choose(items);
-        }
-    }
+	function chooseRandomElement() {
+		let _f;
+		const items = (_f = v_sidebar.searchResults).length > 0 ? _f :
+			(_f = v_sidebar.filteredElements).length > 0 ? _f :
+				v_sidebar.items;
+		if (items.length < 1) return null;
+		if (settings.randomButton === 1) return choose(items);
+		if (items.length < 32768) {
+			const filtered = items.filter((x) => !x.hide && x.text.length < 31);
+			return choose(filtered.length > 0 ? filtered : items);
+		} else {
+			for (let i = 100; i--;) {
+				const choice = choose(items);
+				if (!choice.hide && choice.text.length < 31)
+					return choice;
+			}
+			return choose(items);
+		}
+	}
 
-    let instanceSound,
-        localRate = 0.9;
-    function spawnRandomInstance() {
-        const element = chooseRandomElement();
-        if (!element) return;
-        unsafeWindow.IC.createInstance({
-            text: element.text,
-            emoji: element.emoji ?? "⬜",
-            itemId: element.id,
-            discovery: element.discovery,
-            animate: true,
-            ...getRandomCirclePos({
-                x: (window.innerWidth - v_sidebar.sidebarWidth) / 2,
-                y: window.innerHeight / 2
-            }, (window.innerWidth - v_sidebar.sidebarWidth) / 6)
-        });
-        if (instanceSound ??= unsafeWindow.Howler._howls.find((x) => x._src.endsWith("instance.mp3"))) {
-            localRate += 0.1;
-            if (localRate > 1.3) localRate = 0.9
-            instanceSound.rate(localRate);
-            instanceSound.play();
-        }
-    }
+	let instanceSound,
+		localRate = 0.9;
+	function spawnRandomInstance() {
+		const element = chooseRandomElement();
+		if (!element) return;
+		unsafeWindow.IC.createInstance({
+			text: element.text,
+			emoji: element.emoji ?? "⬜",
+			itemId: element.id,
+			discovery: element.discovery,
+			animate: true,
+			...getRandomCirclePos({
+				x: (window.innerWidth - v_sidebar.sidebarWidth) / 2,
+				y: window.innerHeight / 2
+			}, (window.innerWidth - v_sidebar.sidebarWidth) / 6)
+		});
+		if (instanceSound ??= unsafeWindow.Howler._howls.find((x) => x._src.endsWith("instance.mp3"))) {
+			localRate += 0.1;
+			if (localRate > 1.3) localRate = 0.9
+			instanceSound.rate(localRate);
+			instanceSound.play();
+		}
+	}
 
-    randomButton.addEventListener("click", function () {
-        spawnRandomInstance();
-    });
+	randomButton.addEventListener("click", function() {
+		spawnRandomInstance();
+	});
+}
+
+function initEvents({ v_container }) {
+	const switchSave = v_container.switchSave;
+	v_container.switchSave = function(id) {
+		dispatchEvent(new CustomEvent("ic-switchsave", { detail: { currentId: v_container.currSave, newId: id } }));
+		return switchSave.apply(this, [id]);
+	}
+
+	const craftApi = v_container.craftApi;
+	v_container.craftApi = async function(a, b) {
+		[a, b] = [a, b].sort();
+		const result = await craftApi.apply(this, [a, b]);
+		dispatchEvent(new CustomEvent("ic-craftapi", { detail: { a, b, result} }));
+		return result;
+	}
 }
 
 function init() {
-    GM.addStyle(css);
+	GM.addStyle(css);
 
-    const v_container = document.querySelector(".container").__vue__,
-        v_sidebar = document.querySelector("#sidebar").__vue__,
-        v = { v_container, v_sidebar };
+	const v_container = document.querySelector(".container").__vue__,
+		v_sidebar = document.querySelector("#sidebar").__vue__,
+		v = { v_container, v_sidebar };
 
-    initSidebarUpdates(v);
+	initSidebarUpdates(v);
 
-    if (settings.searchDebounceDelay > 0) initSearchDebounce(v);
-    if (settings.searchRelevancy) initSearchRelevancy(v);
+	if (settings.searchDebounceDelay > 0) initSearchDebounce(v);
+	if (settings.searchRelevancy) initSearchRelevancy(v);
 
-    if (settings.recipeLookup) initRecipeLookup(v);
-    if (settings.recipeLogging) initRecipeLogging(v);
+	if (settings.recipeLookup) initRecipeLookup(v);
+	if (settings.recipeLogging) initRecipeLogging(v);
 
-    if (settings.removeDeps) {
-        const addDep = v_sidebar._computedWatchers.sortedElements.addDep;
-        ["sortedElements", "filteredElements", "searchResults"].forEach((k) => v_sidebar._computedWatchers[k].addDep = function (...a) {
-            // if (a[0].subs[0]?.value !== undefined) return addDep.apply(this, a);
-            if (this.newDepIds.size < 65) return addDep.apply(this, a);
-        });
-    }
-    if (settings.randomButton > 0) initRandomButton(v);
-    if (settings.elementPinning) initPinnedContainer(v);
-    if (settings.oldMouseControls) initOldMouseControls(v);
-    if (settings.disableParticles) {
-        const r = window.requestAnimationFrame;
-        window.requestAnimationFrame = () => window.requestAnimationFrame = r;
-        v_container.$refs.particles.style.display = "none";
-    }
-    if (settings.variation) {
-        const toLowerCase = String.prototype.toLowerCase,
-            find = Array.prototype.find;
-        Array.prototype.find = function (f) {
-            if (this !== v_container.items || !/function\((\w+?)\){return \1\.text\.toLowerCase\(\)===\w+?\.text\.toLowerCase\(\)}/.test(f.toString()))
-                return find.apply(this, [f]);
-            String.prototype.toLowerCase = String.prototype.toString;
-            const result = find.apply(this, [f]);
-            String.prototype.toLowerCase = toLowerCase;
-            return result;
-        }
-    }
+	if (settings.removeDeps) {
+		const addDep = v_sidebar._computedWatchers.sortedElements.addDep;
+		["sortedElements", "filteredElements", "searchResults"].forEach((k) => v_sidebar._computedWatchers[k].addDep = function(...a) {
+			// if (a[0].subs[0]?.value !== undefined) return addDep.apply(this, a);
+			if (this.newDepIds.size < 65) return addDep.apply(this, a);
+		});
+	}
+	if (settings.randomButton > 0) initRandomButton(v);
+	if (settings.elementPinning) initPinnedContainer(v);
+	if (settings.oldMouseControls) initOldMouseControls(v);
+	if (settings.disableParticles) {
+		const r = window.requestAnimationFrame;
+		window.requestAnimationFrame = () => window.requestAnimationFrame = r;
+		v_container.$refs.particles.style.display = "none";
+	}
+	if (settings.variation) {
+		const toLowerCase = String.prototype.toLowerCase,
+			find = Array.prototype.find;
+		Array.prototype.find = function(f) {
+			if (this !== v_container.items || !/function\((\w+?)\){return \1\.text\.toLowerCase\(\)===\w+?\.text\.toLowerCase\(\)}/.test(f.toString()))
+				return find.apply(this, [f]);
+			String.prototype.toLowerCase = String.prototype.toString;
+			const result = find.apply(this, [f]);
+			String.prototype.toLowerCase = toLowerCase;
+			return result;
+		}
+	}
 
-    unsafeWindow.ICHelper = exported;
+	initEvents(v);
+
+	unsafeWindow.ICHelper = exported;
 }
 
 window.addEventListener("load", init);
 
 function debounce(fn, delay) {
-    const context = this;
-    let timeout = null;
-    return function () {
-        const args = arguments;
-        if (timeout) clearTimeout(timeout);
-        timeout = setTimeout(() => {
-            timeout = null;
-            fn.apply(context, args)
-        }, delay);
-    }
+	const context = this;
+	let timeout = null;
+	return function() {
+		const args = arguments;
+		if (timeout) clearTimeout(timeout);
+		timeout = setTimeout(() => {
+			timeout = null;
+			fn.apply(context, args)
+		}, delay);
+	}
 }
 
 /**
@@ -1030,251 +1089,251 @@ function debounce(fn, delay) {
 const characterMap = { À: 'A', Á: 'A', Â: 'A', Ã: 'A', Ä: 'A', Å: 'A', Ấ: 'A', Ắ: 'A', Ẳ: 'A', Ẵ: 'A', Ặ: 'A', Æ: 'AE', Ầ: 'A', Ằ: 'A', Ȃ: 'A', Ả: 'A', Ạ: 'A', Ẩ: 'A', Ẫ: 'A', Ậ: 'A', Ç: 'C', Ḉ: 'C', È: 'E', É: 'E', Ê: 'E', Ë: 'E', Ế: 'E', Ḗ: 'E', Ề: 'E', Ḕ: 'E', Ḝ: 'E', Ȇ: 'E', Ẻ: 'E', Ẽ: 'E', Ẹ: 'E', Ể: 'E', Ễ: 'E', Ệ: 'E', Ì: 'I', Í: 'I', Î: 'I', Ï: 'I', Ḯ: 'I', Ȋ: 'I', Ỉ: 'I', Ị: 'I', Ð: 'D', Ñ: 'N', Ò: 'O', Ó: 'O', Ô: 'O', Õ: 'O', Ö: 'O', Ø: 'O', Ố: 'O', Ṍ: 'O', Ṓ: 'O', Ȏ: 'O', Ỏ: 'O', Ọ: 'O', Ổ: 'O', Ỗ: 'O', Ộ: 'O', Ờ: 'O', Ở: 'O', Ỡ: 'O', Ớ: 'O', Ợ: 'O', Ù: 'U', Ú: 'U', Û: 'U', Ü: 'U', Ủ: 'U', Ụ: 'U', Ử: 'U', Ữ: 'U', Ự: 'U', Ý: 'Y', à: 'a', á: 'a', â: 'a', ã: 'a', ä: 'a', å: 'a', ấ: 'a', ắ: 'a', ẳ: 'a', ẵ: 'a', ặ: 'a', æ: 'ae', ầ: 'a', ằ: 'a', ȃ: 'a', ả: 'a', ạ: 'a', ẩ: 'a', ẫ: 'a', ậ: 'a', ç: 'c', ḉ: 'c', è: 'e', é: 'e', ê: 'e', ë: 'e', ế: 'e', ḗ: 'e', ề: 'e', ḕ: 'e', ḝ: 'e', ȇ: 'e', ẻ: 'e', ẽ: 'e', ẹ: 'e', ể: 'e', ễ: 'e', ệ: 'e', ì: 'i', í: 'i', î: 'i', ï: 'i', ḯ: 'i', ȋ: 'i', ỉ: 'i', ị: 'i', ð: 'd', ñ: 'n', ò: 'o', ó: 'o', ô: 'o', õ: 'o', ö: 'o', ø: 'o', ố: 'o', ṍ: 'o', ṓ: 'o', ȏ: 'o', ỏ: 'o', ọ: 'o', ổ: 'o', ỗ: 'o', ộ: 'o', ờ: 'o', ở: 'o', ỡ: 'o', ớ: 'o', ợ: 'o', ù: 'u', ú: 'u', û: 'u', ü: 'u', ủ: 'u', ụ: 'u', ử: 'u', ữ: 'u', ự: 'u', ý: 'y', ÿ: 'y', Ā: 'A', ā: 'a', Ă: 'A', ă: 'a', Ą: 'A', ą: 'a', Ć: 'C', ć: 'c', Ĉ: 'C', ĉ: 'c', Ċ: 'C', ċ: 'c', Č: 'C', č: 'c', C̆: 'C', c̆: 'c', Ď: 'D', ď: 'd', Đ: 'D', đ: 'd', Ē: 'E', ē: 'e', Ĕ: 'E', ĕ: 'e', Ė: 'E', ė: 'e', Ę: 'E', ę: 'e', Ě: 'E', ě: 'e', Ĝ: 'G', Ǵ: 'G', ĝ: 'g', ǵ: 'g', Ğ: 'G', ğ: 'g', Ġ: 'G', ġ: 'g', Ģ: 'G', ģ: 'g', Ĥ: 'H', ĥ: 'h', Ħ: 'H', ħ: 'h', Ḫ: 'H', ḫ: 'h', Ĩ: 'I', ĩ: 'i', Ī: 'I', ī: 'i', Ĭ: 'I', ĭ: 'i', Į: 'I', į: 'i', İ: 'I', ı: 'i', Ĳ: 'IJ', ĳ: 'ij', Ĵ: 'J', ĵ: 'j', Ķ: 'K', ķ: 'k', Ḱ: 'K', ḱ: 'k', K̆: 'K', k̆: 'k', Ĺ: 'L', ĺ: 'l', Ļ: 'L', ļ: 'l', Ľ: 'L', ľ: 'l', Ŀ: 'L', ŀ: 'l', Ł: 'l', ł: 'l', Ḿ: 'M', ḿ: 'm', M̆: 'M', m̆: 'm', Ń: 'N', ń: 'n', Ņ: 'N', ņ: 'n', Ň: 'N', ň: 'n', ŉ: 'n', N̆: 'N', n̆: 'n', Ō: 'O', ō: 'o', Ŏ: 'O', ŏ: 'o', Ő: 'O', ő: 'o', Œ: 'OE', œ: 'oe', P̆: 'P', p̆: 'p', Ŕ: 'R', ŕ: 'r', Ŗ: 'R', ŗ: 'r', Ř: 'R', ř: 'r', R̆: 'R', r̆: 'r', Ȓ: 'R', ȓ: 'r', Ś: 'S', ś: 's', Ŝ: 'S', ŝ: 's', Ş: 'S', Ș: 'S', ș: 's', ş: 's', Š: 'S', š: 's', Ţ: 'T', ţ: 't', ț: 't', Ț: 'T', Ť: 'T', ť: 't', Ŧ: 'T', ŧ: 't', T̆: 'T', t̆: 't', Ũ: 'U', ũ: 'u', Ū: 'U', ū: 'u', Ŭ: 'U', ŭ: 'u', Ů: 'U', ů: 'u', Ű: 'U', ű: 'u', Ų: 'U', ų: 'u', Ȗ: 'U', ȗ: 'u', V̆: 'V', v̆: 'v', Ŵ: 'W', ŵ: 'w', Ẃ: 'W', ẃ: 'w', X̆: 'X', x̆: 'x', Ŷ: 'Y', ŷ: 'y', Ÿ: 'Y', Y̆: 'Y', y̆: 'y', Ź: 'Z', ź: 'z', Ż: 'Z', ż: 'z', Ž: 'Z', ž: 'z', ſ: 's', ƒ: 'f', Ơ: 'O', ơ: 'o', Ư: 'U', ư: 'u', Ǎ: 'A', ǎ: 'a', Ǐ: 'I', ǐ: 'i', Ǒ: 'O', ǒ: 'o', Ǔ: 'U', ǔ: 'u', Ǖ: 'U', ǖ: 'u', Ǘ: 'U', ǘ: 'u', Ǚ: 'U', ǚ: 'u', Ǜ: 'U', ǜ: 'u', Ứ: 'U', ứ: 'u', Ṹ: 'U', ṹ: 'u', Ǻ: 'A', ǻ: 'a', Ǽ: 'AE', ǽ: 'ae', Ǿ: 'O', ǿ: 'o', Þ: 'TH', þ: 'th', Ṕ: 'P', ṕ: 'p', Ṥ: 'S', ṥ: 's', X́: 'X', x́: 'x', Ѓ: 'Г', ѓ: 'г', Ќ: 'К', ќ: 'к', A̋: 'A', a̋: 'a', E̋: 'E', e̋: 'e', I̋: 'I', i̋: 'i', Ǹ: 'N', ǹ: 'n', Ồ: 'O', ồ: 'o', Ṑ: 'O', ṑ: 'o', Ừ: 'U', ừ: 'u', Ẁ: 'W', ẁ: 'w', Ỳ: 'Y', ỳ: 'y', Ȁ: 'A', ȁ: 'a', Ȅ: 'E', ȅ: 'e', Ȉ: 'I', ȉ: 'i', Ȍ: 'O', ȍ: 'o', Ȑ: 'R', ȑ: 'r', Ȕ: 'U', ȕ: 'u', B̌: 'B', b̌: 'b', Č̣: 'C', č̣: 'c', Ê̌: 'E', ê̌: 'e', F̌: 'F', f̌: 'f', Ǧ: 'G', ǧ: 'g', Ȟ: 'H', ȟ: 'h', J̌: 'J', ǰ: 'j', Ǩ: 'K', ǩ: 'k', M̌: 'M', m̌: 'm', P̌: 'P', p̌: 'p', Q̌: 'Q', q̌: 'q', Ř̩: 'R', ř̩: 'r', Ṧ: 'S', ṧ: 's', V̌: 'V', v̌: 'v', W̌: 'W', w̌: 'w', X̌: 'X', x̌: 'x', Y̌: 'Y', y̌: 'y', A̧: 'A', a̧: 'a', B̧: 'B', b̧: 'b', Ḑ: 'D', ḑ: 'd', Ȩ: 'E', ȩ: 'e', Ɛ̧: 'E', ɛ̧: 'e', Ḩ: 'H', ḩ: 'h', I̧: 'I', i̧: 'i', Ɨ̧: 'I', ɨ̧: 'i', M̧: 'M', m̧: 'm', O̧: 'O', o̧: 'o', Q̧: 'Q', q̧: 'q', U̧: 'U', u̧: 'u', X̧: 'X', x̧: 'x', Z̧: 'Z', z̧: 'z', й: 'и', Й: 'И', ё: 'е', Ё: 'Е' };
 const removeAccentsRegex = new RegExp(Object.keys(characterMap).join('|'), 'g');
 function removeAccents(string) {
-    return string.replace(removeAccentsRegex, (char) => {
-        return characterMap[char];
-    });
+	return string.replace(removeAccentsRegex, (char) => {
+		return characterMap[char];
+	});
 }
 const rankings = {
-    CASE_SENSITIVE_EQUAL: 7,
-    EQUAL: 6,
-    STARTS_WITH: 5,
-    WORD_STARTS_WITH: 4,
-    CONTAINS: 3,
-    ACRONYM: 2,
-    MATCHES: 1,
-    NO_MATCH: 0,
+	CASE_SENSITIVE_EQUAL: 7,
+	EQUAL: 6,
+	STARTS_WITH: 5,
+	WORD_STARTS_WITH: 4,
+	CONTAINS: 3,
+	ACRONYM: 2,
+	MATCHES: 1,
+	NO_MATCH: 0,
 };
 const defaultBaseSortFn = (a, b) => String(a.rankedValue).localeCompare(String(b.rankedValue));
 function matchSorter(items, value, options = {}) {
-    const { keys, threshold = rankings.MATCHES, baseSort = defaultBaseSortFn, sorter = (matchedItems) => matchedItems.sort((a, b) => sortRankedValues(a, b, baseSort)), } = options;
-    const matchedItems = items.reduce(reduceItemsToRanked, []);
-    const sorted = sorter(matchedItems).map(({ item }) => item);
-    return sorted;
-    function reduceItemsToRanked(matches, item, index) {
-        const rankingInfo = getHighestRanking(item, keys, value, options);
-        const { rank, keyThreshold = threshold } = rankingInfo;
-        if (rank >= keyThreshold) {
-            matches.push({ ...rankingInfo, item, index });
-        }
-        return matches;
-    }
+	const { keys, threshold = rankings.MATCHES, baseSort = defaultBaseSortFn, sorter = (matchedItems) => matchedItems.sort((a, b) => sortRankedValues(a, b, baseSort)), } = options;
+	const matchedItems = items.reduce(reduceItemsToRanked, []);
+	const sorted = sorter(matchedItems).map(({ item }) => item);
+	return sorted;
+	function reduceItemsToRanked(matches, item, index) {
+		const rankingInfo = getHighestRanking(item, keys, value, options);
+		const { rank, keyThreshold = threshold } = rankingInfo;
+		if (rank >= keyThreshold) {
+			matches.push({ ...rankingInfo, item, index });
+		}
+		return matches;
+	}
 }
 matchSorter.rankings = rankings;
 function getHighestRanking(item, keys, value, options) {
-    if (!keys) {
-        const stringItem = item;
-        return {
-            rankedValue: stringItem,
-            rank: getMatchRanking(stringItem, value, options),
-            keyIndex: -1,
-            keyThreshold: options.threshold,
-        };
-    }
-    const valuesToRank = getAllValuesToRank(item, keys);
-    return valuesToRank.reduce(({ rank, rankedValue, keyIndex, keyThreshold }, { itemValue, attributes }, i) => {
-        let newRank = getMatchRanking(itemValue, value, options);
-        let newRankedValue = rankedValue;
-        const { minRanking, maxRanking, threshold } = attributes;
-        if (newRank < minRanking && newRank >= rankings.MATCHES) {
-            newRank = minRanking;
-        }
-        else if (newRank > maxRanking) {
-            newRank = maxRanking;
-        }
-        if (newRank > rank) {
-            rank = newRank;
-            keyIndex = i;
-            keyThreshold = threshold;
-            newRankedValue = itemValue;
-        }
-        return { rankedValue: newRankedValue, rank, keyIndex, keyThreshold };
-    }, {
-        rankedValue: item,
-        rank: rankings.NO_MATCH,
-        keyIndex: -1,
-        keyThreshold: options.threshold,
-    });
+	if (!keys) {
+		const stringItem = item;
+		return {
+			rankedValue: stringItem,
+			rank: getMatchRanking(stringItem, value, options),
+			keyIndex: -1,
+			keyThreshold: options.threshold,
+		};
+	}
+	const valuesToRank = getAllValuesToRank(item, keys);
+	return valuesToRank.reduce(({ rank, rankedValue, keyIndex, keyThreshold }, { itemValue, attributes }, i) => {
+		let newRank = getMatchRanking(itemValue, value, options);
+		let newRankedValue = rankedValue;
+		const { minRanking, maxRanking, threshold } = attributes;
+		if (newRank < minRanking && newRank >= rankings.MATCHES) {
+			newRank = minRanking;
+		}
+		else if (newRank > maxRanking) {
+			newRank = maxRanking;
+		}
+		if (newRank > rank) {
+			rank = newRank;
+			keyIndex = i;
+			keyThreshold = threshold;
+			newRankedValue = itemValue;
+		}
+		return { rankedValue: newRankedValue, rank, keyIndex, keyThreshold };
+	}, {
+		rankedValue: item,
+		rank: rankings.NO_MATCH,
+		keyIndex: -1,
+		keyThreshold: options.threshold,
+	});
 }
 function getMatchRanking(testString, stringToRank, options) {
-    testString = prepareValueForComparison(testString, options);
-    stringToRank = prepareValueForComparison(stringToRank, options);
-    if (stringToRank.length > testString.length) {
-        return rankings.NO_MATCH;
-    }
-    if (testString === stringToRank) {
-        return rankings.CASE_SENSITIVE_EQUAL;
-    }
-    testString = testString.toLowerCase();
-    stringToRank = stringToRank.toLowerCase();
-    if (testString === stringToRank) {
-        return rankings.EQUAL;
-    }
-    if (testString.startsWith(stringToRank)) {
-        return rankings.STARTS_WITH;
-    }
-    if (testString.includes(` ${stringToRank}`)) {
-        return rankings.WORD_STARTS_WITH;
-    }
-    if (testString.includes(stringToRank)) {
-        return rankings.CONTAINS;
-    }
-    else if (stringToRank.length === 1) {
-        return rankings.NO_MATCH;
-    }
-    if (getAcronym(testString).includes(stringToRank)) {
-        return rankings.ACRONYM;
-    }
-    return getClosenessRanking(testString, stringToRank);
+	testString = prepareValueForComparison(testString, options);
+	stringToRank = prepareValueForComparison(stringToRank, options);
+	if (stringToRank.length > testString.length) {
+		return rankings.NO_MATCH;
+	}
+	if (testString === stringToRank) {
+		return rankings.CASE_SENSITIVE_EQUAL;
+	}
+	testString = testString.toLowerCase();
+	stringToRank = stringToRank.toLowerCase();
+	if (testString === stringToRank) {
+		return rankings.EQUAL;
+	}
+	if (testString.startsWith(stringToRank)) {
+		return rankings.STARTS_WITH;
+	}
+	if (testString.includes(` ${stringToRank}`)) {
+		return rankings.WORD_STARTS_WITH;
+	}
+	if (testString.includes(stringToRank)) {
+		return rankings.CONTAINS;
+	}
+	else if (stringToRank.length === 1) {
+		return rankings.NO_MATCH;
+	}
+	if (getAcronym(testString).includes(stringToRank)) {
+		return rankings.ACRONYM;
+	}
+	return getClosenessRanking(testString, stringToRank);
 }
 function getAcronym(string) {
-    let acronym = '';
-    const wordsInString = string.split(' ');
-    for (const wordInString of wordsInString) {
-        const splitByHyphenWords = wordInString.split('-');
-        for (const splitByHyphenWord of splitByHyphenWords) {
-            acronym += splitByHyphenWord.substr(0, 1);
-        }
-    }
-    return acronym;
+	let acronym = '';
+	const wordsInString = string.split(' ');
+	for (const wordInString of wordsInString) {
+		const splitByHyphenWords = wordInString.split('-');
+		for (const splitByHyphenWord of splitByHyphenWords) {
+			acronym += splitByHyphenWord.substr(0, 1);
+		}
+	}
+	return acronym;
 }
 function getClosenessRanking(testString, stringToRank) {
-    let matchingInOrderCharCount = 0;
-    let charNumber = 0;
-    function findMatchingCharacter(matchChar, string, index) {
-        for (let j = index, J = string.length; j < J; j++) {
-            const stringChar = string[j];
-            if (stringChar === matchChar) {
-                matchingInOrderCharCount += 1;
-                return j + 1;
-            }
-        }
-        return -1;
-    }
-    function getRanking(spread) {
-        const spreadPercentage = 1 / spread;
-        const inOrderPercentage = matchingInOrderCharCount / stringToRank.length;
-        const ranking = rankings.MATCHES + inOrderPercentage * spreadPercentage;
-        return ranking;
-    }
-    const firstIndex = findMatchingCharacter(stringToRank[0], testString, 0);
-    if (firstIndex < 0) {
-        return rankings.NO_MATCH;
-    }
-    charNumber = firstIndex;
-    for (let i = 1, I = stringToRank.length; i < I; i++) {
-        const matchChar = stringToRank[i];
-        charNumber = findMatchingCharacter(matchChar, testString, charNumber);
-        const found = charNumber > -1;
-        if (!found) {
-            return rankings.NO_MATCH;
-        }
-    }
-    const spread = charNumber - firstIndex;
-    return getRanking(spread);
+	let matchingInOrderCharCount = 0;
+	let charNumber = 0;
+	function findMatchingCharacter(matchChar, string, index) {
+		for (let j = index, J = string.length; j < J; j++) {
+			const stringChar = string[j];
+			if (stringChar === matchChar) {
+				matchingInOrderCharCount += 1;
+				return j + 1;
+			}
+		}
+		return -1;
+	}
+	function getRanking(spread) {
+		const spreadPercentage = 1 / spread;
+		const inOrderPercentage = matchingInOrderCharCount / stringToRank.length;
+		const ranking = rankings.MATCHES + inOrderPercentage * spreadPercentage;
+		return ranking;
+	}
+	const firstIndex = findMatchingCharacter(stringToRank[0], testString, 0);
+	if (firstIndex < 0) {
+		return rankings.NO_MATCH;
+	}
+	charNumber = firstIndex;
+	for (let i = 1, I = stringToRank.length; i < I; i++) {
+		const matchChar = stringToRank[i];
+		charNumber = findMatchingCharacter(matchChar, testString, charNumber);
+		const found = charNumber > -1;
+		if (!found) {
+			return rankings.NO_MATCH;
+		}
+	}
+	const spread = charNumber - firstIndex;
+	return getRanking(spread);
 }
 function sortRankedValues(a, b, baseSort) {
-    const aFirst = -1;
-    const bFirst = 1;
-    const { rank: aRank, keyIndex: aKeyIndex } = a;
-    const { rank: bRank, keyIndex: bKeyIndex } = b;
-    const same = aRank === bRank;
-    if (same) {
-        if (aKeyIndex === bKeyIndex) {
-            return baseSort(a, b);
-        }
-        else {
-            return aKeyIndex < bKeyIndex ? aFirst : bFirst;
-        }
-    }
-    else {
-        return aRank > bRank ? aFirst : bFirst;
-    }
+	const aFirst = -1;
+	const bFirst = 1;
+	const { rank: aRank, keyIndex: aKeyIndex } = a;
+	const { rank: bRank, keyIndex: bKeyIndex } = b;
+	const same = aRank === bRank;
+	if (same) {
+		if (aKeyIndex === bKeyIndex) {
+			return baseSort(a, b);
+		}
+		else {
+			return aKeyIndex < bKeyIndex ? aFirst : bFirst;
+		}
+	}
+	else {
+		return aRank > bRank ? aFirst : bFirst;
+	}
 }
 function prepareValueForComparison(value, { keepDiacritics }) {
-    value = `${value}`;
-    if (!keepDiacritics) {
-        value = removeAccents(value);
-    }
-    return value;
+	value = `${value}`;
+	if (!keepDiacritics) {
+		value = removeAccents(value);
+	}
+	return value;
 }
 function getItemValues(item, key) {
-    if (typeof key === 'object') {
-        key = key.key;
-    }
-    let value;
-    if (typeof key === 'function') {
-        value = key(item);
-    }
-    else if (item == null) {
-        value = null;
-    }
-    else if (Object.hasOwn(item, key)) {
-        value = item[key];
-    }
-    else if (key.includes('.')) {
-        return getNestedValues(key, item);
-    }
-    else {
-        value = null;
-    }
-    if (value == null) {
-        return [];
-    }
-    if (Array.isArray(value)) {
-        return value;
-    }
-    return [String(value)];
+	if (typeof key === 'object') {
+		key = key.key;
+	}
+	let value;
+	if (typeof key === 'function') {
+		value = key(item);
+	}
+	else if (item == null) {
+		value = null;
+	}
+	else if (Object.hasOwn(item, key)) {
+		value = item[key];
+	}
+	else if (key.includes('.')) {
+		return getNestedValues(key, item);
+	}
+	else {
+		value = null;
+	}
+	if (value == null) {
+		return [];
+	}
+	if (Array.isArray(value)) {
+		return value;
+	}
+	return [String(value)];
 }
 function getNestedValues(path, item) {
-    const keys = path.split('.');
-    let values = [item];
-    for (let i = 0, I = keys.length; i < I; i++) {
-        const nestedKey = keys[i];
-        let nestedValues = [];
-        for (let j = 0, J = values.length; j < J; j++) {
-            const nestedItem = values[j];
-            if (nestedItem == null)
-                continue;
-            if (Object.hasOwn(nestedItem, nestedKey)) {
-                const nestedValue = nestedItem[nestedKey];
-                if (nestedValue != null) {
-                    nestedValues.push(nestedValue);
-                }
-            }
-            else if (nestedKey === '*') {
-                nestedValues = nestedValues.concat(nestedItem);
-            }
-        }
-        values = nestedValues;
-    }
-    if (Array.isArray(values[0])) {
-        const result = [];
-        return result.concat(...values);
-    }
-    return values;
+	const keys = path.split('.');
+	let values = [item];
+	for (let i = 0, I = keys.length; i < I; i++) {
+		const nestedKey = keys[i];
+		let nestedValues = [];
+		for (let j = 0, J = values.length; j < J; j++) {
+			const nestedItem = values[j];
+			if (nestedItem == null)
+				continue;
+			if (Object.hasOwn(nestedItem, nestedKey)) {
+				const nestedValue = nestedItem[nestedKey];
+				if (nestedValue != null) {
+					nestedValues.push(nestedValue);
+				}
+			}
+			else if (nestedKey === '*') {
+				nestedValues = nestedValues.concat(nestedItem);
+			}
+		}
+		values = nestedValues;
+	}
+	if (Array.isArray(values[0])) {
+		const result = [];
+		return result.concat(...values);
+	}
+	return values;
 }
 function getAllValuesToRank(item, keys) {
-    const allValues = [];
-    for (let j = 0, J = keys.length; j < J; j++) {
-        const key = keys[j];
-        const attributes = getKeyAttributes(key);
-        const itemValues = getItemValues(item, key);
-        for (let i = 0, I = itemValues.length; i < I; i++) {
-            allValues.push({
-                itemValue: itemValues[i],
-                attributes,
-            });
-        }
-    }
-    return allValues;
+	const allValues = [];
+	for (let j = 0, J = keys.length; j < J; j++) {
+		const key = keys[j];
+		const attributes = getKeyAttributes(key);
+		const itemValues = getItemValues(item, key);
+		for (let i = 0, I = itemValues.length; i < I; i++) {
+			allValues.push({
+				itemValue: itemValues[i],
+				attributes,
+			});
+		}
+	}
+	return allValues;
 }
 const defaultKeyAttributes = {
-    maxRanking: Infinity,
-    minRanking: -Infinity,
+	maxRanking: Infinity,
+	minRanking: -Infinity,
 };
 function getKeyAttributes(key) {
-    if (typeof key === 'string') {
-        return defaultKeyAttributes;
-    }
-    return { ...defaultKeyAttributes, ...key };
+	if (typeof key === 'string') {
+		return defaultKeyAttributes;
+	}
+	return { ...defaultKeyAttributes, ...key };
 }

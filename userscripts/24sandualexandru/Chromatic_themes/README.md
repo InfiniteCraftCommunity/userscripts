@@ -1,4 +1,4 @@
-# Chromatic Latests | [Install](https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/Chromatic_Latests/index.user.js)
+# Chromatic Latests | [Install](https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/24sandualexandru/Chromatic_themes/index.user.js)
 
 Chromatic Themes Changing Colors and Sparkles v300+
 

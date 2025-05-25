@@ -2,13 +2,14 @@
 // @name        Tooltips
 // @namespace   Violentmonkey Scripts
 // @match       https://neal.fun/infinite-craft/*
-// @grant       none
+// @grant       GM_addElement
+// @grant       unsafeWindow
 // @version     1.0
 // @author      -
 // @description 4/30/2025, 8:10:05 PM
 // @require	https://unpkg.com/wanakana
 // ==/UserScript==
-(function () {
+(async function () {
     const isNumeric = (string) => /^[+-]?\d+(\.\d+)?$/.test(string);
     function getFlagEmoji(countryCode) {
         let codePoints = countryCode
@@ -53,6 +54,34 @@
             console.error(error);
         }
     }
+
+
+  const TOKENIZER_URL = 'https://belladoreai.github.io/llama-tokenizer-js/llama-tokenizer.js';
+
+function loadTokenizer() {
+    return new Promise((resolve, reject) => {
+        if (typeof unsafeWindow.llamaTokenizer !== 'undefined') {
+            console.log('llamaTokenizer already available on unsafeWindow.');
+            resolve(unsafeWindow.llamaTokenizer);
+            return;
+        }
+        const scriptElement = GM_addElement('script', { type: 'module', src: TOKENIZER_URL });
+        scriptElement.onload = () => resolve(unsafeWindow.llamaTokenizer);
+        scriptElement.onerror = (e) => reject(new Error(`Failed to load llamaTokenizer script from ${TOKENIZER_URL}. Check network and console. ${e}`));
+    });
+}
+
+const tokenizer = await loadTokenizer();
+if (tokenizer) {
+
+    console.log(`Loded tokenizer`);
+}
+else console.log('llamaTokenizer is undefined...');
+
+
+
+
+
     let tooltipHandlers = [{
         id: "romaji",
         name: "Romaji",
@@ -150,8 +179,26 @@
             if (translated != "")
                 tooltips.push(`🔄 ${translated}`)
         }
+    },
+  {
+        id: "tokenCount",
+        name: "TokenCount",
+        priority: 0,
+        description: "Display token count",
+        enabled: false,
+        condition: (e) => true,
+        handle(element, tooltips) {
+                 if(tokenizer)
+             {
+            var encoded=tokenizer.encode(element.text);
+
+            if (encoded != null)
+                tooltips.push(`#️⃣ Tokens count: ${encoded.length}`)
+             }
+        }
     }
-    ]
+    ];
+
 
 
 
@@ -214,6 +261,11 @@
     }
 
     window.addEventListener("load", () => {
+
+
+
+
+
 
         const instanceObserver = new MutationObserver((mutations) => {
 

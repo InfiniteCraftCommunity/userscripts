@@ -133,7 +133,7 @@ var listOfElements=["Wish"]
 	v_container.craftApi = async function(a, b) {
 		const result = await craftApi.apply(this, [a, b]);
 
-    if(listOfElements.includes(result.text ))
+    if(result && listOfElements.includes(result.text ))
 	 {
      doneElements.push(result.text);
      localStorage.setItem("doneList",JSON.stringify(doneElements));

@@ -4,7 +4,7 @@
 // @match       https://neal.fun/infinite-craft/*
 // @grant       GM_addElement
 // @grant       unsafeWindow
-// @version     1.0
+// @version     1.2
 // @author      -
 // @description 4/30/2025, 8:10:05 PM
 // @require	https://unpkg.com/wanakana
@@ -639,7 +639,7 @@ else console.log('llamaTokenizer is undefined...');
         priority: 2,
         description: "more than 30 characters.",
         enabled: false,
-        condition: (e) => e.text.length>=30,
+        condition: (e) => e.text.length>30,
         handle(element, tooltips) {
             tooltips.push("💀 Dead")
         }
@@ -693,8 +693,27 @@ else console.log('llamaTokenizer is undefined...');
             var encoded=tokenizer.encode(element.text);
 
             if (encoded != null)
-                tooltips.push(`#️⃣ Tokens count: ${encoded.length}`)
+                tooltips.push(`#️⃣ Tokens count: ${encoded.length-1}`)
              }
+        }
+    },
+    {   id: "characterslimit",
+        name: "CharacterOverLimit",
+        priority: 0,
+        description: "Display number of character that are over limit",
+        enabled: false,
+        condition: (e) => e.text.length>=25,
+        handle(element, tooltips) {
+            if(element.text.length<=30)
+          {
+            tooltips.push(`⚠️ Number characters: ${element.text.length}`)
+          }else
+            {
+
+              tooltips.push(`🚨 Number characters: ${element.text.length}`)
+
+            }
+
         }
     }
     ];

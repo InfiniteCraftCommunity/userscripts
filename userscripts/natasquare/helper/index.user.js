@@ -578,10 +578,11 @@ function initRecipeLookup({ v_container, v_sidebar }) {
 	});
 }
 
-function initRecipeLogging() {
+function initCraftEvents() {
 	window.addEventListener("ic-craftapi", function(e) {
 		const { a, b, result } = e.detail;
-		if (result) console.log(`${a} + ${b} = ${result.text}`);
+		if (!result) return;
+		if (settings.recipeLogging) console.log(`${a} + ${b} = ${result.text}`);
 	});
 }
 
@@ -913,7 +914,7 @@ function init() {
 	if (settings.searchRelevancy) initSearchRelevancy(v);
 
 	if (settings.recipeLookup) initRecipeLookup(v);
-	if (settings.recipeLogging) initRecipeLogging(v);
+	initCraftEvents(v);
 
 	if (settings.removeDeps) {
 		const addDep = v_sidebar._computedWatchers.sortedElements.addDep;

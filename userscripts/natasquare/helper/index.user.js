@@ -255,18 +255,47 @@ const css = `
 	background-color: color-mix(in oklab, var(--background-color), var(--text-color) 5%);
 }
 
-.recipe-modal-body {
+.recipe-modal-body .recipe-modal-body-inner[data-tab-id=recipes],
+.recipe-modal-body .recipe-modal-body-inner[data-tab-id=usages] {
 	display: grid;
 	gap: 8px;
 	overflow: auto;
-	padding: 20px 24px;
-	padding-top: 12px;
+	padding: 12px 24px;
 }
 
-.recipe-modal-body .recipe {
+.recipe-modal-body .recipe-modal-body-inner[data-tab-id=recipes] .recipe,
+.recipe-modal-body .recipe-modal-body-inner[data-tab-id=usages] .recipe {
 	display: flex;
 	gap: 6px;
 	align-items: center;
+}
+
+.recipe-modal-footer {
+	color: var(--border-color);
+	position: sticky;
+	bottom: 0;
+	z-index: 1;
+	background-color: var(--background-color);
+	padding: 20px 24px;
+	padding-top: 12px;
+	align-items: center;
+}
+
+.recipe-modal-footer .recipe-modal-footer-tab {
+	color: color-mix(in oklab, var(--text-color) 70%, var(--background-color));
+	text-decoration-line: underline;
+	text-decoration-style: dotted;
+	transition: color .2s;
+}
+
+.recipe-modal-footer .recipe-modal-footer-tab:hover {
+	color: var(--text-color);
+	cursor: pointer;
+}
+
+.recipe-modal-footer .recipe-modal-footer-tab.active {
+	color: var(--text-color);
+	text-decoration-line: none;
 }
 
 .item {
@@ -493,7 +522,135 @@ function createItemElement(item, wrap = false) {
 }
 exported.createItemElement = createItemElement;
 
+const idMap = new Map(),
+	idReverseMap = new Map(),
+	usageMap = new Map();
+
+exported.idMap = idMap;
+exported.idReverseMap = idReverseMap;
+exported.usageMap = usageMap;
+
+let lastRefresh = -1;
+function refreshIdMapping() {
+	// throttling, helps when multiple failing getItem/getId calls happen
+	if (Date.now() - lastRefresh < 200) return;
+	for (const item of unsafeWindow.IC.getItems()) {
+		idMap.set(item.id, item);
+		idReverseMap.set(item.text, item.id);
+	}
+	lastRefresh = Date.now();
+}
+exported.refreshIdMapping = refreshIdMapping;
+
+function getItemFromId(id, skipRefresh = false) {
+	if (idMap.has(id) || skipRefresh) return idMap.get(id) ?? null;
+	refreshIdMapping();
+	return idMap.get(id) ?? null;
+}
+exported.getItemFromId = getItemFromId;
+
+function getIdFromText(text, skipRefresh = false) {
+	if (idReverseMap.has(text) || skipRefresh) return idReverseMap.get(text);
+	refreshIdMapping();
+	return idReverseMap.get(text) ?? null;
+}
+exported.getIdFromText = getIdFromText;
+
+// now that i think about it why am i using a map anyway?
+// eh surely this will be useful for someone else...
+function addUsage(recipe, result) {
+	const [first, second] = recipe;
+	if (!usageMap.has(first)) usageMap.set(first, new Map([[second, result]]));
+	else usageMap.get(first).set(second, result);
+	if (!usageMap.has(second)) usageMap.set(second, new Map([[first, result]]));
+	else usageMap.get(second).set(first, result);
+}
+exported.addUsage = addUsage;
+
+const recipeModalTabs = new Map();
+exported.recipeModalTabs = recipeModalTabs;
+
+function renderRecipeBody(container, item) {
+	if (!item.recipes || item.recipes.length < 1)
+		container.appendChild(document.createTextNode("No recipes recorded for this element."));
+	else for (const r of item.recipes) {
+		const recipe = document.createElement("div");
+		recipe.classList.add("recipe");
+		// no need to worry about refreshing since that's done when opening modal already
+		const [itemA, itemB] = r.map(id => idMap.get(id));
+		if (!itemA || !itemB) {
+			console.warn("Invalid recipe for " + item.text, r);
+			continue;
+		}
+		recipe.append(
+			createItemElement(itemA),
+			document.createTextNode("+"),
+			createItemElement(itemB)
+		);
+		container.appendChild(recipe);
+	}
+	return container;
+}
+
+function renderRecipeFooter(container, item) {
+	const recipeCount = item.recipes?.length;
+	container.appendChild(document.createTextNode(`${(recipeCount || "No").toLocaleString()} recipe${recipeCount === 1 ? "" : "s"}`));
+}
+
+recipeModalTabs.set("recipes", {
+	renderBody: renderRecipeBody,
+	renderFooter: renderRecipeFooter
+});
+
+function renderUsageBody(container, item) {
+	const usages = usageMap.get(item.id);
+	if (!usages)
+		// i know this should be unreachable because of the condition but just in case
+		container.appendChild(document.createTextNode("No usage recorded for this element."));
+	else for (const r of usages) {
+		const recipe = document.createElement("div");
+		recipe.classList.add("recipe");
+		const [itemA, itemB] = r.map(id => idMap.get(id));
+		if (!itemA || !itemB) {
+			console.warn("invalid usage recorded for " + item.text, r);
+			continue;
+		}
+		recipe.append(
+			createItemElement(itemA),
+			document.createTextNode("→"),
+			createItemElement(itemB)
+		);
+		container.appendChild(recipe);
+	}
+	return container;
+}
+
+function renderUsageFooter(container, item) {
+	const usageCount = usageMap.get(item.id)?.size,
+		message = usageCount ?
+			`Used in ${usageCount.toLocaleString()} recipe${usageCount === 1 ? "" : "s"}` :
+			"Unused"; // unreachable but eh
+	container.appendChild(document.createTextNode(message));
+}
+
+recipeModalTabs.set("usages", {
+	condition: (item) => usageMap.has(item.id),
+	renderBody: renderUsageBody,
+	renderFooter: renderUsageFooter
+});
+
 function initRecipeLookup({ v_container, v_sidebar }) {
+	window.addEventListener("ic-load", function() {
+		for (const item of v_container.items) {
+			// for initializing the id mapping
+			idMap.set(item.id, item);
+			idReverseMap.set(item.text, item.id);
+			if (!item.recipes || item.recipes.length < 1) continue;
+			for (const recipe of item.recipes) addUsage(recipe, item.id);
+		}
+		exported.usageMap = usageMap;
+	});
+
 	const modal = document.createElement("dialog");
 	modal.classList.add("recipe-modal");
 	const modalTitle = document.createElement("h1");
@@ -503,27 +660,57 @@ function initRecipeLookup({ v_container, v_sidebar }) {
 	const closeIcon = document.createElement("img");
 	closeIcon.src = closeIconSrc
 	closeButton.appendChild(closeIcon);
-	closeButton.addEventListener("click", _ => modal.close());
 	const modalHeader = document.createElement("div");
 	modalHeader.classList.add("recipe-modal-header");
 	modalHeader.append(modalTitle, closeButton);
 	const modalBody = document.createElement("div");
 	modalBody.classList.add("recipe-modal-body");
-	modal.append(modalHeader, modalBody);
+	const modalFooter = document.createElement("div");
+	modalFooter.classList.add("recipe-modal-footer");
+	modal.append(modalHeader, modalBody, modalFooter);
 	v_container.$el.appendChild(modal);
 
 	["wheel", "scroll"].forEach((x) => modal.addEventListener(x, (e) => e.stopImmediatePropagation(), true));
 
-	const idMap = new Map();
-	function openRecipeModal(itemText) {
-		let itemId;
-		for (const item of v_container.items) {
-			idMap.set(item.id, item);
-			if (item.text === itemText) itemId = item.id;
-		}
-		const item = idMap.get(itemId);
+	let renderCache = {},
+		currentItemId = null;
 
-		if (!item) throw new Error("this shouldn't be possible in normal gameplay");
+	function openRecipeModal(itemId, reload = true, tabId) {
+		if (isNaN(itemId)) throw new Error("itemId must be a number");
+		currentItemId = itemId = Number(itemId);
+
+		const item = getItemFromId(itemId);
+
+		if (!item) throw new Error("could not find item with id " + itemId);
+
+		if (!reload) {
+			if (!recipeModalTabs.has(tabId)) throw new Error(`tab with id ${tabId} does not exist`);
+
+			let found = false;
+			for (const tabFooter of modalFooter.querySelectorAll(".recipe-modal-footer-tab")) {
+				const id = tabFooter.getAttribute("data-tab-id");
+				if (id === tabId) {
+					tabFooter.classList.add("active");
+					found = true;
+				} else tabFooter.classList.remove("active");
+			}
+
+			if (!found) throw new Error(`tab with id ${tabId} is not available to switch to`);
+
+			modalBody.innerHTML = "";
+
+			if (renderCache[tabId]) return modalBody.appendChild(renderCache[tabId]);
+
+			const tabContainer = document.createElement("div");
+			tabContainer.classList.add("recipe-modal-body-inner");
+			tabContainer.setAttribute("data-tab-id", tabId);
+			recipeModalTabs.get(tabId).renderBody(tabContainer, item);
+			renderCache[tabId] = tabContainer;
+
+			modalBody.appendChild(tabContainer);
+
+			return;
+		}
 
 		const itemEmoji = document.createElement("span");
 		itemEmoji.classList.add("item-emoji");
@@ -531,40 +718,75 @@ function initRecipeLookup({ v_container, v_sidebar }) {
 		modalTitle.innerHTML = "";
 		modalTitle.append(itemEmoji, document.createTextNode(` ${item.text} `));
 
+		refreshIdMapping();
+
+		const okTabIds = new Set();
+
+		for (const [id, tab] of recipeModalTabs)
+			if (
+				typeof tab.condition !== "function" ||
+				tab.condition(item)
+			) okTabIds.add(id);
+
+		if (okTabIds.size < 1) {
+			// shouldn't be possible with default configuration since recipe tab is always on but eh just to be sure
+			modalBody.innerHTML = "";
+			modalBody.appendChild(document.createTextNode("Nothing to see here, maybe try another item?"));
+			return;
+		}
+
+		if (!okTabIds.has(tabId)) tabId = okTabIds.values().next().value;
+
+		renderCache = {};
+
+		const tabContainer = document.createElement("div");
+		tabContainer.classList.add("recipe-modal-body-inner");
+		tabContainer.setAttribute("data-tab-id", tabId);
+		recipeModalTabs.get(tabId).renderBody(tabContainer, item);
+		renderCache[tabId] = tabContainer;
+
 		modalBody.innerHTML = "";
-		if (!item.recipes || item.recipes.length < 1)
-			modalBody.appendChild(document.createTextNode("No recipes recorded for this element."));
-		else for (const r of item.recipes) {
-			const recipe = document.createElement("div");
-			recipe.classList.add("recipe");
-			const [itemA, itemB] = r.map((id) => idMap.get(id));
-			if (!itemA || !itemB) {
-				console.warn("Invalid recipe for " + item.text, r);
-				continue;
-			}
-			recipe.append(
-				createItemElement(itemA),
-				document.createTextNode("+"),
-				createItemElement(itemB)
-			);
-			modalBody.appendChild(recipe);
+		modalBody.appendChild(tabContainer);
+
+		modalFooter.innerHTML = "";
+
+		let first = true;
+		for (const id of okTabIds) {
+			if (first) first = false;
+			else modalFooter.appendChild(document.createTextNode(" · "));
+
+			const tabFooter = document.createElement("span");
+			tabFooter.classList.add("recipe-modal-footer-tab");
+			if (id === tabId) tabFooter.classList.add("active");
+			tabFooter.setAttribute("data-tab-id", id);
+			recipeModalTabs.get(id).renderFooter(tabFooter, item);
+			modalFooter.appendChild(tabFooter);
 		}
 
 		modal.showModal();
 	}
 	exported.openRecipeModal = openRecipeModal;
 
+	function closeRecipeModal() {
+		currentItemId = null;
+		renderCache = {};
+		modal.close();
+		modalBody.innerHTML = "";
+	}
+
+	closeButton.addEventListener("click", closeRecipeModal);
+
 	[v_sidebar.$el, modal].forEach((x) => x.addEventListener("contextmenu", function(e) {
 		const item = traverseUntil(e.target, ".item");
 		if (item) {
 			e.preventDefault();
-			openRecipeModal(item.getAttribute("data-item-text"));
+			openRecipeModal(item.getAttribute("data-item-id"));
 		}
 	}));
 
 	let hidden = false;
 	modal.addEventListener("mousedown", function(e) {
-		if (e.target === e.currentTarget) return modal.close();
+		if (e.target === e.currentTarget) return closeRecipeModal();
 		if (e.button === 2) return;
 		const item = traverseUntil(e.target, ".item");
 		if (!item) return;
@@ -576,6 +798,15 @@ function initRecipeLookup({ v_container, v_sidebar }) {
 		modal.classList.remove("hidden");
 		hidden = false;
 	});
+
+	modalFooter.addEventListener("click", function(e) {
+		if (currentItemId === null) return;
+		const tabFooter = traverseUntil(e.target, ".recipe-modal-footer-tab[data-tab-id]");
+		if (!tabFooter || tabFooter.classList.contains("active")) return;
+		const tabId = tabFooter.getAttribute("data-tab-id");
+		if (!recipeModalTabs.has(tabId)) return;
+		openRecipeModal(currentItemId, false, tabId);
+	});
 }
 
 function initCraftEvents() {
@@ -583,6 +814,19 @@ function initCraftEvents() {
 		const { a, b, result } = e.detail;
 		if (!result) return;
 		if (settings.recipeLogging) console.log(`${a} + ${b} = ${result.text}`);
+		if (settings.recipeLookup) {
+			// at this point the result might not be in the item list yet
+			// so we queue this for when the call stack is empty (when stuff finishes)
+			// not sure if this is the best way to do it though
+			setTimeout(() => {
+				const aid = getIdFromText(a),
+					bid = getIdFromText(b),
+					rid = getIdFromText(result.text);
+				// careful, id can be 0
+				if (aid !== null && bid !== null && rid !== null)
+					addUsage([aid, bid], rid);
+			});
+		}
 	});
 }
 
@@ -898,6 +1142,13 @@ function initEvents({ v_container }) {
 		const result = await craftApi.apply(this, [a, b]);
 		dispatchEvent(new CustomEvent("ic-craftapi", { detail: { a, b, result} }));
 		return result;
+	}
+
+	const addAPI = v_container.addAPI;
+	v_container.addAPI = function() {
+		dispatchEvent(new CustomEvent("ic-load"));
+		v_container.addAPI = addAPI;
+		return addAPI.apply(this, arguments);
 	}
 }
 

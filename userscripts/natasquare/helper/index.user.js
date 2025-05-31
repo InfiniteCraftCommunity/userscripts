@@ -628,7 +628,7 @@ function renderUsageBody(container, item) {
 function renderUsageFooter(container, item) {
 	const usageCount = usageMap.get(item.id)?.size,
 		message = usageCount ?
-			`Used in ${usageCount.toLocaleString()} recipe${usageCount === 1 ? "" : "s"}` :
+			`${usageCount.toLocaleString()} use${usageCount === 1 ? "" : "s"}` :
 			"Unused"; // unreachable but eh
 	container.appendChild(document.createTextNode(message));
 }

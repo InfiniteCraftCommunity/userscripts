@@ -786,7 +786,15 @@ function initRecipeLookup({ v_container, v_sidebar }) {
 
 	let hidden = false;
 	modal.addEventListener("mousedown", function(e) {
-		if (e.target === e.currentTarget) return closeRecipeModal();
+		if (e.target === e.currentTarget) {
+			// apparently this is also true when clicking on the scrollbar
+			// so a bound check is ineviatable
+			const rect = modal.getBoundingClientRect();
+			if (e.clientX < rect.left ||
+				e.clientX > rect.right ||
+				e.clientY < rect.top ||
+				e.clientY > rect.bottom) closeRecipeModal()
+		}
 		if (e.button === 2) return;
 		const item = traverseUntil(e.target, ".item");
 		if (!item) return;

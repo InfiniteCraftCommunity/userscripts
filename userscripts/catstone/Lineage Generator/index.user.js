@@ -17,6 +17,7 @@
     'use strict';
 
     const o = {
+        refresh: reloadGameData,
         baseElementsString: ["Water", "Fire", "Wind", "Earth"],   // these get mapped to IDs later in the code.
         baseElements: undefined,  // ids
 

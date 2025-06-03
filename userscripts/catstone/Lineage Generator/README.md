@@ -1,4 +1,4 @@
-# Utils Mod | [Install](https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/catstone/Sandwhich%20Utils%20Mod/index.user.js)
+# Utils Mod | [Install](https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/catstone/Lineage%20Generator/index.user.js)
 
 This script generates pretty good lineages directly ingame! (just like infinibrowsers Analyzer does)  
 > [!WARNING]

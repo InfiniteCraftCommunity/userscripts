@@ -15,7 +15,7 @@
 // @require         https://unpkg.com/wanakana
 // @require         https://raw.githubusercontent.com/surferseo/intl-segmenter-polyfill/master/dist/bundled.js
 //
-// @version         2.0
+// @version         3.0
 // @author          Alexander_Andercou, Mikarific
 // @description     Adds folders to Infinite Craft
 //
@@ -28,6 +28,8 @@
 
 (function () {
 	let folders = ["alphabets", "diverse"];
+  let foldersSize=200;
+  let folderSizes={"alphabets":200,"diverse":100};
 	let currentFolder = null;
 	let mode = 0;
 	let folderDiv = null;
@@ -40,6 +42,7 @@
 	let foldersData = {};
 	let ParentSource = null;
 	let openFolder = true;
+  var openedFolders=0;
 
 	function existsFolder(fileName) {
 		for (let f of document.querySelectorAll(".folder")) {
@@ -326,6 +329,14 @@
 		if (cloneElement.querySelector(".addspan")) {
 			span = true;
 			spanCss = cloneElement.querySelector(".addspan").style.cssText;
+      text="";
+      var spans=Array.from(cloneElement.childNodes);
+       spans=spans.slice(1);
+      for(let span of spans)
+       {
+         text+=span.textContent;
+       }
+
 		}
 
 		console.log("text is:", text);
@@ -352,7 +363,7 @@
 		if (rect1.x < rect2.x + rect2.width && rect1.x + rect1.width > rect2.x && rect1.y < rect2.y + rect2.height && rect1.y + rect1.height > rect2.y) {
 			let cloneElement = element1.cloneNode(true);
 
-			//cloneElement.id="";
+			cloneElement.id="";
 
 			cloneElement.style.translate = "0px 0px";
 			cloneElement.style.display = "inline-block";
@@ -368,8 +379,8 @@
 				discovered = true;
 			}
 
-			cloneElement.style.scale = 0.9;
-			cloneElement.children[0].style.fontSize = '20px';
+		    cloneElement.style.scale = 0.9;
+		  	cloneElement.children[0].style.fontSize = '20px';
 
 			elementToSave = getElementToSave(cloneElement, discovered);
 
@@ -378,17 +389,22 @@
 				cloneElement.classList.add("item");
 			}
 
-			if (element2.children[0].children[0].textContent in foldersData) {
-				console.log(cloneElement.style.cssText);
-				console.log(elementToSave);
-				console.log(cloneElement);
 
-				foldersData[element2.children[0].children[0].textContent].push(elementToSave);
+
+      var added=false;
+			if (element2.children[0].children[0].textContent in foldersData) {
+     	var found=foldersData[element2.children[0].children[0].textContent].find(x=>x.text==elementToSave.text)
+      if(found==null)
+        {
+          			foldersData[element2.children[0].children[0].textContent].push(elementToSave);
+                added=true;
+        }
 			} else {
 				foldersData[element2.children[0].children[0].textContent] = [];
 				foldersData[element2.children[0].children[0].textContent].push(elementToSave);
+        added=true;
 			}
-
+         if(added){
 			localStorage.setItem("folderStructure", JSON.stringify(foldersData));
 
 			cloneElement.addEventListener("mousedown", (e) => {
@@ -415,6 +431,7 @@
 			});
 
 			element2.appendChild(cloneElement);
+         }
 		}
 	}
 
@@ -510,8 +527,16 @@
 		let nameOfFolder = null;
 
 		if (localFolder == null) {
+
+      var folderWrapper= document.createElement("div");
+   folderWrapper.style.display="flex";
+   folderWrapper.style.position = "sticky"
+   folderWrapper.style.flexDirection="column";
+
+
 			localFolder = document.createElement("div");
 			localFolder.classList.add("folder");
+      folderWrapper.appendChild(localFolder);
 			currentFolderName = document.createElement("div");
 			currentFolderName.classList.add("folderName");
 			nameOfFolder = document.createElement("span");
@@ -521,7 +546,21 @@
 			localFolder.appendChild(currentFolderName);
 
 			localFolder.style.width = "100%";
-			localFolder.style.height = "200px";
+			localFolder.style.height = folderSizes[folders[mode]];
+      if(localFolder.style.height==null)
+        {
+           localFolder.style.height="200px"
+           folderSizes[folders[mode]]=200;
+           localStorage.setItem("folderSizes", JSON.stringify(folderSizes));
+
+        }else
+      {
+        localFolder.style.height+="px";
+
+      }
+
+
+
 			localFolder.style.zIndex = "1";
 			localFolder.style.overflowX = "scroll";
 
@@ -555,7 +594,41 @@
 			});
 
 			closeWindow.addEventListener("click", function () {
-				parentSidebar.removeChild(localFolder);
+				parentSidebar.removeChild(folderWrapper);
+        openedFolders--;
+        if(openedFolders<=0)
+          {
+           let foldersDiv = document.querySelector(".folders");
+            foldersDiv.style.height=0+"px";
+          }
+			});
+
+     let randomButton=document.createElement("spam");
+      randomButton.style.float = "left";
+      randomButton.style.fontSize = "x-large";
+		  randomButton.textContent = "❔";
+      randomButton.style.marginLeft = "10px";
+      randomButton.addEventListener("mouseover", function () {
+				console.log("over random");
+			  randomButton.style.textShadow = "red 2px 0 20px";
+				randomButton.style.backgroundColor = "red";
+			});
+			randomButton.addEventListener("mouseout", function () {
+				randomButton.style.textShadow = "";
+				randomButton.style.backgroundColor = "transparent";
+			});
+	  randomButton.addEventListener("click", function () {
+
+      var element=foldersData[nameOfFolder.textContent][Math.floor(Math.random() *  foldersData[nameOfFolder.textContent].length)];
+
+					const randomX = getRandomPosition(400, 800);
+					const randomY = getRandomPosition(300, 600);
+					IC.createInstance({
+						"text": element.text,
+						"emoji": element.emoji,
+						"x": randomX,
+						"y": randomY,
+					})
 			});
 
 			minimizeMaximize.style.float = "left";
@@ -573,11 +646,11 @@
 			});
 
 			minimizeMaximize.addEventListener("click", function () {
-				if (localFolder.style.height == "200px") {
-					localFolder.style.height = "35px";
+				if (	minimizeMaximize.textContent=="🗕") {
+					localFolder.style.height = "45px";
 					minimizeMaximize.textContent = "🗖";
 				} else {
-					localFolder.style.height = "200px";
+					localFolder.style.height = 	folderSizes[nameOfFolder.textContent]+"px";
 					minimizeMaximize.textContent = "🗕";
 				}
 			});
@@ -638,17 +711,32 @@
 
 			currentFolderName.appendChild(minimizeMaximize);
 			currentFolderName.appendChild(closeWindow);
-
+      currentFolderName.appendChild(randomButton);
 			currentFolderName.appendChild(cleanP);
 
 			currentFolderName.appendChild(deleteFolderP);
 
 			localFolder.appendChild(document.createElement("br"));
 
-			parentSidebar.appendChild(localFolder);
+
+			parentSidebar.insertBefore(folderWrapper,parentSidebar.children[0]);
+
 		} else {
 			currentFolderName = localFolder.children[0];
 			nameOfFolder = currentFolderName.children[0];
+      localFolder.style.height = folderSizes[folders[mode]];
+      if(localFolder.style.height==null)
+        {
+           localFolder.style.height="200px"
+           folderSizes[folders[mode]]=200;
+           localStorage.setItem("folderSizes", JSON.stringify(folderSizes));
+
+        }else
+      {
+        localFolder.style.height+="px";
+
+      }
+
 			while (localFolder.firstChild) {
 				localFolder.firstChild.remove();
 			}
@@ -656,6 +744,35 @@
 		}
 
 		populateFolder(nameOfFolder.textContent, localFolder);
+    var finalDiv=document.createElement("div");
+    finalDiv.style.cursor="ns-resize";
+    finalDiv.style.height="3px";
+	  finalDiv.style.width="100%";
+    finalDiv.style.position="sticky";
+    finalDiv.style.top="100%";
+    let resizingLocal = false;
+    let startYLocal=0;
+    let startHeight =localFolder.offsetHeight;
+    finalDiv.addEventListener("mousedown",(e)=>{
+    resizingLocal  = true;
+		startYLocal = e.clientY;
+		startHeight =localFolder.offsetHeight;
+   function handleResize(e) {
+		if (!resizingLocal ) return;
+		const newHeight = startHeight + e.clientY - startYLocal;
+    if(newHeight<45)
+       newHeight=45;
+    folderSizes[nameOfFolder.textContent]=newHeight;
+    localStorage.setItem("folderSizes",JSON.stringify(folderSizes));
+		localFolder.style.height=newHeight+"px";
+    }
+    document.addEventListener("mousemove", handleResize);
+    document.addEventListener("mouseup", function() {
+			document.removeEventListener("mousemove", handleResize);
+		});
+    });
+
+    folderWrapper.appendChild(finalDiv);
 		console.log("Parent:", parentSidebar);
 	}
 
@@ -719,7 +836,14 @@
 	}
 
 	function switchTheStyle() {
-		buildFolder();
+
+    if(openedFolders==0)
+      {
+        		let foldersDiv = document.querySelector(".folders");
+            foldersDiv.style.height=foldersSize+"px";
+      }
+    openedFolders++;
+    	buildFolder();
 	}
 
 	function set_up_Folder_create_button() {
@@ -970,14 +1094,18 @@
 		if (localStorage.getItem("foldersNames") != null) {
 			folders = JSON.parse(localStorage.getItem("foldersNames"));
 		}
-
+if (localStorage.getItem("foldersContainerSize") != null) {
+			foldersSize = JSON.parse(localStorage.getItem("foldersContainerSize"));
+		}
 		if (localStorage.getItem("folderStructure") != null) {
 			foldersData = JSON.parse(localStorage.getItem("folderStructure"));
 			console.log(foldersData);
 		} else {
 			foldersData = {};
 		}
-
+if (localStorage.getItem("folderSizes") != null) {
+			folderSizes = JSON.parse(localStorage.getItem("folderSizes"));
+		}
 		const instanceObserver = new MutationObserver((mutations) => {
 			for (const mutation of mutations) {
 				console.log("mutation:", mutation);
@@ -1002,11 +1130,45 @@
 		let parentFolders = document.getElementsByClassName("sidebar-inner")[0];
 		let foldersDiv = document.createElement("div");
 		foldersDiv.classList.add("folders");
-		foldersDiv.style.position = "sticky";
 		foldersDiv.style.width = "100%";
 		foldersDiv.style.zIndex = "1";
 		foldersDiv.style.overflow = "auto";
-		parentFolders.insertBefore(foldersDiv, document.getElementsByClassName("items")[0]);
+    foldersDiv.style.height=0+"px";
+
+    var resizeFolders=document.createElement("div");
+    resizeFolders.style.cursor="ns-resize";
+    resizeFolders.style.height="3px";
+	  resizeFolders.style.width="100%";
+    let resizing = false;
+    let startY=0;
+    let startHeight =foldersDiv.offsetHeight;
+    resizeFolders.addEventListener("mousedown",(e)=>{
+    resizing = true;
+		startY = e.clientY;
+		startHeight = foldersDiv.offsetHeight;
+   function handleResize(e) {
+		if (!resizing) return;
+		const newHeight = startHeight + e.clientY - startY;
+    foldersSize=newHeight;
+    localStorage.setItem("foldersContainerSize",foldersSize);
+		foldersDiv.style.height=newHeight+"px";
+
+	}
+		document.addEventListener("mousemove", handleResize);
+		document.addEventListener("mouseup", function() {
+			resizing = false;
+			document.removeEventListener("mousemove", handleResize);
+		});
+    });
+
+    var foldersWrapper= document.createElement("div");
+    foldersWrapper.style.display="flex";
+    foldersWrapper.style.position = "sticky"
+    foldersWrapper.style.flexDirection="column";
+    foldersWrapper.appendChild(foldersDiv);
+    foldersWrapper.appendChild(resizeFolders);
+    foldersWrapper.style.border="1px solid var(--border-color)";
+		parentFolders.insertBefore(foldersWrapper, document.getElementsByClassName("items")[0]);
 	}
 	window.addEventListener(
 		"load",

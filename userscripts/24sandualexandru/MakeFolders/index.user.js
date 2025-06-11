@@ -603,7 +603,7 @@
           }
 			});
 
-     let randomButton=document.createElement("spam");
+     let randomButton=document.createElement("span");
       randomButton.style.float = "left";
       randomButton.style.fontSize = "x-large";
 		  randomButton.textContent = "❔";
@@ -618,7 +618,8 @@
 				randomButton.style.backgroundColor = "transparent";
 			});
 	  randomButton.addEventListener("click", function () {
-
+      if(foldersData[nameOfFolder.textContent]!=null && foldersData[nameOfFolder.textContent].length>0)
+        {
       var element=foldersData[nameOfFolder.textContent][Math.floor(Math.random() *  foldersData[nameOfFolder.textContent].length)];
 
 					const randomX = getRandomPosition(400, 800);
@@ -629,6 +630,7 @@
 						"x": randomX,
 						"y": randomY,
 					})
+        }
 			});
 
 			minimizeMaximize.style.float = "left";

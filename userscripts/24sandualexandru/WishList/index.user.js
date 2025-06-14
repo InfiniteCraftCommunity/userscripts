@@ -13,14 +13,66 @@
 
 var listOfElements=["Wish"]
    var doneElements=[]
+
+
+   	function confirmPrompt(doStuff, extraPrompt = "") {
+		let parent = document.querySelector(".container");
+
+		let dialog = document.createElement("dialog");
+		let label = document.createElement("label");
+
+		let saveButton = document.createElement("button");
+		let closeButton = document.createElement("button");
+		label.textContent = "Confirm or cancel " + extraPrompt;
+		closeButton.textContent = "Close without saving";
+		saveButton.textContent = "Confirm";
+
+		saveButton.style.float = "right";
+		closeButton.style.float = "left";
+		saveButton.addEventListener("click", function () {
+			doStuff();
+			dialog.close();
+		});
+
+		closeButton.addEventListener("click", function () {
+			dialog.close();
+		});
+		dialog.appendChild(label);
+		dialog.appendChild(document.createElement("br"));
+		dialog.appendChild(document.createElement("br"));
+
+		dialog.appendChild(saveButton);
+		dialog.appendChild(closeButton);
+
+		dialog.style.position = "absolute";
+		dialog.style.top = "33%";
+		dialog.style.left = "25%";
+		dialog.style.background = window.getComputedStyle(document.querySelector(".container")).getPropertyValue("--background-color").trim();
+		dialog.style.color = window.getComputedStyle(document.querySelector(".container")).getPropertyValue("--text-color").trim();
+
+		parent.appendChild(dialog);
+		dialog.showModal();
+	}
+
+
+
+
+
+
+
+
+
+
    function updateList()
   {
-    var listModal=document.querySelector(".wish-modal");
+    let listModal=document.querySelector(".wish-modal");
     if(listModal==null)
       {
          listModal=document.createElement("dialog");
+         listModal.classList.add("wish-modal");
          document.querySelector(".container").appendChild(listModal);
       }
+       listModal.close();
        listModal.innerHTML="";
        listModal.style.width="300px";
        listModal.style.height="500px";
@@ -46,11 +98,12 @@ var listOfElements=["Wish"]
                listModal.removeChild(input);
 
                var itemDiv=document.createElement("div");
+                itemDiv.style.width="100%";
                var textNode=document.createTextNode(input.value);
 
                itemDiv.appendChild(textNode);
                listModal.appendChild(itemDiv);
-
+               updateList();
            }
 
 
@@ -62,7 +115,7 @@ var listOfElements=["Wish"]
 
     listModal.appendChild(addButton);
 
-    for(var item of listOfElements){
+    for(let item of listOfElements){
        var itemDiv=document.createElement("div");
        var textNode=document.createTextNode(item);
           if(doneElements.includes(item))
@@ -72,8 +125,50 @@ var listOfElements=["Wish"]
          itemDiv.appendChild(checkNode);
 
         }
-
+        itemDiv.style.display = "flex";
+        itemDiv.style.justifyContent = "space-between";
+        itemDiv.style.alignItems = "center";
        itemDiv.appendChild(textNode);
+        let closeButton=document.createElement("span");
+         closeButton.textContent="❌";
+         closeButton.style.marginLeft = "auto";
+         closeButton.style.fontSize = "x-large";
+
+			 closeButton.addEventListener("mouseover", function () {
+				console.log("over maximize");
+				 closeButton.style.textShadow = "red 2px 0 20px";
+				 closeButton.style.backgroundColor = "red";
+			});
+			 closeButton.addEventListener("mouseout", function () {
+				 closeButton.style.textShadow = "";
+				 closeButton.style.backgroundColor = "transparent";
+			});
+
+			 closeButton.addEventListener("click", function () {
+       confirmPrompt(()=>
+                 {
+            const index = listOfElements.indexOf( item );
+           if (index > -1) {
+              listOfElements.splice(index, 1); // Removes the first 2
+               localStorage.setItem("wishList",JSON.stringify(listOfElements));
+
+                updateList();
+
+           }
+           });
+
+
+			});
+
+
+
+
+
+
+
+         itemDiv.appendChild(closeButton);
+
+
       listModal.appendChild(itemDiv);
     }
     listModal.addEventListener("mousedown", function(e) {

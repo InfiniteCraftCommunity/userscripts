@@ -135,14 +135,17 @@ window.addEventListener("load",()=>{
 
    if(result && result.text)
      {
+          if(recentData.find(x=>x.text==result.text)==null){
            var item= IC.getItems().find(x=>x.text==result.text);
-             if(item)
+             if(item )
               {
                 recentData.unshift({"text":result.text,"emoji":result.emoji,"id":item.id});
+
               }else
                {
                 recentData.unshift({"text":result.text,"emoji":result.emoji,"id":IC.getItems().length});
                }
+          }
        if(recentData.length>recentSize)
         {
           trimArray(recentData,recentSize);

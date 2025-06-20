@@ -35,7 +35,7 @@
 		let saveButton = document.createElement("button");
 		let closeButton = document.createElement("button");
 		label.textContent = "Confirm or cancel " + extraPrompt;
-		closeButton.textContent = "Close without saving";
+		closeButton.textContent = "Cancel";
 		saveButton.textContent = "Confirm";
 
 		saveButton.style.float = "right";
@@ -430,11 +430,56 @@
         "{FE0C}": "Variation Selector 13",
         "{FE0D}": "Variation Selector 14",
         "{FE0E}": "Variation Selector 15",
-        "{FE0F}": "Variation Selector 16"
+        "{FE0F}": "Variation Selector 16"}
 
-    };
-    str=str.replace(/[\u0001-\u200D\uFE00-\uFFFF]/g, match => charMap[match] || match);
+   const emojiList = new Set([
+  "#️","\*️","0️","1️","2️","3️","4️","5️","6️","7️","8️","9️","©️","®️","‼️","⁉️","⃣️","™️","ℹ️","↔️","↕️","↖️","↗️","↘️","↙️","↩️","↪️","⌨️","⏏️","⏭️","⏮️","⏯️","⏱️","⏲️","⏸️","⏹️","⏺️","Ⓜ️","▪️","▫️","▶️","◀️","◻️","◼️","☀️","☁️","☂️","☃️","☄️","☎️","☑️","☘️","☝️","☠️","☢️","☣️","☦️","☪️","☮️","☯️","☸️","☹️","☺️","♀️","♂️","♟️","♠️","♣️","♥️","♦️","♨️","♻️","♾️","⚒️","⚔️","⚕️","⚖️","⚗️","⚙️","⚛️","⚜️","⚠️","⚧️","⚰️","⚱️","⛈️","⛑️","⛓️","⛩️","⛰️","⛱️","⛴️","⛷️","⛸️","⛹️","✂️","✈️","✉️","✌️","✍️","✏️","✒️","✔️","✖️","✝️","✡️","✳️","✴️","❄️","❇️","❣️","❤️","⤴️","⤵️","⬅️","⬆️","⬇️","〰️","〽️","🅰️","🅱️","🅾️","🅿️","🈂️","🈷️","🌡️","🌤️","🌥️","🌦️","🌧️","🌨️","🌩️","🌪️","🌫️","🌬️","🌶️","🍽️","🎖️","🎗️","🎙️","🎚️","🎛️","🎞️","🎟️","🏋️","🏌️","🏍️","🏎️","🏔️","🏕️","🏖️","🏗️","🏘️","🏙️","🏚️","🏛️","🏜️","🏝️","🏞️","🏟️","🏳️","🏴️","🏵️","🏷️","🐿️","🕉️","🕊️","🕯️","🕰️","🕳️","🕴️","🕵️","🕶️","🕷️","🕸️","🕹️","🖊️","🖋️","🖌️","🖍️","🖐️","🖥️","🖨️","🖱️","🖲️","🖼️","🗂️","🗃️","🗄️","🗑️","🗒️","🗓️","🗜️","🗝️","🗞️","🗡️","🗣️","🗨️","🗯️","🗳️","🗺️","🛋️","🛍️","🛎️","🛏️","🛠️","🛡️","🛢️","🛣️","🛤️","🛥️","🛩️","🛰️","🛳️"]);
 
+function codePointToUnicodeEscape(codePoint) {
+
+ return String.fromCodePoint(codePoint);
+
+}
+
+
+function replaceUnwantedChars(str) {
+
+  const chars = Array.from(str); // Properly handle surrogate pairs
+  let output = [];
+ console.log("Chars:",chars);
+  for (let i = 0; i < chars.length; i++) {
+    const current = chars[i];
+
+    const code = current.codePointAt(0);
+
+    // Check if the current character is in the target range
+    const inRange =
+      (code >= 1 && code <= 0x001F) ||
+      (code >= 0x200C && code <= 0x200D) ||
+      (code >= 0xFE00 && code <= 0xFFFF);
+
+    // Check previous character (can include emoji + variation selector)
+    const prev = chars[i - 1] ?? "";
+    const lookbehind = (prev + current).normalize();
+
+    const precededByEmoji = emojiList.has(lookbehind);
+
+    if (inRange && !precededByEmoji) {
+
+      let key=codePointToUnicodeEscape(code);
+
+      output.push(charMap[key]); // Replace it
+    } else {
+
+      output.push(current); // Keep as is
+    }
+  }
+ console.log("output:",output);
+  return output.join("");
+}
+
+    str=replaceUnwantedChars(str);
+    console.log("EDITED:",str)
     str=str.toLowerCase();
     var entries=Object.entries(replacers);
     for(let entry of entries)
@@ -447,10 +492,10 @@
     for(let entry of extraEntries)
       {
 
-        str=str.replace(entry[0].toLowerCase(),entry[1]);
+        str=str.replace(new RegExp(entry[0].toLowerCase(), 'gui'),entry[1]);
 
       }
-
+console.log("string:"+str);
 return str;
 }
     var cleanedText= replaceSpecialCharacters(result.text)

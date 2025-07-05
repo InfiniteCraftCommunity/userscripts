@@ -3,7 +3,7 @@
 // @namespace   Violentmonkey Scripts
 // @match       https://neal.fun/infinite-craft/*
 // @grant       none
-// @version     1.0
+// @version     1.75
 // @author      -
 // @description 7/2/2025, 10:33:18 PM
 // ==/UserScript==
@@ -332,15 +332,17 @@ function moveToFront(arr, element) {
 		return elementToSave;
 	}
 
-	function AtIntersection(element1, element2) {
+	function AtIntersection(element1, element2, parentElement) {
 		console.log("intersection happends");
 
 		const rect1 = element1.getBoundingClientRect();
 		const rect2 = element2.getBoundingClientRect();
-
+    const rect3= parentElement.getBoundingClientRect();
 		console.log("atinter el1", element1);
 
-		if (rect1.x < rect2.x + rect2.width && rect1.x + rect1.width > rect2.x && rect1.y < rect2.y + rect2.height && rect1.y + rect1.height > rect2.y) {
+		if (rect1.x < rect2.x + rect2.width && rect1.x + rect1.width > rect2.x && rect1.y < rect2.y + rect2.height && rect1.y + rect1.height > rect2.y)
+    if (rect1.x < rect3.x + rect3.width && rect1.x + rect1.width > rect3.x && rect1.y < rect3.y + rect3.height && rect1.y + rect1.height > rect3.y)
+    {
 			let cloneElement = element1.cloneNode(true);
       	let discovered = false;
 
@@ -603,7 +605,7 @@ if (localStorage.getItem("folderSizes") != null) {
 						if (node.id != "instance-0" && !node.classList.contains("background-instance")) {
 							node.addEventListener("mouseup", (event) => {
 								console.log(event.clientX, event.clientY);
-								for (let folder of document.querySelectorAll(".folderContent")) AtIntersection(node, folder);
+								for (let folder of document.querySelectorAll(".folderContent")) AtIntersection(node, folder,document.querySelector(".popupFolders"));
 							});
 						}
 					}
@@ -654,7 +656,7 @@ if (localStorage.getItem("folderSizes") != null) {
           mockDialog.appendChild(actionsBar);
           mockDialog.appendChild(content);
           content.style.overflowY="auto";
-          content.style.height="400px";
+          content.style.height="100%";
           mockDialog.style.resize="both";
           content.style.width="500px";
 	    //    content.style.resize="both";
@@ -717,11 +719,12 @@ if (localStorage.getItem("folderSizes") != null) {
       if(foldersData[currentFolderName]!=null && foldersData[currentFolderName].length>0)
         {
       var element=foldersData[currentFolderName][Math.floor(Math.random() *  foldersData[currentFolderName].length)];
-
+       let source=IC.getItems().find(x=>x.text==element.text);
 					const randoms = getRandomPositionXY(0, 800,(document.querySelector("#sidebar").getBoundingClientRect().left/2-150),400,100,500);
 					IC.createInstance({
 						"text": element.text,
 						"emoji": element.emoji,
+            "itemId":source.id,
 						"x": randoms[0],
 						"y": randoms[1]
 					})
@@ -765,6 +768,10 @@ if (localStorage.getItem("folderSizes") != null) {
 			});
 			deleteFolderP.addEventListener("click", function () {
 				confirmPrompt(function () {
+
+        if(folders.length>1)
+          {
+
 	        delete foldersData[currentFolderName];
 					folders = folders.slice(0, folders.indexOf(currentFolderName)).concat(folders.slice(folders.indexOf(currentFolderName) + 1));
           if(openFolders.includes(currentFolderName))
@@ -777,7 +784,7 @@ if (localStorage.getItem("folderSizes") != null) {
 					localStorage.setItem("folderStructure", JSON.stringify(foldersData));
 					localStorage.setItem("foldersNames", JSON.stringify(folders));
           updateAndShowDialog();
-
+          }
 				}, "Deleting folder");
 
 			});
@@ -1019,8 +1026,8 @@ initTheAlphabeth();
   FoldersImage.style.position="absolute";
    FoldersImage.style.height="50px";
    FoldersImage.style.width="50px";
-   FoldersImage.style.top="7px";
-   FoldersImage.style.left="200px";
+   FoldersImage.style.bottom="5px";
+   FoldersImage.style.left="100px";
   parentF.appendChild(FoldersImage);
 
 

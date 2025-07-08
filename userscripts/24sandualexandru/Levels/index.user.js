@@ -69,6 +69,8 @@ function computeScoreTillNextLevel(score)
     {
       var intermediate=score-100000;
 
+
+         return 10000-intermediate%10000;;
     }
 
  }
@@ -165,7 +167,7 @@ levelDiv.appendChild(scoreSpan);
      }
     else
     {
-      level=1+(score-100000)%10000;
+      level=1+(Math.ceil((score-100000)/10000));
     }
 
      return level;
@@ -238,6 +240,25 @@ window.addEventListener("load",async ()=>{
      GM.setValue("levelScore",score);
 
      var level=await computeLevel(score);
+     if(await GM.getValue("levelByAlex"))
+    {
+      let savedLevel=JSON.parse(await GM.getValue("levelByAlex"));
+      console.log("Saved vs new", savedLevel,level)
+      if(savedLevel<level)
+       {
+         let color=colorPalette[Math.floor(Math.random() * colorPalette.length)];
+         await GM.setValue("levelColor",color);
+         await GM.setValue("levelByAlex",level); 
+
+       }
+
+    }else
+      {
+       await  GM.setValue("levelByAlex",JSON.stringify(level));
+
+
+      }
+
      var color=await GM.getValue("levelColor");
       if(color==null)
        {

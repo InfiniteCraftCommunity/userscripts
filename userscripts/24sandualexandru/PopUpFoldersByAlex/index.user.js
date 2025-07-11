@@ -3,7 +3,7 @@
 // @namespace   Violentmonkey Scripts
 // @match       https://neal.fun/infinite-craft/*
 // @grant       none
-// @version     1.75
+// @version     1.5
 // @author      -
 // @description 7/2/2025, 10:33:18 PM
 // ==/UserScript==
@@ -655,10 +655,19 @@ if (localStorage.getItem("folderSizes") != null) {
           mockDialog.appendChild(folderTitlesBar);
           mockDialog.appendChild(actionsBar);
           mockDialog.appendChild(content);
-          content.style.overflowY="auto";
-          content.style.height="100%";
+
           mockDialog.style.resize="both";
           content.style.width="500px";
+          mockDialog.style.display="flex";
+          mockDialog.style.flexDirection="column";
+          content.style.overflowY="auto";
+          content.style.flex="1";
+         mockDialog.addEventListener('wheel', (e) => {
+          console.log("wheel")
+          content.scrollTop = e.deltaY;
+         });
+
+
 	    //    content.style.resize="both";
       for (let el of foldersData[currentFolderName]) {
 				let item = elementToItem(el, currentFolderName, content);
@@ -1038,7 +1047,13 @@ FoldersImage.addEventListener("click",(k)=>{
 
 });
 
+FoldersImage.addEventListener("dblclick",(k)=>{
 
+   confirmPrompt(()=>{
+     document.querySelector(".popupFolders").parentNode.removeChild( document.querySelector(".popupFolders"));
+   },"Close the folders popup")
+
+});
 
 
 

@@ -678,11 +678,13 @@ if (localStorage.getItem("folderSizes") != null) {
 			let deleteFolderP = document.createElement("span");
 			let closeWindow = document.createElement("span");
       let randomButton=document.createElement("span");
+      let listButton=document.createElement("span");
 
       actionsBar.appendChild(cleanP);
       actionsBar.appendChild(deleteFolderP);
       actionsBar.appendChild(closeWindow );
       actionsBar.appendChild(randomButton);
+      actionsBar.appendChild(listButton);
       actionsBar.style.height="30px";
       actionsBar.style.backgroundColor="var(--border-color)";
 
@@ -739,7 +741,100 @@ if (localStorage.getItem("folderSizes") != null) {
 					})
         }
 			});
+     listButton.style.float = "left";
+			listButton.style.fontSize = "x-large";
+			listButton.style.marginLeft = "10px";
+      listButton.textContent="📝"
+      listButton.addEventListener("click",()=>{
+        let listElements=[];
+        let listDialog=document.createElement("dialog");
+        let closeButton=document.createElement("span");
+        closeButton.textContent="❌";
+        closeButton.style.float="right";
+        closeButton.addEventListener("click",()=>{
+          listDialog.close();
+        })
+       closeButton.addEventListener("mouseover",()=>{
+         closeButton.style.backgroundColor="red";
+        })
 
+        closeButton.addEventListener("mouseout",()=>{
+         closeButton.style.backgroundColor="transparent";
+        })
+
+
+
+        listDialog.appendChild(closeButton);
+         listDialog.style.width="300px";
+         listDialog.style.height="300px";
+         let textPrompt="Elements ("+listElements.length+")";
+         let textP=document.createElement("p");
+         textP.textContent=textPrompt;
+         listDialog.appendChild(textP);
+
+         let textArea=document.createElement("textarea");
+         textArea.style.resize="none";
+         textArea.style.width="200px";
+         textArea.style.height="200px";
+         textArea.style.overflowY="auto";
+         textArea.addEventListener("input",()=>{
+
+           let elenents=textArea.value.split("\n");
+           const uniqueList = [...new Set(elenents)];
+           listElements=[];
+           for(let element of uniqueList)
+            {
+              if(IC.getItems().find(x=>x.text.toLowerCase()==element.toLowerCase()))
+                {
+                  listElements.push(element);
+                }
+
+            }
+           textPrompt="Elements ("+listElements.length+")";
+           textP.textContent=textPrompt;
+         })
+
+        let addButton=document.createElement("button");
+         addButton.textContent="Add";
+         addButton.style.backgroundColor="hsl(202, 60%, 46%)";
+         addButton.addEventListener("click",()=>{
+            listDialog.close();
+           for(let text of listElements)
+           {
+            let item=IC.getItems().find(x=>x.text.toLowerCase()==text.toLowerCase());
+            item.discovered=item.discovery;
+            found=foldersData[ currentFolderName].find(x=>x.text.toLowerCase()==item.text.toLowerCase());
+             if(!found)
+             {
+            foldersData[currentFolderName].push(item);
+             }
+
+           }
+           	localStorage.setItem("folderStructure", JSON.stringify(foldersData));
+           updateAndShowDialog();
+         });
+         addButton.addEventListener("mouseover",()=>{
+             addButton.style.backgroundColor="hsl(202, 50%, 36%)";
+         });
+
+           addButton.addEventListener("mouseout",()=>{
+             addButton.style.backgroundColor="hsl(202, 60%, 46%)";
+         });
+
+
+         listDialog.appendChild(textArea);
+         listDialog.appendChild(document.createElement("br"));
+         listDialog.appendChild(addButton);
+         listDialog.style.position="absolute";
+         listDialog.style.top="50%";
+         listDialog.style.left="50%";
+         listDialog.style.transform="translate(-50%, -50%)";
+
+
+         document.querySelector(".container").appendChild(listDialog);
+          listDialog.showModal();
+
+      });
 
 			cleanP.style.float = "right";
 			deleteFolderP.style.float = "right";

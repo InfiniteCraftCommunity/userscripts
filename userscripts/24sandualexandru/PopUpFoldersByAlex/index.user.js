@@ -3,7 +3,7 @@
 // @namespace   Violentmonkey Scripts
 // @match       https://neal.fun/infinite-craft/*
 // @grant       none
-// @version     1.75
+// @version     1.5
 // @author      -
 // @description 7/2/2025, 10:33:18 PM
 // ==/UserScript==
@@ -36,7 +36,14 @@ function moveToFront(arr, element) {
   }
   return arr;
 }
-
+  const findDuplicates = arr => {
+  const seen = new Set();
+  return arr.filter(item => {
+    if (seen.has(item.toLowerCase())) return true;
+    seen.add(item.toLowerCase());
+    return false;
+  });
+};
  	function confirmPrompt(doStuff, extraPrompt = "") {
 		let parent = document.querySelector(".container");
 
@@ -655,10 +662,19 @@ if (localStorage.getItem("folderSizes") != null) {
           mockDialog.appendChild(folderTitlesBar);
           mockDialog.appendChild(actionsBar);
           mockDialog.appendChild(content);
-          content.style.overflowY="auto";
-          content.style.height="100%";
+
           mockDialog.style.resize="both";
           content.style.width="500px";
+          mockDialog.style.display="flex";
+          mockDialog.style.flexDirection="column";
+          content.style.overflowY="auto";
+          content.style.flex="1";
+         mockDialog.addEventListener('wheel', (e) => {
+          console.log("wheel")
+          content.scrollTop = e.deltaY;
+         });
+
+
 	    //    content.style.resize="both";
       for (let el of foldersData[currentFolderName]) {
 				let item = elementToItem(el, currentFolderName, content);
@@ -669,11 +685,13 @@ if (localStorage.getItem("folderSizes") != null) {
 			let deleteFolderP = document.createElement("span");
 			let closeWindow = document.createElement("span");
       let randomButton=document.createElement("span");
+      let listButton=document.createElement("span");
 
       actionsBar.appendChild(cleanP);
       actionsBar.appendChild(deleteFolderP);
       actionsBar.appendChild(closeWindow );
       actionsBar.appendChild(randomButton);
+      actionsBar.appendChild(listButton);
       actionsBar.style.height="30px";
       actionsBar.style.backgroundColor="var(--border-color)";
 
@@ -730,7 +748,139 @@ if (localStorage.getItem("folderSizes") != null) {
 					})
         }
 			});
+     listButton.style.float = "left";
+			listButton.style.fontSize = "x-large";
+			listButton.style.marginLeft = "10px";
+      listButton.textContent="📝"
+      listButton.addEventListener("click",()=>{
+        let listElements=[];
+        let listDialog=document.createElement("dialog");
+        let closeButton=document.createElement("span");
+        let typosP=document.createElement("p");
+        let duplicatedP=document.createElement("p");
+        let typos=[];
+        closeButton.textContent="❌";
+        closeButton.style.float="right";
+        closeButton.addEventListener("click",()=>{
+          listDialog.close();
+        })
+       closeButton.addEventListener("mouseover",()=>{
+         closeButton.style.backgroundColor="red";
+        })
 
+        closeButton.addEventListener("mouseout",()=>{
+         closeButton.style.backgroundColor="transparent";
+        })
+
+
+
+        listDialog.appendChild(closeButton);
+         listDialog.style.width="300px";
+         listDialog.style.height="300px";
+         let textPrompt="Elements ("+listElements.length+")";
+         let textP=document.createElement("p");
+         textP.textContent=textPrompt;
+         listDialog.appendChild(textP);
+
+         let textArea=document.createElement("textarea");
+         textArea.style.resize="none";
+         textArea.style.width="200px";
+         textArea.style.height="200px";
+         textArea.style.overflowY="auto";
+         textArea.addEventListener("input",()=>{
+
+           let elenents=textArea.value.split("\n");
+           const uniqueList = [...new Set(elenents)];
+           listElements=[];
+           typos=[];
+           let duplicatedLines=findDuplicates(elenents).filter(x=>x.trim()!="");
+           for(let element of uniqueList)
+            {
+              if(IC.getItems().find(x=>x.text.toLowerCase()==element.toLowerCase()))
+                {
+                  listElements.push(element);
+                }else
+                  {
+                    typos.push( element);
+                  }
+
+            }
+           textPrompt="Elements ("+listElements.length+")";
+           textP.textContent=textPrompt;
+           typos=typos.filter(x=>x.trim()!="")
+           if(typos.length>0)
+           {
+
+              typosP.textContent="Elements you don't have in the savefile ("+typos.length+"):\n ";
+            for(let typo of typos)
+              {
+
+                       typosP.textContent = typosP.textContent+typo+", " ;
+
+              }
+           }else
+             {
+                typosP.textContent="";
+             }
+            if(duplicatedLines.length>0)
+         {
+                duplicatedP.textContent="Duplicated Lines ("+duplicatedLines.length+"):\n "
+              let uniqueDuplicated=[...new Set(duplicatedLines)]
+            for(let duplicated of uniqueDuplicated)
+              {
+
+                    duplicatedP.textContent = duplicatedP.textContent+duplicated+", " ;
+
+              }
+         }else{
+            duplicatedP.textContent="";
+         }
+
+         })
+
+        let addButton=document.createElement("button");
+         addButton.textContent="Add";
+         addButton.style.backgroundColor="hsl(202, 60%, 46%)";
+         addButton.addEventListener("click",()=>{
+            listDialog.close();
+           for(let text of listElements)
+           {
+            let item=IC.getItems().find(x=>x.text.toLowerCase()==text.toLowerCase());
+            item.discovered=item.discovery;
+            found=foldersData[ currentFolderName].find(x=>x.text.toLowerCase()==item.text.toLowerCase());
+             if(!found)
+             {
+            foldersData[currentFolderName].push(item);
+             }
+
+           }
+           	localStorage.setItem("folderStructure", JSON.stringify(foldersData));
+           updateAndShowDialog();
+         });
+         addButton.addEventListener("mouseover",()=>{
+             addButton.style.backgroundColor="hsl(202, 50%, 36%)";
+         });
+
+           addButton.addEventListener("mouseout",()=>{
+             addButton.style.backgroundColor="hsl(202, 60%, 46%)";
+         });
+
+
+         listDialog.appendChild(textArea);
+         listDialog.appendChild(document.createElement("br"));
+         listDialog.appendChild(addButton);
+         listDialog.appendChild(typosP);
+         listDialog.appendChild(duplicatedP);
+         listDialog.style.position="absolute";
+         listDialog.style.top="50%";
+         listDialog.style.left="50%";
+         listDialog.style.transform="translate(-50%, -50%)";
+
+
+         document.querySelector(".container").appendChild(listDialog);
+          listDialog.showModal();
+
+      });
 
 			cleanP.style.float = "right";
 			deleteFolderP.style.float = "right";
@@ -1038,7 +1188,13 @@ FoldersImage.addEventListener("click",(k)=>{
 
 });
 
+FoldersImage.addEventListener("dblclick",(k)=>{
 
+   confirmPrompt(()=>{
+     document.querySelector(".popupFolders").parentNode.removeChild( document.querySelector(".popupFolders"));
+   },"Close the folders popup")
+
+});
 
 
 

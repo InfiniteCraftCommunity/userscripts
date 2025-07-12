@@ -749,6 +749,8 @@ if (localStorage.getItem("folderSizes") != null) {
         let listElements=[];
         let listDialog=document.createElement("dialog");
         let closeButton=document.createElement("span");
+        let typosP=document.createElement("p");
+        let typos=[];
         closeButton.textContent="❌";
         closeButton.style.float="right";
         closeButton.addEventListener("click",()=>{
@@ -782,16 +784,36 @@ if (localStorage.getItem("folderSizes") != null) {
            let elenents=textArea.value.split("\n");
            const uniqueList = [...new Set(elenents)];
            listElements=[];
+           typos=[];
            for(let element of uniqueList)
             {
               if(IC.getItems().find(x=>x.text.toLowerCase()==element.toLowerCase()))
                 {
                   listElements.push(element);
-                }
+                }else
+                  {
+                    typos.push( element);
+                  }
 
             }
            textPrompt="Elements ("+listElements.length+")";
            textP.textContent=textPrompt;
+           typos=typos.filter(x=>x.trim()!="")
+           if(typos.length>0)
+           {
+
+              typosP.textContent="Elements you don't have in the savefile ("+typos.length+"):\n ";
+            for(let typo of typos)
+              {
+
+                       typosP.textContent = typosP.textContent+typo+", " ;
+
+              }
+           }else
+             {
+                typosP.textContent="";
+             }
+
          })
 
         let addButton=document.createElement("button");
@@ -825,6 +847,7 @@ if (localStorage.getItem("folderSizes") != null) {
          listDialog.appendChild(textArea);
          listDialog.appendChild(document.createElement("br"));
          listDialog.appendChild(addButton);
+         listDialog.appendChild(typosP);
          listDialog.style.position="absolute";
          listDialog.style.top="50%";
          listDialog.style.left="50%";

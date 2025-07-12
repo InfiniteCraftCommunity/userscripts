@@ -36,7 +36,14 @@ function moveToFront(arr, element) {
   }
   return arr;
 }
-
+  const findDuplicates = arr => {
+  const seen = new Set();
+  return arr.filter(item => {
+    if (seen.has(item.toLowerCase())) return true;
+    seen.add(item.toLowerCase());
+    return false;
+  });
+};
  	function confirmPrompt(doStuff, extraPrompt = "") {
 		let parent = document.querySelector(".container");
 
@@ -750,6 +757,7 @@ if (localStorage.getItem("folderSizes") != null) {
         let listDialog=document.createElement("dialog");
         let closeButton=document.createElement("span");
         let typosP=document.createElement("p");
+        let duplicatedP=document.createElement("p");
         let typos=[];
         closeButton.textContent="❌";
         closeButton.style.float="right";
@@ -785,6 +793,7 @@ if (localStorage.getItem("folderSizes") != null) {
            const uniqueList = [...new Set(elenents)];
            listElements=[];
            typos=[];
+           let duplicatedLines=findDuplicates(elenents).filter(x=>x.trim()!="");
            for(let element of uniqueList)
             {
               if(IC.getItems().find(x=>x.text.toLowerCase()==element.toLowerCase()))
@@ -813,6 +822,19 @@ if (localStorage.getItem("folderSizes") != null) {
              {
                 typosP.textContent="";
              }
+            if(duplicatedLines.length>0)
+         {
+                duplicatedP.textContent="Duplicated Lines ("+duplicatedLines.length+"):\n "
+              let uniqueDuplicated=[...new Set(duplicatedLines)]
+            for(let duplicated of uniqueDuplicated)
+              {
+
+                    duplicatedP.textContent = duplicatedP.textContent+duplicated+", " ;
+
+              }
+         }else{
+            duplicatedP.textContent="";
+         }
 
          })
 
@@ -848,6 +870,7 @@ if (localStorage.getItem("folderSizes") != null) {
          listDialog.appendChild(document.createElement("br"));
          listDialog.appendChild(addButton);
          listDialog.appendChild(typosP);
+         listDialog.appendChild(duplicatedP);
          listDialog.style.position="absolute";
          listDialog.style.top="50%";
          listDialog.style.left="50%";

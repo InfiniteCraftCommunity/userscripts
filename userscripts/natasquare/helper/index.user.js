@@ -268,6 +268,13 @@ const css = `
 	display: flex;
 	gap: 6px;
 	align-items: center;
+	order: 0;
+}
+
+.recipe-modal-body .recipe-modal-body-inner[data-tab-id=recipes] .recipe.useless,
+.recipe-modal-body .recipe-modal-body-inner[data-tab-id=usages] .recipe.useless {
+	order: 1;
+	opacity: .7;
 }
 
 .recipe-modal-footer {
@@ -570,10 +577,47 @@ exported.addUsage = addUsage;
 const recipeModalTabs = new Map();
 exported.recipeModalTabs = recipeModalTabs;
 
+// what was i cooking with this
+function getUselessRecipes(recipes, result) {
+	const uselessRecipes = new Set(),
+		promotees = new Set();
+	let hasPure = false;
+	for (const recipe of recipes) {
+		const [a, b] = recipe;
+		if (a === result || b === result) {
+			uselessRecipes.add(recipe);
+		}
+		else if (a < 4 && b < 4) {
+			hasPure = true;
+			break;
+		}
+		else if (a < 4 || b < 4) {
+			promotees.add(a < 4 ? b : a);
+		}
+	}
+	if (hasPure) {
+		for (const recipe of recipes) {
+			const [a, b] = recipe;
+			if (a > 3 || b > 3)
+				uselessRecipes.add(recipe);
+		}
+		return uselessRecipes
+	}
+	if (promotees.size > 0) {
+		for (const recipe of recipes) {
+			const [a, b] = recipe;
+			if ((a > 3 && b > 3) && (promotees.has(a) || promotees.has(b)))
+				uselessRecipes.add(recipe);
+		}
+	}
+	return uselessRecipes;
+}
+
 function renderRecipeBody(container, item) {
 	if (!item.recipes || item.recipes.length < 1)
-		container.appendChild(document.createTextNode("No recipes recorded for this element."));
-	else for (const r of item.recipes) {
+		return container.appendChild(document.createTextNode("No recipes recorded for this element."));
+	const uselessRecipes = getUselessRecipes(item.recipes, item.id);
+	for (const r of item.recipes) {
 		const recipe = document.createElement("div");
 		recipe.classList.add("recipe");
 		// no need to worry about refreshing since that's done when opening modal already
@@ -587,6 +631,7 @@ function renderRecipeBody(container, item) {
 			document.createTextNode("+"),
 			createItemElement(itemB)
 		);
+		if (uselessRecipes.has(r)) recipe.classList.add("useless");
 		container.appendChild(recipe);
 	}
 	return container;

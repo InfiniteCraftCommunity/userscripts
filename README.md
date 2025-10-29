@@ -19,21 +19,6 @@ AdjustInfiniBrowserLineages | ✅ **Updated**
 PrivateServer | ✅ **Updated**
 Chromatic_themes | ✅ **Updated**
 MakeFolders | ✅ **Updated**
-Alt-Lineages | ✅ **Updated**
-ColorProven | ✅ **Updated**
-
-<!--
-## ✨ Popular Userscripts
-
-Name | Description
----- | -----------
-[MBS](userscripts/MBS) | Adds even more useful features to Infinite Craft
-[Infinite Craft Helper](userscripts/InfiniteCraftHelper) | Adds useful features to Infinite Craft
-[BetterRandomButton](userscripts/BetterRandomButton) | A better Random Element Button
-[gm_abuse](userscripts/gm_abuse) | Moves your savefile to the script's storage, allowing bigger savefiles to be used
-[AdjustInfiniBrowserLineages](userscripts/AdjustInfiniBrowserLineages) | Adjusts lineages on InfiniBrowser, removing steps for elements that you already have
-[TextOnBoard](userscripts/TextOnBoard) | Allows you to write text messages on the board
--->
 
 ## How To Install Userscripts
 

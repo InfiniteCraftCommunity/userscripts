@@ -42,12 +42,24 @@
         for (const mutation of mutations) {
             if (mutation.addedNodes.length > 0) {
                 for (const node of mutation.addedNodes) {
-                console.log("ITEM CHECK",node)
 
                     if (node.classList && node.classList.contains("item-wrapper")) {
                         let itemNode=node.querySelector(".item-discovery");
                         if(itemNode)
                         doStuffOnItem(itemNode);
+                    }
+                }
+            }
+        }
+    }
+      async function doStuffOnInstancesMutation(mutations) {
+        for (const mutation of mutations) {
+            if (mutation.addedNodes.length > 0) {
+                for (const node of mutation.addedNodes) {
+
+                    if (node.id!="instance-0" && node.classList.contains("instance-discovery") && node.querySelector(".instance-emoji")) {
+
+                        doStuffOnItem(node);
                     }
                 }
             }
@@ -74,7 +86,23 @@
         for (let item of items)
            doStuffOnItem(item,true);
 
+        const instanceObserver = new MutationObserver((mutations) => {
 
+
+            doStuffOnInstancesMutation(mutations);
+
+
+        });
+
+       instanceObserver.observe(document.querySelector("#instances"), {
+            childList: true,
+            subtree: true,
+
+        });
+
+        var instances = document.querySelectorAll(".instance-discovery");
+        for (let inst of instances)
+           doStuffOnItem(inst,true);
 
    });
 

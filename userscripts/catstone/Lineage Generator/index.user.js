@@ -20,7 +20,7 @@
 
     const o = {
         baseElementsString: ["Water", "Fire", "Wind", "Earth"],
-        baseElements: null,  // gets updated in `reloadGameData`
+        baseElementsId: null,  // gets updated in `reloadGameData`
 
         recipesIngIC: new Map(),// "Water=Water" => "Lake"
         recipesResIC: [],       // "Lake" => ["Water", "Water"]

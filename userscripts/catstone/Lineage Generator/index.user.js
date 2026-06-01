@@ -2,10 +2,12 @@
 // @name          Lineage Generator
 // @namespace     Catstone
 // @match         https://neal.fun/infinite-craft/*
-// @version       2.0
+// @grant         GM_setValue
+// @grant         GM_getValue
+// @version       2.1
 // @author        Catstone
 // @license       MIT
-// @description   Generates pretty good lineages ingame!
+// @description   Generates pretty damn good lineages ingame!
 // @downloadURL   https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/catstone/Lineage%20Generator/index.user.js
 // @updateURL     https://github.com/InfiniteCraftCommunity/userscripts/raw/master/userscripts/catstone/Lineage%20Generator/index.user.js
 // ==/UserScript==
@@ -17,7 +19,6 @@
     'use strict';
 
     const o = {
-        refresh: reloadGameData,
         baseElementsString: ["Water", "Fire", "Wind", "Earth"],   // these get mapped to IDs later in the code.
         baseElements: undefined,  // ids
 
@@ -33,8 +34,47 @@
     };
 
     unsafeWindow.lineage = {
+        refresh: reloadGameData,
+        make: consoleMakeLineage,
         vars: o,
+        icCaseText,
+        icCaseId,
+        verify: verifyLineage,
+        missing: alertOnMissingRecipes,
+        toArray: textLineageToArray,
+        toString: textArrayLineageToString,
+        idLineageToText,
+        idToMostlyNealCase,
+        internal: {
+            findBestRecipeHeur,
+            generateElementHeuristics,
+            generateLineage,
+            removeUnnecessary,
+            correctlyCapsAndOrderLineage,
+        }
     };
+
+    const alphabet = [
+      ["Water", "Earth", "Plant"], ["Earth", "Plant", "Tree"], ["Water", "Tree", "River"], ["Earth", "River", "Delta"],
+      ["Tree", "River", "Paper"], ["Plant", "Paper", "Book"], ["Book", "Delta", "Alphabet"]
+    ];
+    const punc = [
+      ...alphabet, ["Alphabet", "Alphabet", "Word"], ["Word", "Word", "Sentence"], ["Wind", "Sentence", "Phrase"],
+      ["Book", "Phrase", "Quote"], ["Alphabet", "Quote", "Punctuation"]
+    ];
+    const alphabetSoup = [
+      ...punc, ["Punctuation", "Quote", "Apostrophe"], ["Apostrophe", "Quote", "Quotation Mark"],
+      ["Fire", "Alphabet", "Alphabet Soup"], ["Alphabet Soup", "Quotation Mark", "\"Alphabet Soup\""]
+    ];
+    const rip = [
+      ...alphabetSoup, ["Book", "Sentence", "Prison"], ["Earth", "Prison", "Grave"], ["\"Alphabet Soup\"", "Grave", "\"R.I.P.\""]
+    ];
+    const defaultPresets = [
+        { name: "Alphabet", goals: ["Alphabet"], required: alphabet, permament: true },
+        { name: "Punctuation", goals: ["Punctuation", "Quote", "Alphabet"], required: punc, permament: true },
+        { name: "\"Alphabet Soup\"", goals: ["\"Alphabet Soup\"", "Punctuation", "Quote", "Alphabet"], required: alphabetSoup, permament: true },
+        { name: "\"R.I.P\"", goals: ["\"R.I.P.\"", "\"Alphabet Soup\"", "Punctuation", "Quote", "Alphabet"], required: rip, permament: true },
+    ];
 
 
 
@@ -87,7 +127,7 @@
                 if (!response || !response.instance) return;
                 addElement(response.instance.text, response.instance.id);
 
-                const newRecipe = [arguments[0].itemId, arguments[1].itemId, response.instance.id];
+                const newRecipe = [icCaseId(arguments[0].itemId), icCaseId(arguments[1].itemId), icCaseId(response.instance.id)];
                 const newHeurForR = (o.elementHeur[newRecipe[0]] ?? Infinity) + (o.elementHeur[newRecipe[1]] ?? Infinity) + 1;
                 if ((o.elementHeur[newRecipe[2]] ?? Infinity) > newHeurForR) {
                     o.elementHeur[newRecipe[2]] = newHeurForR;
@@ -98,6 +138,17 @@
             });
             return response;
         }
+
+        // this event listener was added before helpers listener, so it also registers stuff earlier MUhaHAHAHAHA
+        unsafeWindow.addEventListener('contextmenu', (e) => {
+            if (!e.target || !e.target.closest) return;
+            const goalItem = e.target.closest('.lineage-goals-container .lineage-goal');
+            if (goalItem) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                goalItem.dispatchEvent(new Event('remove-goal'));
+            }
+        }, true);
     });
 
 
@@ -142,9 +193,9 @@
 
     function addRecipe(f, s, r) {
         if (!Number.isInteger(f) || !Number.isInteger(s) || !Number.isInteger(r)) return;
-        const F = icCase(f);
-        const S = icCase(s);
-        const R = icCase(r);
+        const F = icCaseId(f);
+        const S = icCaseId(s);
+        const R = icCaseId(r);
         if (F === R || S === R) return;
 
         const sortedFS = S > F ? [F, S] : [S, F];
@@ -168,6 +219,8 @@
 
 
     function icCaseText(inputText) {
+        if (!inputText) return undefined;
+
         let resultText = '';
         const len = inputText.length;
         for (let i = 0; i < len; i++) {
@@ -177,7 +230,7 @@
     }
 
 
-    function icCase(inputId) {
+    function icCaseId(inputId) {
         const mapOutput = o.icCasedLookup[inputId];
         if (mapOutput !== undefined) return mapOutput;
 
@@ -194,43 +247,33 @@
         return resultId;
     };
 
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
 
 
 
 
 
 
-    unsafeWindow.lineage = async function (...goals) {
-        goals = goals.map(goal => {
-            const goalId = o.elementTextToId.get(icCaseText(goal));
-            if (goalId === undefined) throw new Error(`${goal} is not in your save...`);
-            return goalId;
-        });
-        for (const _ of generateLineageMultipleMethods(goals)) {}
-    };
-    unsafeWindow.lineage['vars'] = o;
-
-
-
-
-    function* generateLineageMultipleMethods(goals) {
+    async function* generateLineageMultipleMethods(goals) {
         const lineageGenerators = {
-            'Simple':         () => generateLineage(goals),
-            'Normal Recalc':  () => generateLineage(goals, 1),
-            'Reverse Recalc': () => generateLineage(goals, 2),
-            'Min Recalc':     () => generateLineage(goals, 3),
-            'Max Recalc':     () => generateLineage(goals, 4),
-            'Random Recalc':  () => generateLineage(goals, 5),
+            'Simple':         async () => await generateLineage(goals),
+            'Normal Recalc':  async () => await generateLineage(goals, 1),
+            'Reverse Recalc': async () => await generateLineage(goals, 2),
+            'Min Recalc':     async () => await generateLineage(goals, 3),
+            'Max Recalc':     async () => await generateLineage(goals, 4),
+            'Random Recalc':  async () => await generateLineage(goals, 5),
         };
 
         // Now iterate through the generators and run them
         for (const [methodName, generateFunc] of Object.entries(lineageGenerators)) {
             console.time(methodName);
-            const { lineage, missingElements } = generateFunc();
+            const { lineage, missingElements } = await generateFunc();
 
             const groupName = [`%c${methodName}:`, 'background:green; color:white', `${lineage.length}-step`];
             console.groupCollapsed(...groupName);
-            console.log(lineageToText(lineage, goals));
+            console.log(idLineageToText(lineage, goals));
             console.timeEnd(methodName);
             console.groupEnd();
 
@@ -243,11 +286,11 @@
 
 
 
-    function lineageToText(lineage, goals) {
+    function idLineageToText(lineage, goals) {
         return lineage.map((recipe, i) => {
             const [first, second] = [o.elementIdToText[recipe[0]], o.elementIdToText[recipe[1]]].sort();
             const result = o.elementIdToText[recipe[2]];
-            return `${first} + ${second} = ${result}` + (goals.includes(icCase(recipe[2])) ? `  // ${i + 1}` : '');
+            return `${first} + ${second} = ${result}` + (goals.includes(icCaseId(recipe[2])) ? `  // ${i + 1}` : '');
         }).join('\n');
     }
 
@@ -316,7 +359,7 @@
 
 
 
-    function generateLineage(goals, recalc=false, depth=0) {
+    async function generateLineage(goals, recalc=false, depth=0) {
         const elementQueue = [...goals];
         const crafted = new Set();
         const visitedLastPath = new Map();  // for invalid lineages with infinite loops
@@ -369,6 +412,9 @@
                         const heur = heurMap[el];
                         return heur > best.heur ? { element: el, heur } : best;
                     }, { element: undefined, heur: -Infinity });
+
+                    // tiny sleep to let the ui update
+                    await sleep(0);
                     generateElementHeuristics([element], heurMap, worst.heur);
                 }
             }
@@ -503,7 +549,7 @@
     }
 
     async function helperRenderBody(container, item) {
-        const goalId = icCase(o.elementTextToId.get(item.text))
+        const goalId = icCaseId(o.elementTextToId.get(item.text))
         if (goalId === undefined) {
             container.appendChild(document.createTextNode(`${item.text} is not in your save...`));
             return container;
@@ -526,14 +572,180 @@
                 processNewGoalElements([addGoalInput.value]);
             }
         });
-        addGoalInput.addEventListener('paste', (event) => {
-            const clipboardText = (event.clipboardData || unsafeWindow.clipboardData).getData('text');
-            if (clipboardText) {
-                processNewGoalElements(clipboardText.split('\n'));
-                event.preventDefault();
+
+        // --- Dropdown Menu ---
+        const dropdownContainer = document.createElement("div");
+        dropdownContainer.classList.add("lineage-dropdown");
+
+        const dropdownMenuBtn = document.createElement("button");
+        dropdownMenuBtn.type = "button";
+        dropdownMenuBtn.classList.add("lineage-action-button");
+        dropdownMenuBtn.textContent = "☰";
+        dropdownMenuBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            dropdownContent.classList.toggle("show");
+        });
+
+        const dropdownContent = document.createElement("div");
+        dropdownContent.classList.add("lineage-dropdown-content");
+
+        // Option 1: Copy Goals
+        const optCopy = document.createElement("div");
+        optCopy.classList.add("lineage-dropdown-item");
+        optCopy.textContent = "Copy Goals";
+        optCopy.addEventListener("click", () => {
+            navigator.clipboard.writeText(goals.map(goalId => idToMostlyNealCase(goalId).text).join('\n')).then(() => {
+                optCopy.style.color = 'gold';
+                setTimeout(() => optCopy.style.color = '', 500);
+            }).catch(err => alert('Failed to copy goals.'));
+        });
+
+        // Option 2: Paste Goals
+        const optPaste = document.createElement("div");
+        optPaste.classList.add("lineage-dropdown-item");
+        optPaste.textContent = "Paste Goals";
+        optPaste.addEventListener("click", async () => {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) processNewGoalElements(text.split('\n'));
+            } catch (err) {
+                alert('Failed to read clipboard text. Please ensure clipboard permissions are granted.');
             }
         });
-        goalsContainerContainerDiv.append(goalsContainerDiv, addGoalInput);
+
+
+        // Option 3: Add Random Goal
+        const optRandom = document.createElement("div");
+        optRandom.classList.add("lineage-dropdown-item");
+        optRandom.textContent = "Add random goal";
+        optRandom.addEventListener("click", () => {
+            const items = unsafeWindow.IC.getItems();
+            if (items.length > 0) {
+                const randomItem = items[Math.floor(Math.random() * items.length)];
+                processNewGoalElements([randomItem.text]);
+            }
+        });
+
+        // Option 4: Add Worst Element
+        const optWorstElement = document.createElement("div");
+        optWorstElement.classList.add("lineage-dropdown-item");
+        optWorstElement.textContent = "Add worst element";
+        optWorstElement.addEventListener("click", () => {
+            const maxHeurId = o.elementHeur.reduce((m, n, i) => n > (o.elementHeur[m] ?? -Infinity) ? i : m, -1);
+            const maxHeurItem = idToMostlyNealCase(maxHeurId);
+            if (maxHeurItem) processNewGoalElements([maxHeurItem.text]);
+        });
+
+        // Option 5: Add Best Seed
+        const optBestSeed = document.createElement("div");
+        optBestSeed.classList.add("lineage-dropdown-item");
+        optBestSeed.textContent = "Add best seed";
+        optBestSeed.addEventListener("click", () => {
+            alertOnMissingRecipes(defaultPresets[1].required, true);
+            processNewGoalElements(defaultPresets[1].goals);
+        });
+
+        // Option 6: Seed Presets
+        const optPresets = document.createElement("div");
+        optPresets.classList.add("lineage-dropdown-item");
+        optPresets.textContent = "Other Seeds...";
+        optPresets.style.borderTop = "1px solid var(--border-color, #333)";
+        optPresets.addEventListener("click", (e) => {
+            e.stopPropagation();
+            renderPresetsMenu();
+        });
+
+        function renderMainMenu() {
+            dropdownContent.innerHTML = '';
+            dropdownContent.append(optCopy, optPaste, optRandom, optWorstElement, optBestSeed, optPresets);
+        }
+
+        function renderPresetsMenu() {
+            dropdownContent.innerHTML = '';
+
+            // Back button
+            const backBtn = document.createElement("div");
+            backBtn.classList.add("lineage-dropdown-item");
+            backBtn.textContent = "↩";
+            backBtn.style.borderBottom = "1px solid var(--border-color, #333)";
+            backBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                renderMainMenu();
+            });
+            dropdownContent.append(backBtn);
+
+            const presets = getPresets();
+
+            // Render each preset
+            presets.forEach((p, i) => {
+                const wrapper = document.createElement("div");
+                wrapper.classList.add("lineage-dropdown-item");
+                wrapper.style.display = "flex";
+                wrapper.style.alignItems = "center";
+                wrapper.style.justifyContent = "space-between";
+                wrapper.style.padding = "0";
+                wrapper.addEventListener("click", () => {
+                    if (p.required) alertOnMissingRecipes(p.required, true);
+                    processNewGoalElements(p.goals);
+                    dropdownContent.classList.remove("show");
+                    renderMainMenu();
+                });
+
+                const presetItem = document.createElement("div");
+                presetItem.classList.add("lineage-dropdown-item");
+                presetItem.textContent = p.name;
+
+                const deleteButton = document.createElement("button");
+                deleteButton.classList.add("lineage-action-button");
+                deleteButton.textContent = "✖";
+                deleteButton.style.color = "crimson";
+                deleteButton.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    if (confirm(`You actually want to delete '${p.name}'??!`)) {
+                        presets.splice(i, 1);
+                        GM_setValue("lineage_seed_presets", JSON.stringify(presets));
+                        renderPresetsMenu();
+                    }
+                });
+
+                wrapper.append(presetItem);
+                if (!p.permament) wrapper.append(deleteButton);
+                dropdownContent.append(wrapper);
+            });
+
+            // Add Current Goals button
+            const addCurrentBtn = document.createElement("div");
+            addCurrentBtn.classList.add("lineage-dropdown-item");
+            addCurrentBtn.style.borderTop = "1px solid var(--border-color, #333)";
+            addCurrentBtn.style.color = "cyan";
+            addCurrentBtn.textContent = "+ Add current goals";
+            addCurrentBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                if (goals.length === 0) {
+                    alert("You have no goals to save!");
+                    return;
+                }
+                const name = prompt("Enter a name for this preset:") || idToMostlyNealCase(goals[0]).text;
+                const currentGoalsText = goals.map(id => idToMostlyNealCase(id).text);
+                presets.push({ name: name, goals: currentGoalsText });
+                GM_setValue("lineage_seed_presets", JSON.stringify(presets));
+                renderPresetsMenu();
+            });
+
+            dropdownContent.append(addCurrentBtn);
+        }
+
+        renderMainMenu();
+
+        // Close dropdown when clicking outside
+        document.addEventListener("click", () => {
+            dropdownContent.classList.remove("show");
+            setTimeout(renderMainMenu, 200);
+        });
+
+        dropdownContainer.append(dropdownMenuBtn, dropdownContent);
+
+        goalsContainerContainerDiv.append(goalsContainerDiv, addGoalInput, dropdownContainer);
 
 
         const lineageHeaderDiv = document.createElement("div");
@@ -541,17 +753,17 @@
 
         const lineageTitle = document.createTextNode('');
 
-        const copyButton = document.createElement("button");
-        copyButton.type = "button";
-        copyButton.classList.add("lineage-action-button");
-        copyButton.textContent = "Copy";
+        const copyLineageButton = document.createElement("button");
+        copyLineageButton.type = "button";
+        copyLineageButton.classList.add("lineage-action-button");
+        copyLineageButton.textContent = "Copy";
         let copyResetTimeout;
-        copyButton.addEventListener('click', () => {
-            navigator.clipboard.writeText(lineageToText(lineage, goals)).then(() => {
-                copyButton.style.borderColor = 'lime';
+        copyLineageButton.addEventListener('click', () => {
+            navigator.clipboard.writeText(idLineageToText(lineage, goals)).then(() => {
+                copyLineageButton.style.borderColor = 'lime';
                 clearTimeout(copyResetTimeout);
                 copyResetTimeout = setTimeout(() => {  // revert to original
-                    copyButton.style.borderColor = '';
+                    copyLineageButton.style.borderColor = '';
                 }, 500);
             }).catch(err => alert('Failed to copy lineage.'));
         });
@@ -568,10 +780,11 @@
             startTime = performance.now();
             let methodIndex = 0;
             optimiseButton.textContent = `Optimising... (${methodIndex++}/5)`;
-            // small delay to let the UI update
-            await new Promise(resolve => setTimeout(resolve, 0));
+            let goalsSnapshot = [...goals];
 
-            for (const { lineage: newLineage, methodName: newMethodName, missingElements: newMissingElements } of generator) {
+            for await (const { lineage: newLineage, methodName: newMethodName, missingElements: newMissingElements } of generator) {
+                if (!container.checkVisibility() || goals.join('\n') != goalsSnapshot.join('\n')) return
+
                 if (newLineage.length < lineage.length || (newLineage.length === lineage.length && newMissingElements.length < missingElements.length)) {
                     lineage = newLineage;
                     methodName = newMethodName;
@@ -580,8 +793,6 @@
                 }
                 optimiseButton.textContent = `Optimising... (${methodIndex++}/5)`;
                 updateHeaderStatText();
-                await new Promise(resolve => setTimeout(resolve, 0));
-                if (!document.querySelector('.recipe-modal').open) return;
             }
             optimiseButton.textContent = 'Optimised';
             optimiseButton.style.opacity = '0.2';
@@ -589,15 +800,14 @@
             optimiseButton.style.borderColor = '';
         });
 
-        lineageHeaderDiv.append(lineageTitle, optimiseButton, copyButton);
+        lineageHeaderDiv.append(lineageTitle, optimiseButton, copyLineageButton);
 
 
         const lineageBodyDiv = document.createElement("div");
         lineageBodyDiv.classList.add("lineage-body");
         container.append(goalsContainerContainerDiv, lineageHeaderDiv, lineageBodyDiv);
 
-        drawGoals();
-        initializeLineage();
+        drawGoalsAndInitLineage();
 
 
         function processNewGoalElements(newGoals) {
@@ -606,34 +816,32 @@
                 const icGoalText = icCaseText(newGoal.trim());
                 const newItemId = o.elementTextToId.get(icGoalText);
                 if (newItemId !== undefined && !goals.includes(newItemId)) {
+                    addGoalInput.value = '';
                     goals.push(newItemId);
                     update = true;
                 }
             }
             if (update) {
-                addGoalInput.value = '';
-                drawGoals();
-                initializeLineage();
+                drawGoalsAndInitLineage();
             }
         }
 
-        function drawGoals() {
+        function drawGoalsAndInitLineage() {
             goalsContainerDiv.innerHTML = '';
+            optimiseButton.style.borderColor = '';
+            initializeLineage();
+
             goals.forEach((goalId, index) => {
-                const goalItem = getElementCaps(goalId);
+                const goalItem = idToMostlyNealCase(goalId);
                 const goalItemElement = unsafeWindow.ICHelper.createItemElement(goalItem);
                 goalItemElement.classList.add('lineage-goal');
 
                 goalItemElement.dataset.goalId = goalId; // Store goalId for easy access
                 goalItemElement.dataset.index = index;   // Store original index
-                goalItemElement.addEventListener('contextmenu', (e) => {
-                    e.preventDefault();
-                    e.stopImmediatePropagation();
-
+                goalItemElement.addEventListener('remove-goal', (e) => {
                     goals.splice(e.target.dataset.index, 1);
-                    drawGoals();
-                    initializeLineage();
-                }, true);
+                    drawGoalsAndInitLineage();
+                });
 
                 // prevent helper behaviour
                 goalItemElement.addEventListener('mousedown', (e) => e.stopImmediatePropagation(), true);
@@ -678,8 +886,7 @@
                         // Reorder the `goals` array
                         const [movedItem] = goals.splice(sourceIndex, 1); // Remove item from old position
                         goals.splice(targetIndex, 0, movedItem);      // Insert item at new position
-                        drawGoals();
-                        initializeLineage();
+                        drawGoalsAndInitLineage();
                     }
                 });
 
@@ -688,10 +895,10 @@
             addGoalInput.placeholder = `Add goal... (${goals.length})`;
         }
 
-        function initializeLineage() {
+        async function initializeLineage() {
             startTime = performance.now();
             generator = generateLineageMultipleMethods(goals);
-            const result = (generator.next()).value;
+            const result = (await generator.next()).value;
             lineage = result.lineage;
             methodName = result.methodName;
             missingElements = result.missingElements;
@@ -700,15 +907,6 @@
             optimiseButton.textContent = 'Optimise';
             optimiseButton.style.opacity = '';
             optimiseButton.style.pointerEvents = '';
-        }
-
-
-        function getElementCaps(itemId) {
-            let item = unsafeWindow.ICHelper.idMap.get(itemId);
-            if (item) return item;
-            // example: it is `End Of Sentence` but the user only has `End of Sentence`...
-            const itemLowerText = o.elementIdToText[itemId].toLowerCase();
-            return unsafeWindow.IC.getItems().find(x => x.text.toLowerCase() === itemLowerText);
         }
 
 
@@ -721,7 +919,7 @@
                 const missingContaierDiv = document.createElement("div");
                 missingContaierDiv.classList.add("lineage-missing-container");
                 for (const missingElement of missingElements) {
-                    const missingItem = getElementCaps(missingElement);
+                    const missingItem = idToMostlyNealCase(missingElement);
                     const missingItemElement = unsafeWindow.ICHelper.createItemElement(missingItem);
                     missingItemElement.classList.add('lineage-missing');
                     missingContaierDiv.append(missingItemElement);
@@ -743,10 +941,10 @@
                     const firstItemElement = unsafeWindow.ICHelper.createItemElement(first);
                     const secondItemElement = unsafeWindow.ICHelper.createItemElement(second);
                     const resultItemElement = unsafeWindow.ICHelper.createItemElement(result);
-                    if (missingElements.includes(icCase(first.id))) firstItemElement.classList.add('lineage-missing');
-                    if (missingElements.includes(icCase(second.id))) secondItemElement.classList.add('lineage-missing');
-                    if (missingElements.includes(icCase(result.id))) resultItemElement.classList.add('lineage-missing');
-                    else if (goals.includes(icCase(result.id))) resultItemElement.classList.add('lineage-goal');
+                    if (missingElements.includes(icCaseId(first.id))) firstItemElement.classList.add('lineage-missing');
+                    if (missingElements.includes(icCaseId(second.id))) secondItemElement.classList.add('lineage-missing');
+                    if (missingElements.includes(icCaseId(result.id))) resultItemElement.classList.add('lineage-missing');
+                    else if (goals.includes(icCaseId(result.id))) resultItemElement.classList.add('lineage-goal');
 
 	                  recipe.append(
 	                  	  stepNumberSpan,
@@ -760,10 +958,111 @@
                 }
             });
         }
+        function getPresets() {
+            return JSON.parse(GM_getValue("lineage_seed_presets", JSON.stringify(defaultPresets)));
+        }
         function updateHeaderStatText() {
             lineageTitle.textContent = `${methodName} - ${lineage.length} Steps (${((performance.now() - startTime) / 1000).toFixed(3)} s)`;
         }
 	      return container;
+    }
+
+
+
+    function idToMostlyNealCase(itemId) {
+        let item = unsafeWindow.ICHelper.idMap.get(itemId);
+        if (item) return item;
+        // example: it is `End Of Sentence` but the user only has `End of Sentence`...
+        const itemLowerText = o.elementIdToText[itemId].toLowerCase();
+        return unsafeWindow.IC.getItems().find(x => x.text.toLowerCase() === itemLowerText);
+    }
+
+
+    function textLineageToArray(input) {
+        if (Array.isArray(input)) return input
+        return input.split('\n').filter(Boolean).map(line => {
+            const [fs, r] = line.split(/ \/\/| ::/)[0].split(' = ').map(x => x.trim());
+            const [f, s] = [fs.slice(0, fs.indexOf(' + ')), fs.slice(fs.indexOf(' + ') + 3)].map(x => x.trim());
+            return [f, s, r];
+        });
+    }
+
+    function textArrayLineageToString(input) {
+        if (typeof input === 'string') return input
+
+        // Handle both 3D arrays (alt lineages) and 2D arrays (single lineage)
+        const is3D = Array.isArray(input[0]) && Array.isArray(input[0][0]);
+        return (is3D ? input : [input]).map(lineage =>
+            lineage.map(x => `${[x[0], x[1]].sort()[0]} + ${[x[0], x[1]].sort()[1]} = ${x[2]}`).join('\n')
+        ).join('\n\n')
+    }
+
+    function alertOnMissingRecipes(input, alertPopup) {
+        let missing = new Set();
+        for (const [first, second, res] of textLineageToArray(input)) {
+            const id1 = o.elementTextToId.get(icCaseText(first));
+            const id2 = o.elementTextToId.get(icCaseText(second));
+            const idRes = o.elementTextToId.get(icCaseText(res));
+
+            const sortedFS = id2 > id1 ? [id1, id2] : [id2, id1];
+            if (icCaseId(o.recipesIngIC.get(sortedFS.join('='))) !== idRes) {
+                missing.add(`${first} + ${second} = ${res}`);
+            }
+        }
+        if (alertPopup) {
+            if (missing.size) alert("You are missing:\n\n" + [...missing].join("\n"));
+        }
+        else {
+            console.log('%cMissing:', 'background: orange; color: white', missing.size > 0 ? `\n`+[...missing].join`\n` : "No missing recipes, yay!")
+            return [...missing];
+        }
+    }
+
+    async function verifyLineage(input, delayMs=30) {
+        alertOnMissingRecipes(input);
+
+        let owned = new Set(o.baseElementsString),
+            ownedIC = new Set([...owned].map(x => icCaseText(x))),
+            err = [],
+            promises = [];
+
+        textLineageToArray(input).forEach(([f, s, r], i) => {
+            [f, s].forEach(x => {
+                if (!ownedIC.has(icCaseText(x))) err.push(`${x} was never crafted...`);
+                else if (!owned.has(x)) err.push(`${x} was crafted in different caps...`);
+            });
+            if (owned.has(r)) err.push(`${r} was already crafted...`);
+            else if (ownedIC.has(icCaseText(r))) err.push(`${r} was already crafted in different caps...`);
+            owned.add(r), ownedIC.add(icCaseText(r));
+
+            if (delayMs) promises.push((async () => {
+                await sleep(i * delayMs);
+                try {
+                    if (!await fetch(`https://neal.fun/api/infinite-craft/check?first=${encodeURIComponent(icCaseText(f))}&second=${encodeURIComponent(icCaseText(s))}&result=${encodeURIComponent(r)}`)
+                        .then(x => x.json()).then(x => x.valid)) err.push(`Invalid recipe: ${f} + ${s} = ${r}`);
+                } catch (error) {
+                    err.push(`Error checking recipe (${f} + ${s} = ${r}): ${error}`);
+                }
+            })());
+        });
+        Promise.all(promises).then(() => console.log('%cVerify:', 'background: purple; color: white', err.length > 0 ? err.join`\n` : "No Errors, yay!"));
+        return err;
+    }
+
+    async function consoleMakeLineage(...goals) {
+        goals = goals.map(goal => {
+            const goalId = o.elementTextToId.get(icCaseText(goal));
+            if (goalId === undefined) throw new Error(`${goal} is not in your save...`);
+            return goalId;
+        });
+
+        let bestResult = null;
+        for await (const lineage of generateLineageMultipleMethods(goals)) {
+            if (!bestResult || lineage.lineage.length < bestResult.lineage.length) {
+                bestResult = lineage;
+            }
+        }
+        return bestResult
     }
 
 
@@ -855,6 +1154,7 @@ const css = `
 .lineage-goals-container-container {
   display: flex;
   margin-bottom: 5px;
+  align-items: center;
 }
 .lineage-goals-container {
   display: flex;
@@ -883,6 +1183,7 @@ const css = `
   border-radius: 4px;
   font-size: 0.9em;
   margin: 8px;
+  margin-right: 0px;
 }
 
 
@@ -902,6 +1203,43 @@ const css = `
 }
 .lineage-missing-container .item {
   overflow: visible;
+}
+
+.lineage-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.lineage-dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: var(--background-color, #1f1f1f);
+    min-width: 196px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5);
+    z-index: 1000;
+    border: 1px solid var(--border-color, #333);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.lineage-dropdown-content.show {
+    display: block;
+}
+
+.lineage-dropdown-item {
+    color: var(--text-color, #fff);
+    padding: 10px 14px;
+    text-decoration: none;
+    display: block;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.15s;
+}
+
+.lineage-dropdown-item:hover {
+    background-color: color-mix(in oklab, var(--background-color), var(--text-color) 15%);
 }
 
 
@@ -963,10 +1301,12 @@ const css = `
     background-color: transparent;
     border: 3px solid var(--border-color);
     border-radius: 5px;
+    height: 30px;
     padding: 5px;
     cursor: pointer;
     transition: background-color 0.15s ease, border-color 0.15s ease;
-    margin-left: 8px;
+    margin-left: 4px;
+    margin-right: 4px;
 }
 
 .lineage-action-button:hover {
@@ -980,8 +1320,8 @@ const css = `
 `;
 
 const styleElement = document.createElement("style");
-styleElement.type = "text/css"; // Good practice, though often inferred
-styleElement.textContent = css.trim(); // Or innerText
+styleElement.type = "text/css";
+styleElement.textContent = css.trim();
 document.head.appendChild(styleElement);
 
 })();

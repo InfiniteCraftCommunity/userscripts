@@ -34,7 +34,7 @@ This script generates pretty good lineages directly ingame! (just like infinibro
 ## Wind only lineage:  
 1. Open console `Ctrl + Shift + I`
 2. type `lineage.vars.baseElementsString = ["Wind"]`
-3. type `lineage.vars.refresh()`  
+3. type `lineage.refresh()`  
 ![image](https://github.com/user-attachments/assets/28439326-21c0-4667-b214-020a5f2ac611)  
 
 ## Checking Lineages:

@@ -4,7 +4,7 @@
 // @match         https://neal.fun/infinite-craft/*
 // @grant         GM_setValue
 // @grant         GM_getValue
-// @version       2.1
+// @version       2.2
 // @author        Catstone
 // @license       MIT
 // @description   Generates pretty damn good lineages ingame!
@@ -19,8 +19,8 @@
     'use strict';
 
     const o = {
-        baseElementsString: ["Water", "Fire", "Wind", "Earth"],   // these get mapped to IDs later in the code.
-        baseElements: undefined,  // ids
+        baseElementsString: ["Water", "Fire", "Wind", "Earth"],
+        baseElements: null,  // gets updated in `reloadGameData`
 
         recipesIngIC: new Map(),// "Water=Water" => "Lake"
         recipesResIC: [],       // "Lake" => ["Water", "Water"]
@@ -37,26 +37,19 @@
         refresh: reloadGameData,
         make: consoleMakeLineage,
         vars: o,
-        icCaseText,
-        icCaseId,
-        verify: verifyLineage,
-        missing: alertOnMissingRecipes,
-        toArray: textLineageToArray,
-        toString: textArrayLineageToString,
-        idLineageToText,
-        idToMostlyNealCase,
+        icCaseText, icCaseId,
+        verify: verifyLineage, missing: alertOnMissingRecipes,
+        toArray: textLineageToArray, toString: textArrayLineageToString,
+        idLineageToText, idToMostlyNealCase,
         internal: {
-            findBestRecipeHeur,
-            generateElementHeuristics,
-            generateLineage,
-            removeUnnecessary,
-            correctlyCapsAndOrderLineage,
+            findBestRecipeHeur, generateElementHeuristics, generateLineage,
+            removeUnnecessary, correctlyCapsAndOrderLineage,
         }
     };
 
     const alphabet = [
       ["Water", "Earth", "Plant"], ["Earth", "Plant", "Tree"], ["Water", "Tree", "River"], ["Earth", "River", "Delta"],
-      ["Tree", "River", "Paper"], ["Plant", "Paper", "Book"], ["Book", "Delta", "Alphabet"]
+      ["Tree", "River", "Paper"], ["Paper", "Paper", "Book"], ["Book", "Delta", "Alphabet"]
     ];
     const punc = [
       ...alphabet, ["Alphabet", "Alphabet", "Word"], ["Word", "Word", "Sentence"], ["Wind", "Sentence", "Phrase"],
@@ -67,13 +60,13 @@
       ["Fire", "Alphabet", "Alphabet Soup"], ["Alphabet Soup", "Quotation Mark", "\"Alphabet Soup\""]
     ];
     const rip = [
-      ...alphabetSoup, ["Book", "Sentence", "Prison"], ["Earth", "Prison", "Grave"], ["\"Alphabet Soup\"", "Grave", "\"R.I.P.\""]
+      ...alphabetSoup, ["Word", "Wind", "Whisper"], ["Earth", "Whisper", "Grave"], ["\"Alphabet Soup\"", "Grave", "\"R.I.P.\""]
     ];
     const defaultPresets = [
-        { name: "Alphabet", goals: ["Alphabet"], required: alphabet, permament: true },
-        { name: "Punctuation", goals: ["Punctuation", "Quote", "Alphabet"], required: punc, permament: true },
-        { name: "\"Alphabet Soup\"", goals: ["\"Alphabet Soup\"", "Punctuation", "Quote", "Alphabet"], required: alphabetSoup, permament: true },
-        { name: "\"R.I.P\"", goals: ["\"R.I.P.\"", "\"Alphabet Soup\"", "Punctuation", "Quote", "Alphabet"], required: rip, permament: true },
+        { name: "Alphabet", goals: ["Alphabet"], required: alphabet },
+        { name: "Punctuation", goals: ["Punctuation", "Quote", "Alphabet"], required: punc },
+        { name: "\"Alphabet Soup\"", goals: ["\"Alphabet Soup\"", "Punctuation", "Quote", "Alphabet"], required: alphabetSoup },
+        { name: "\"R.I.P\"", goals: ["\"R.I.P.\"", "\"Alphabet Soup\"", "Punctuation", "Quote", "Alphabet"], required: rip },
     ];
 
 
@@ -93,14 +86,11 @@
             loadDataAfterFinishLoading();
             return switchSave.apply(this, arguments);
         }
-
         const uploadSave = v_container.uploadSave;
         v_container.uploadSave = function() {
             loadDataAfterFinishLoading();
             return uploadSave.apply(this, arguments);
         }
-
-
         function loadDataAfterFinishLoading() {
             const intervalId = setInterval(() => {
                 if (!v_container.isLoading) {
@@ -111,13 +101,12 @@
             }, 10)
         }
 
-
         // add helper recipeModal stuff
         if (unsafeWindow?.ICHelper?.recipeModalTabs) unsafeWindow.ICHelper.recipeModalTabs.set("lineages", {
-        	  renderBody: helperRenderBody,
-        	  renderFooter: helperRenderFooter
+        	renderBody: helperRenderBody,
+        	renderFooter: helperRenderFooter
         });
-        else alert('the newest version of Helper is required to display lineages ingame!');
+        else alert('Lineage Generator\nThe newest version of Helper is required to display lineages ingame!');
 
         // listen for crafts
         const craft = v_container.craft;
@@ -168,7 +157,7 @@
         for (const element of ICItems) {
             addElement(element.text, element.id);
         }
-        o.baseElements = o.baseElementsString.map(x => o.elementTextToId.get(x));
+        o.baseElementsId = o.baseElementsString.map(x => o.elementTextToId.get(x));
         o.nonExistentIcCaseId = ICItems.length + 20000;
 
         for (const element of ICItems) {
@@ -179,8 +168,8 @@
         console.timeEnd('Load Data');
 
         console.time('Generate Heuristics');
-        for (const baseElement of o.baseElements) o.elementHeur[baseElement] = 0;
-        generateElementHeuristics(o.baseElements);
+        for (const baseElement of o.baseElementsId) o.elementHeur[baseElement] = 0;
+        generateElementHeuristics(o.baseElementsId);
         console.timeEnd('Generate Heuristics');
 
         console.log('Variables generated: (window.lineage.vars)', o);
@@ -206,15 +195,12 @@
         pushToArrayArray(o.recipesUsesIC, F, [S, R]);
         if (F !== S) pushToArrayArray(o.recipesUsesIC, S, [F, R]);
     }
-
-
-    const pushToArrayArray = (arr, key, value) => {
+    function pushToArrayArray(arr, key, value) {
         let a = arr[key];
         if (!a) arr[key] = [value];
         else a.push(value);
     };
-
-
+    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
 
 
@@ -228,8 +214,6 @@
         }
         return resultText;
     }
-
-
     function icCaseId(inputId) {
         const mapOutput = o.icCasedLookup[inputId];
         if (mapOutput !== undefined) return mapOutput;
@@ -245,10 +229,6 @@
         }
         o.icCasedLookup[inputId] = resultId;
         return resultId;
-    };
-
-    function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
 
@@ -282,27 +262,6 @@
     }
 
 
-
-
-
-
-    function idLineageToText(lineage, goals) {
-        return lineage.map((recipe, i) => {
-            const [first, second] = [o.elementIdToText[recipe[0]], o.elementIdToText[recipe[1]]].sort();
-            const result = o.elementIdToText[recipe[2]];
-            return `${first} + ${second} = ${result}` + (goals.includes(icCaseId(recipe[2])) ? `  // ${i + 1}` : '');
-        }).join('\n');
-    }
-
-
-
-
-
-
-
-
-
-
     function generateElementHeuristics(startElements, heurMap=o.elementHeur, end=Infinity) {
         const pq = new PriorityQueue((a, b) => b[0] > a[0]);
 
@@ -332,8 +291,6 @@
             }
         }
     }
-
-
 
 
     function findBestRecipeHeur(recipesArr, heurMap=o.elementHeur) {
@@ -385,7 +342,7 @@
 
             let neededIng;
             for (const ing of bestRecipe) {
-                if (!o.baseElements.includes(ing) && !crafted.has(ing)) {
+                if (!o.baseElementsId.includes(ing) && !crafted.has(ing)) {
                     neededIng = ing;
                     break;
                 }
@@ -424,13 +381,12 @@
 
 
 
-
     function removeUnnecessary(lineage, goals) {
         const resultIngMap = new Map(lineage.map(recipe => [recipe[2], [recipe[0], recipe[1]]]));
         const usedMap = new Map(lineage.map(recipe => [recipe[2], new Set()]));
         for (const [f, s, r] of lineage) {
-            if (!o.baseElements.includes(f)) usedMap.get(f)?.add(r);
-            if (!o.baseElements.includes(s)) usedMap.get(s)?.add(r);
+            if (!o.baseElementsId.includes(f)) usedMap.get(f)?.add(r);
+            if (!o.baseElementsId.includes(s)) usedMap.get(s)?.add(r);
         }
 
         for (let i = lineage.length - 1; i >= 0; i--) {
@@ -444,8 +400,8 @@
             let removeable = true;
             for (const use of usedMap.get(r)) {
                 const replacementRecipe = o.recipesResIC[use].find(([newF, newS]) =>
-                    (o.baseElements.includes(newF) || (resultIngMap.has(newF) && !blacklist.has(newF)))
-                 && (o.baseElements.includes(newS) || (resultIngMap.has(newS) && !blacklist.has(newS)))
+                    (o.baseElementsId.includes(newF) || (resultIngMap.has(newF) && !blacklist.has(newF)))
+                 && (o.baseElementsId.includes(newS) || (resultIngMap.has(newS) && !blacklist.has(newS)))
                 );
                 if (replacementRecipe) changes.push([use, replacementRecipe]);
                 else {
@@ -466,10 +422,6 @@
     }
 
 
-
-
-
-
     function getBlacklistRU(element, usedMap) {
         const blacklist = new Set([element]);
         for (const blackElement of blacklist) {
@@ -481,19 +433,14 @@
     }
     function switchRecipeRU(result, newRecipe, resultIngMap, usedMap) {
         const originalRecipe = resultIngMap.get(result);
-        for (const x of originalRecipe) if (!o.baseElements.includes(x)) usedMap.get(x)?.delete(result);
+        for (const x of originalRecipe) if (!o.baseElementsId.includes(x)) usedMap.get(x)?.delete(result);
 
         if (!newRecipe) resultIngMap.delete(result);
         else {
             resultIngMap.set(result, newRecipe);
-            for (const x of newRecipe) if (!o.baseElements.includes(x)) usedMap.get(x).add(result);
+            for (const x of newRecipe) if (!o.baseElementsId.includes(x)) usedMap.get(x).add(result);
         }
     }
-
-
-
-
-
 
 
 
@@ -517,7 +464,7 @@
             }
             let neededIngs = [];
             for (const ing of recipe) {
-                if (!o.baseElements.includes(ing) && !crafted.has(ing)) {
+                if (!o.baseElementsId.includes(ing) && !crafted.has(ing)) {
                     neededIngs.push(ing);
                 }
             }
@@ -578,11 +525,13 @@
         dropdownContainer.classList.add("lineage-dropdown");
 
         const dropdownMenuBtn = document.createElement("button");
-        dropdownMenuBtn.type = "button";
         dropdownMenuBtn.classList.add("lineage-action-button");
         dropdownMenuBtn.textContent = "☰";
+        // Close dropdown when clicking outside
+        document.addEventListener("click", () => dropdownContent.classList.remove("show"));
         dropdownMenuBtn.addEventListener("click", (e) => {
             e.stopPropagation();
+            renderMainMenu();
             dropdownContent.classList.toggle("show");
         });
 
@@ -674,15 +623,14 @@
             });
             dropdownContent.append(backBtn);
 
-            const presets = getPresets();
 
-            // Render each preset
-            presets.forEach((p, i) => {
+            const userPresets = JSON.parse(GM_getValue("lineage_seed_presets", "[]"));
+            defaultPresets.forEach(p => addPreset(p));
+            userPresets.forEach((p, i) => addPreset(p, i));
+
+            function addPreset(p, deleteIndex) {
                 const wrapper = document.createElement("div");
                 wrapper.classList.add("lineage-dropdown-item");
-                wrapper.style.display = "flex";
-                wrapper.style.alignItems = "center";
-                wrapper.style.justifyContent = "space-between";
                 wrapper.style.padding = "0";
                 wrapper.addEventListener("click", () => {
                     if (p.required) alertOnMissingRecipes(p.required, true);
@@ -694,26 +642,28 @@
                 const presetItem = document.createElement("div");
                 presetItem.classList.add("lineage-dropdown-item");
                 presetItem.textContent = p.name;
-
-                const deleteButton = document.createElement("button");
-                deleteButton.classList.add("lineage-action-button");
-                deleteButton.textContent = "✖";
-                deleteButton.style.color = "crimson";
-                deleteButton.addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    if (confirm(`You actually want to delete '${p.name}'??!`)) {
-                        presets.splice(i, 1);
-                        GM_setValue("lineage_seed_presets", JSON.stringify(presets));
-                        renderPresetsMenu();
-                    }
-                });
-
                 wrapper.append(presetItem);
-                if (!p.permament) wrapper.append(deleteButton);
-                dropdownContent.append(wrapper);
-            });
 
-            // Add Current Goals button
+                if (deleteIndex) {
+                    const deleteButton = document.createElement("button");
+                    deleteButton.classList.add("lineage-action-button");
+                    deleteButton.textContent = "✖";
+                    deleteButton.style.color = "crimson";
+                    deleteButton.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        if (confirm(`You actually want to delete '${p.name}'??!`)) {
+                            userPresets.splice(deleteIndex, 1);
+                            GM_setValue("lineage_seed_presets", JSON.stringify(userPresets));
+                            renderPresetsMenu();
+                        }
+                    });
+                    wrapper.append(deleteButton);
+                }
+
+                dropdownContent.append(wrapper);
+            }
+
+            // + Current Goals button
             const addCurrentBtn = document.createElement("div");
             addCurrentBtn.classList.add("lineage-dropdown-item");
             addCurrentBtn.style.borderTop = "1px solid var(--border-color, #333)";
@@ -721,30 +671,17 @@
             addCurrentBtn.textContent = "+ Add current goals";
             addCurrentBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
-                if (goals.length === 0) {
-                    alert("You have no goals to save!");
-                    return;
-                }
+                if (goals.length === 0) return alert("No goals to save :((");
                 const name = prompt("Enter a name for this preset:") || idToMostlyNealCase(goals[0]).text;
                 const currentGoalsText = goals.map(id => idToMostlyNealCase(id).text);
-                presets.push({ name: name, goals: currentGoalsText });
-                GM_setValue("lineage_seed_presets", JSON.stringify(presets));
+                userPresets.push({ name: name, goals: currentGoalsText });
+                GM_setValue("lineage_seed_presets", JSON.stringify(userPresets));
                 renderPresetsMenu();
             });
 
             dropdownContent.append(addCurrentBtn);
         }
-
-        renderMainMenu();
-
-        // Close dropdown when clicking outside
-        document.addEventListener("click", () => {
-            dropdownContent.classList.remove("show");
-            setTimeout(renderMainMenu, 200);
-        });
-
         dropdownContainer.append(dropdownMenuBtn, dropdownContent);
-
         goalsContainerContainerDiv.append(goalsContainerDiv, addGoalInput, dropdownContainer);
 
 
@@ -754,7 +691,6 @@
         const lineageTitle = document.createTextNode('');
 
         const copyLineageButton = document.createElement("button");
-        copyLineageButton.type = "button";
         copyLineageButton.classList.add("lineage-action-button");
         copyLineageButton.textContent = "Copy";
         let copyResetTimeout;
@@ -769,7 +705,6 @@
         });
 
         const optimiseButton = document.createElement("button");
-        optimiseButton.type = "button";
         optimiseButton.classList.add("lineage-action-button");
         optimiseButton.textContent = "Optimise";
         optimiseButton.addEventListener('click', async () => {
@@ -833,53 +768,38 @@
 
             goals.forEach((goalId, index) => {
                 const goalItem = idToMostlyNealCase(goalId);
-                const goalItemElement = unsafeWindow.ICHelper.createItemElement(goalItem);
-                goalItemElement.classList.add('lineage-goal');
+                const goalElement = unsafeWindow.ICHelper.createItemElement(goalItem);
+                goalElement.classList.add('lineage-goal');
 
-                goalItemElement.dataset.goalId = goalId; // Store goalId for easy access
-                goalItemElement.dataset.index = index;   // Store original index
-                goalItemElement.addEventListener('remove-goal', (e) => {
+                goalElement.dataset.goalId = goalId; // Store goalId for easy access
+                goalElement.dataset.index = index;   // Store original index
+                goalElement.addEventListener('remove-goal', (e) => {
                     goals.splice(e.target.dataset.index, 1);
                     drawGoalsAndInitLineage();
                 });
 
                 // prevent helper behaviour
-                goalItemElement.addEventListener('mousedown', (e) => e.stopImmediatePropagation(), true);
+                goalElement.addEventListener('mousedown', (e) => e.stopImmediatePropagation(), true);
 
-                goalItemElement.draggable = true;
-                goalItemElement.addEventListener('dragstart', (event) => {
-                    event.dataTransfer.setData('text/plain', goalId);
-                    event.dataTransfer.setData('sourceIndex', index);
-                    event.target.classList.add('dragging');
-                    setTimeout(() => event.target.style.visibility = 'hidden', 0);
+                goalElement.draggable = true;
+                goalElement.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', goalId);
+                    e.dataTransfer.setData('sourceIndex', index);
+                    e.target.classList.add('dragging');
+                    setTimeout(() => e.target.style.visibility = 'hidden', 0);
                 });
-
-                goalItemElement.addEventListener('dragend', (event) => {
-                    event.target.classList.remove('dragging');
-                    event.target.style.visibility = 'visible';
-                    document.querySelectorAll('.lineage-goal-item.drag-over').forEach(el => el.classList.remove('drag-over'));
+                goalElement.addEventListener('dragend', (e) => {
+                    e.target.classList.remove('dragging');
+                    e.target.style.visibility = 'visible';
                 });
-
-                // --- Handle as a drop target (for reordering) ---
-                goalItemElement.addEventListener('dragover', (event) => {
-                    event.preventDefault(); // Necessary to allow dropping
-                    event.dataTransfer.dropEffect = 'move';
-                    // Add visual feedback for where it would drop
-                    const draggingElementIndex = parseInt(event.dataTransfer.getData('sourceIndex'), 10);
-                    if (index !== draggingElementIndex) { // Don't highlight if dragging over itself
-                        event.target.classList.add('drag-over');
-                    }
+                goalElement.addEventListener('dragover', (e) => {
+                    e.preventDefault(); // Necessary to allow dropping
+                    e.dataTransfer.dropEffect = 'move';
                 });
-
-                goalItemElement.addEventListener('dragleave', (event) => {
-                    event.target.classList.remove('drag-over');
-                });
-
-                goalItemElement.addEventListener('drop', (event) => {
-                    event.preventDefault();
-                    event.target.classList.remove('drag-over');
-                    const draggedGoalId = event.dataTransfer.getData('text/plain');
-                    const sourceIndex = parseInt(event.dataTransfer.getData('sourceIndex'), 10);
+                goalElement.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const draggedGoalId = e.dataTransfer.getData('text/plain');
+                    const sourceIndex = parseInt(e.dataTransfer.getData('sourceIndex'), 10);
                     const targetIndex = index;
 
                     if (sourceIndex !== targetIndex) {
@@ -890,7 +810,7 @@
                     }
                 });
 
-                goalsContainerDiv.append(goalItemElement);
+                goalsContainerDiv.append(goalElement);
             });
             addGoalInput.placeholder = `Add goal... (${goals.length})`;
         }
@@ -964,7 +884,7 @@
         function updateHeaderStatText() {
             lineageTitle.textContent = `${methodName} - ${lineage.length} Steps (${((performance.now() - startTime) / 1000).toFixed(3)} s)`;
         }
-	      return container;
+	    return container;
     }
 
 
@@ -995,6 +915,14 @@
         return (is3D ? input : [input]).map(lineage =>
             lineage.map(x => `${[x[0], x[1]].sort()[0]} + ${[x[0], x[1]].sort()[1]} = ${x[2]}`).join('\n')
         ).join('\n\n')
+    }
+
+    function idLineageToText(lineage, goals) {
+        return lineage.map((recipe, i) => {
+            const [first, second] = [o.elementIdToText[recipe[0]], o.elementIdToText[recipe[1]]].sort();
+            const result = o.elementIdToText[recipe[2]];
+            return `${first} + ${second} = ${result}` + (goals.includes(icCaseId(recipe[2])) ? `  // ${i + 1}` : '');
+        }).join('\n');
     }
 
     function alertOnMissingRecipes(input, alertPopup) {
@@ -1072,27 +1000,17 @@
 
 
 
-
-// PriorityQueue (from stackoverflow)
+// Priority Queue - https://stackoverflow.com/a/42919752   
 const pqTop = 0;
 const pqParent = i => ((i + 1) >>> 1) - 1;
 const pqLeft = i => (i << 1) + 1;
 const pqRight = i => (i + 1) << 1;
 
 class PriorityQueue {
-  constructor(comparator = (a, b) => a > b) {
-    this._heap = [];
-    this._comparator = comparator;
-  }
-  size() {
-    return this._heap.length;
-  }
-  isEmpty() {
-    return this.size() == 0;
-  }
-  peek() {
-    return this._heap[pqTop];
-  }
+  constructor(comparator = (a, b) => a > b) { this._heap = []; this._comparator = comparator; }
+  size() { return this._heap.length; }
+  isEmpty() { return this.size() == 0; }
+  peek() { return this._heap[pqTop]; }
   push(...values) {
     values.forEach(value => {
       this._heap.push(value);
@@ -1116,12 +1034,8 @@ class PriorityQueue {
     this._siftDown();
     return replacedValue;
   }
-  _greater(i, j) {
-    return this._comparator(this._heap[i], this._heap[j]);
-  }
-  _swap(i, j) {
-    [this._heap[i], this._heap[j]] = [this._heap[j], this._heap[i]];
-  }
+  _greater(i, j) { return this._comparator(this._heap[i], this._heap[j]); }
+  _swap(i, j) { [this._heap[i], this._heap[j]] = [this._heap[j], this._heap[i]]; }
   _siftUp() {
     let node = this.size() - 1;
     while (node > pqTop && this._greater(node, pqParent(node))) {
@@ -1145,8 +1059,8 @@ class PriorityQueue {
 
 const css = `
 .recipe-modal-body .recipe-modal-body-inner[data-tab-id=lineages] {
-	display: grid;
-	padding: 12px 0px 12px 24px;
+  display: grid;
+  padding: 12px 0px 12px 24px;
   overflow: hidden;
   grid-template-rows: auto 1fr;
 }
@@ -1168,11 +1082,6 @@ const css = `
 }
 .lineage-goals-container .item .dragging {
     opacity: 0.5;
-}
-.lineage-goals-container .item .drag-over {
-    outline: 10px dashed var(--accent-color, cyan);
-    outline-offset: -2px;
-    background-color: color-mix(in oklab, var(--item-background-color, #333), var(--accent-color, cyan) 10%);
 }
 
 .lineage-goals-input {
@@ -1206,73 +1115,67 @@ const css = `
 }
 
 .lineage-dropdown {
-    position: relative;
-    display: inline-block;
+  position: relative;
+  display: inline-block;
 }
-
 .lineage-dropdown-content {
-    display: none;
-    position: absolute;
-    right: 0;
-    top: 100%;
-    background-color: var(--background-color, #1f1f1f);
-    min-width: 196px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5);
-    z-index: 1000;
-    border: 1px solid var(--border-color, #333);
-    border-radius: 5px;
-    overflow: hidden;
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: var(--background-color, #1f1f1f);
+  min-width: 196px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5);
+  z-index: 1000;
+  border: 1px solid var(--border-color, #333);
+  border-radius: 5px;
 }
-
 .lineage-dropdown-content.show {
-    display: block;
+  display: block;
 }
-
 .lineage-dropdown-item {
-    color: var(--text-color, #fff);
-    padding: 10px 14px;
-    text-decoration: none;
-    display: block;
-    cursor: pointer;
-    font-size: 0.9em;
-    transition: background-color 0.15s;
+  color: var(--text-color, #fff);
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 0.9em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .lineage-dropdown-item:hover {
-    background-color: color-mix(in oklab, var(--background-color), var(--text-color) 15%);
+  background-color: color-mix(in oklab, var(--background-color), var(--text-color) 15%);
 }
-
 
 
 .recipe-modal-body-inner .lineage-body {
   display: grid;
-	gap: 8px;
-	overflow: auto;
-	padding-top: 12px;
-	padding-right: 12px;
-	padding-bottom: 12px;
+  gap: 8px;
+  overflow: auto;
+  padding-top: 12px;
+  padding-right: 12px;
+  padding-bottom: 12px;
   max-height: 70vh;
   position: relative;
   /* fade effect ;p */
   -webkit-mask-image: linear-gradient(
-      to bottom,
-      transparent 0%,
-      black 20px,
-      black calc(100% - 20px),
-      transparent 100%
+    to bottom,
+    transparent 0%,
+    black 20px,
+    black calc(100% - 20px),
+    transparent 100%
   );
   mask-image: linear-gradient(
-      to bottom,
-      transparent 0%,
-      black 20px,
-      black calc(100% - 20px),
-      transparent 100%
+    to bottom,
+    transparent 0%,
+    black 20px,
+    black calc(100% - 20px),
+    transparent 100%
   );
 }
 .recipe-modal-body-inner .lineage-body .recipe {
-	display: flex;
-	gap: 6px;
-	align-items: center;
+  display: flex;
+  gap: 6px;
+  align-items: center;
 }
 .recipe-step-number {
   display: inline-block;
@@ -1287,41 +1190,35 @@ const css = `
 }
 
 
-
-
 .lineage-header {
-    display: flex;
-    align-items: center;
-    color: var(--text-color);
+  display: flex;
+  align-items: center;
+  color: var(--text-color);
 }
 
 .lineage-action-button {
-    display: grid;
-    place-content: center;
-    background-color: transparent;
-    border: 3px solid var(--border-color);
-    border-radius: 5px;
-    height: 30px;
-    padding: 5px;
-    cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
-    margin-left: 4px;
-    margin-right: 4px;
+  display: grid;
+  place-content: center;
+  background-color: transparent;
+  border: 3px solid var(--border-color);
+  border-radius: 5px;
+  padding: 5px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  margin-left: 4px;
+  margin-right: 4px;
 }
 
 .lineage-action-button:hover {
-    background-color: color-mix(in oklab, var(--background-color), var(--text-color) 5%);
-    border-color: color-mix(in oklab, var(--border-color), var(--text-color) 30%);
+  background-color: color-mix(in oklab, var(--background-color), var(--text-color) 5%);
+  border-color: color-mix(in oklab, var(--border-color), var(--text-color) 30%);
 }
 
 .lineage-action-button:active {
-    background-color: color-mix(in oklab, var(--background-color), var(--text-color) 50%);
+  background-color: color-mix(in oklab, var(--background-color), var(--text-color) 50%);
 }
 `;
-
 const styleElement = document.createElement("style");
-styleElement.type = "text/css";
 styleElement.textContent = css.trim();
 document.head.appendChild(styleElement);
-
 })();

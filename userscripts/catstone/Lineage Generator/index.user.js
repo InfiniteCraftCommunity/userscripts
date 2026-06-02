@@ -262,21 +262,19 @@
     }
 
 
-    function generateElementHeuristics(startElements, heurMap=o.elementHeur, end=Infinity) {
-        const pq = new PriorityQueue((a, b) => b[0] > a[0]);
-
+    function generateElementHeuristics(startElements, heurMap=o.elementHeur, pq=new PriorityQueue(), pause=Infinity, end=Infinity) {
         for (const startElement of startElements) {
             const heur = heurMap[startElement];
             if (heur === undefined) throw new Error(`${startElement} does not have a heur.`);
             pq.push([heur, startElement]);
         }
 
-        while (!pq.isEmpty()) {
+        while (pq.peek()?.[0] < pause) {
             const [elementHeur, element] = pq.pop();
+
             if ((heurMap[element] ?? Infinity) < elementHeur) continue;
 
             for (const [other, result] of (o.recipesUsesIC[element] ?? [])) {
-
                 const otherHeur = element === other ? 0 : heurMap[other];
                 if (otherHeur === undefined) continue;
 
@@ -303,7 +301,9 @@
 
             if (fh < sh) [fh, sh] = [sh, fh];
 
-            if (fh < bestMax  ||  (fh === bestMax && sh < bestMin)) {
+            if (fh < bestMax
+            || (fh === bestMax && sh < bestMin)
+            /* || (fh === bestMax && sh === bestMin && Math.random() > 0.5)*/ ) {
                 bestMax = fh;
                 bestMin = sh;
                 bestRecipe = recipe;
@@ -321,6 +321,7 @@
         const crafted = new Set();
         const visitedLastPath = new Map();  // for invalid lineages with infinite loops
         const heurMap = [...o.elementHeur];
+        const pq = new PriorityQueue();
         const lineage = [];
 
         while (elementQueue.length > 0) {
@@ -365,14 +366,15 @@
                 heurMap[element] = 0;
 
                 if (recalc && elementQueue.length > 0) {
+                    // tiny sleep to let the ui update
+                    await sleep(0);
+
+                    const nextHeurInQueue = heurMap[elementQueue.at(-1)];
                     const worst = elementQueue.reduce((best, el) => {
                         const heur = heurMap[el];
                         return heur > best.heur ? { element: el, heur } : best;
                     }, { element: undefined, heur: -Infinity });
-
-                    // tiny sleep to let the ui update
-                    await sleep(0);
-                    generateElementHeuristics([element], heurMap, worst.heur);
+                    generateElementHeuristics([element], heurMap, pq, nextHeurInQueue, worst.heur);
                 }
             }
         }
@@ -1000,14 +1002,14 @@
 
 
 
-// Priority Queue - https://stackoverflow.com/a/42919752   
+// Priority Queue - https://stackoverflow.com/a/42919752
 const pqTop = 0;
 const pqParent = i => ((i + 1) >>> 1) - 1;
 const pqLeft = i => (i << 1) + 1;
 const pqRight = i => (i + 1) << 1;
 
 class PriorityQueue {
-  constructor(comparator = (a, b) => a > b) { this._heap = []; this._comparator = comparator; }
+  constructor(comparator = (a, b) => b[0] > a[0]) { this._heap = []; this._comparator = comparator; }
   size() { return this._heap.length; }
   isEmpty() { return this.size() == 0; }
   peek() { return this._heap[pqTop]; }

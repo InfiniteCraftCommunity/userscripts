@@ -237,27 +237,23 @@
 
 
     async function* generateLineageMultipleMethods(goals) {
-        const lineageGenerators = {
-            'Simple':         async () => await generateLineage(goals),
-            'Normal Recalc':  async () => await generateLineage(goals, 1),
-            'Reverse Recalc': async () => await generateLineage(goals, 2),
-            'Min Recalc':     async () => await generateLineage(goals, 3),
-            'Max Recalc':     async () => await generateLineage(goals, 4),
-            'Random Recalc':  async () => await generateLineage(goals, 5),
-        };
+        async function generateWithSettings(order, recalc) {
+            console.time(order);
+            const { lineage, missingElements } = await generateLineage(goals, order, recalc);
 
-        // Now iterate through the generators and run them
-        for (const [methodName, generateFunc] of Object.entries(lineageGenerators)) {
-            console.time(methodName);
-            const { lineage, missingElements } = await generateFunc();
-
+            const methodName = (order ? `${icCaseText(order)} Recalc` : 'Simple');
             const groupName = [`%c${methodName}:`, 'background:green; color:white', `${lineage.length}-step`];
             console.groupCollapsed(...groupName);
             console.log(idLineageToText(lineage, goals));
-            console.timeEnd(methodName);
+            console.timeEnd(order);
             console.groupEnd();
 
-            yield { lineage, methodName, missingElements };
+            return { lineage, methodName, missingElements };
+        }
+
+        yield await generateWithSettings();
+        for (const orderName of ['left', 'right', 'min', 'max', 'rand']) {
+            yield await generateWithSettings(orderName, true);
         }
     }
 
@@ -316,7 +312,7 @@
 
 
 
-    async function generateLineage(goals, recalc=false, depth=0) {
+    async function generateLineage(goals, order, recalc=false) {
         const elementQueue = [...goals];
         const crafted = new Set();
         const visitedLastPath = new Map();  // for invalid lineages with infinite loops
@@ -336,10 +332,10 @@
             }
             let bestRecipe = findBestRecipeHeur(elementRecipesArr, heurMap);
 
-            if (recalc === 2) bestRecipe = [bestRecipe[1], bestRecipe[0]];
-            else if (recalc === 3 && heurMap[bestRecipe[0]] > heurMap[bestRecipe[1]]) bestRecipe = [bestRecipe[1], bestRecipe[0]];
-            else if (recalc === 4 && heurMap[bestRecipe[0]] < heurMap[bestRecipe[1]]) bestRecipe = [bestRecipe[1], bestRecipe[0]];
-            else if (recalc === 5 && Math.round(Math.random())) bestRecipe = [bestRecipe[1], bestRecipe[0]];
+            if (order === 'right') bestRecipe = [bestRecipe[1], bestRecipe[0]];
+            else if (order === 'min' && heurMap[bestRecipe[0]] > heurMap[bestRecipe[1]]) bestRecipe = [bestRecipe[1], bestRecipe[0]];
+            else if (order === 'max' && heurMap[bestRecipe[0]] < heurMap[bestRecipe[1]]) bestRecipe = [bestRecipe[1], bestRecipe[0]];
+            else if (order === 'rand' && Math.round(Math.random())) bestRecipe = [bestRecipe[1], bestRecipe[0]];
 
             let neededIng;
             for (const ing of bestRecipe) {
@@ -378,7 +374,9 @@
                 }
             }
         }
-        return correctlyCapsAndOrderLineage(removeUnnecessary(lineage, goals), goals);
+        let initialLineage = removeUnnecessary(lineage, goals);
+        // initialLineage = optimizeLineageAI(initialLineage, goals);
+        return correctlyCapsAndOrderLineage(initialLineage, goals);
     }
 
 
@@ -394,46 +392,51 @@
         for (let i = lineage.length - 1; i >= 0; i--) {
             const [f, s, r] = lineage[i];
             if (goals.includes(r)) continue;
-            // try to remove recipe step by rerouting other recipes
 
-            const blacklist = getBlacklistRU(r, usedMap);
+            let goalsNeeded = 0;
+            const dead = new Set([r]);
+            for (const deadElement of dead) {
+                if (goals.includes(deadElement)) goalsNeeded++;
+                for (const use of usedMap.get(deadElement)) {
+                    dead.add(use);
+                }
+            }
+
             const changes = [];
+            let changed = true;
 
-            let removeable = true;
-            for (const use of usedMap.get(r)) {
-                const replacementRecipe = o.recipesResIC[use].find(([newF, newS]) =>
-                    (o.baseElementsId.includes(newF) || (resultIngMap.has(newF) && !blacklist.has(newF)))
-                 && (o.baseElementsId.includes(newS) || (resultIngMap.has(newS) && !blacklist.has(newS)))
-                );
-                if (replacementRecipe) changes.push([use, replacementRecipe]);
-                else {
-                    removeable = false;
-                    break;
+            while (dead.size > 1 && changed && goalsNeeded) {
+                changed = false;
+                for (const deadElement of dead) {
+                    if (deadElement === r) continue;
+                    let replacementRecipe;
+                    for (const recipe of o.recipesResIC[deadElement]) {
+                        const [newF, newS] = recipe;
+                        if ((o.baseElementsId.includes(newF) || (resultIngMap.has(newF) && !dead.has(newF)))
+                        && (o.baseElementsId.includes(newS) || (resultIngMap.has(newS) && !dead.has(newS)))) {
+                            replacementRecipe = recipe;
+                            break;
+                        }
+                    }
+                    if (replacementRecipe) {
+                        changes.push([deadElement, replacementRecipe]);
+                        dead.delete(deadElement);
+                        changed = true;
+                        if (goals.includes(deadElement) && --goalsNeeded === 0) break;
+                    }
                 }
             }
-            if (removeable) {
-                // we can remove r!!
-                switchRecipeRU(r, undefined, resultIngMap, usedMap);
-                for (const [changeR, changeIngs] of changes) {
-                    switchRecipeRU(changeR, changeIngs, resultIngMap, usedMap);
-                }
+
+            if (goalsNeeded === 0) {
+                for (const d of dead) switchRecipeRU(resultIngMap, usedMap, d);
+                for (const [newR, newIngs] of changes) switchRecipeRU(resultIngMap, usedMap, newR, newIngs);
             }
         }
 
-        return [...resultIngMap.entries()].map(([result, ings]) => [ings[0], ings[1], result]);
+        return [...resultIngMap.entries()].map(([result, ings]) => [ings[0], ings[1], result])
     }
 
-
-    function getBlacklistRU(element, usedMap) {
-        const blacklist = new Set([element]);
-        for (const blackElement of blacklist) {
-            for (const use of usedMap.get(blackElement)) {
-                blacklist.add(use);
-            }
-        }
-        return blacklist;
-    }
-    function switchRecipeRU(result, newRecipe, resultIngMap, usedMap) {
+    function switchRecipeRU(resultIngMap, usedMap, result, newRecipe) {
         const originalRecipe = resultIngMap.get(result);
         for (const x of originalRecipe) if (!o.baseElementsId.includes(x)) usedMap.get(x)?.delete(result);
 
@@ -505,8 +508,9 @@
         }
 
         let goals = [goalId];
-        let startTime, generator, lineage, methodName, missingElements;
-
+        let bestLineage;
+        let startTime;
+        let generator;
 
         const goalsContainerContainerDiv = document.createElement("div");
         goalsContainerContainerDiv.classList.add("lineage-goals-container-container");
@@ -697,7 +701,7 @@
         copyLineageButton.textContent = "Copy";
         let copyResetTimeout;
         copyLineageButton.addEventListener('click', () => {
-            navigator.clipboard.writeText(idLineageToText(lineage, goals)).then(() => {
+            navigator.clipboard.writeText(idLineageToText(bestLineage.lineage, goals)).then(() => {
                 copyLineageButton.style.borderColor = 'lime';
                 clearTimeout(copyResetTimeout);
                 copyResetTimeout = setTimeout(() => {  // revert to original
@@ -715,22 +719,24 @@
             optimiseButton.style.borderColor = 'cyan';
 
             startTime = performance.now();
-            let methodIndex = 0;
-            optimiseButton.textContent = `Optimising... (${methodIndex++}/5)`;
             let goalsSnapshot = [...goals];
+            let optimizeTries = 0;
 
-            for await (const { lineage: newLineage, methodName: newMethodName, missingElements: newMissingElements } of generator) {
+            optimiseButton.textContent = `Optimising... (${optimizeTries++}/5)`;
+            for await (const lineage of generator) {
                 if (!container.checkVisibility() || goals.join('\n') != goalsSnapshot.join('\n')) return
 
-                if (newLineage.length < lineage.length || (newLineage.length === lineage.length && newMissingElements.length < missingElements.length)) {
-                    lineage = newLineage;
-                    methodName = newMethodName;
-                    missingElements = newMissingElements;
+                optimiseButton.textContent = `Optimising... (${optimizeTries++}/5)`;
+
+                if (lineage.lineage.length < bestLineage.lineage.length && lineage.missingElements.length <= bestLineage.missingElements.length
+                 || lineage.lineage.length === bestLineage.lineage.length && lineage.missingElements.length < bestLineage.missingElements.length
+                ) {
+                    bestLineage = lineage;
                     drawLineage();
                 }
-                optimiseButton.textContent = `Optimising... (${methodIndex++}/5)`;
                 updateHeaderStatText();
             }
+
             optimiseButton.textContent = 'Optimised';
             optimiseButton.style.opacity = '0.2';
             optimiseButton.style.transition = '';
@@ -820,10 +826,7 @@
         async function initializeLineage() {
             startTime = performance.now();
             generator = generateLineageMultipleMethods(goals);
-            const result = (await generator.next()).value;
-            lineage = result.lineage;
-            methodName = result.methodName;
-            missingElements = result.missingElements;
+            bestLineage = (await generator.next()).value;
             updateHeaderStatText();
             drawLineage();
             optimiseButton.textContent = 'Optimise';
@@ -835,12 +838,12 @@
         function drawLineage() {
             lineageBodyDiv.innerHTML = '';
 
-            if (missingElements.length > 0) {
+            if (bestLineage.missingElements.length > 0) {
                 const missingContainerContainerDiv = document.createElement("div");
                 missingContainerContainerDiv.classList.add("lineage-missing-container-container");
                 const missingContaierDiv = document.createElement("div");
                 missingContaierDiv.classList.add("lineage-missing-container");
-                for (const missingElement of missingElements) {
+                for (const missingElement of bestLineage.missingElements) {
                     const missingItem = idToMostlyNealCase(missingElement);
                     const missingItemElement = unsafeWindow.ICHelper.createItemElement(missingItem);
                     missingItemElement.classList.add('lineage-missing');
@@ -850,7 +853,7 @@
                 lineageBodyDiv.append(missingContainerContainerDiv);
             }
 
-            lineage.forEach((r, step) => {
+            bestLineage.lineage.forEach((r, step) => {
                 const recipe = document.createElement("div");
 	              recipe.classList.add("recipe");
 	              const [first, second, result] = r.map(x => unsafeWindow.ICHelper.idMap.get(x));
@@ -863,9 +866,9 @@
                     const firstItemElement = unsafeWindow.ICHelper.createItemElement(first);
                     const secondItemElement = unsafeWindow.ICHelper.createItemElement(second);
                     const resultItemElement = unsafeWindow.ICHelper.createItemElement(result);
-                    if (missingElements.includes(icCaseId(first.id))) firstItemElement.classList.add('lineage-missing');
-                    if (missingElements.includes(icCaseId(second.id))) secondItemElement.classList.add('lineage-missing');
-                    if (missingElements.includes(icCaseId(result.id))) resultItemElement.classList.add('lineage-missing');
+                    if (bestLineage.missingElements.includes(icCaseId(first.id))) firstItemElement.classList.add('lineage-missing');
+                    if (bestLineage.missingElements.includes(icCaseId(second.id))) secondItemElement.classList.add('lineage-missing');
+                    if (bestLineage.missingElements.includes(icCaseId(result.id))) resultItemElement.classList.add('lineage-missing');
                     else if (goals.includes(icCaseId(result.id))) resultItemElement.classList.add('lineage-goal');
 
 	                  recipe.append(
@@ -884,7 +887,7 @@
             return JSON.parse(GM_getValue("lineage_seed_presets", JSON.stringify(defaultPresets)));
         }
         function updateHeaderStatText() {
-            lineageTitle.textContent = `${methodName} - ${lineage.length} Steps (${((performance.now() - startTime) / 1000).toFixed(3)} s)`;
+            lineageTitle.textContent = `${bestLineage.methodName} - ${bestLineage.lineage.length} Steps (${((performance.now() - startTime) / 1000).toFixed(3)} s)`;
         }
 	    return container;
     }

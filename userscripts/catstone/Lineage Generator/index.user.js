@@ -118,10 +118,11 @@
 
                 const newRecipe = [icCaseId(arguments[0].itemId), icCaseId(arguments[1].itemId), response.instance.id];
                 const newHeurForR = (o.elementHeur[newRecipe[0]] ?? Infinity) + (o.elementHeur[newRecipe[1]] ?? Infinity) + 1;
-                if ((o.elementHeur[newRecipe[2]] ?? Infinity) > newHeurForR) {
-                    o.elementHeur[newRecipe[2]] = newHeurForR;
+                const resultIc = icCaseId(response.instance.id);
+                if ((o.elementHeur[resultIc] ?? Infinity) > newHeurForR) {
+                    o.elementHeur[resultIc] = newHeurForR;
                     // Now, propagate this change:
-                    generateElementHeuristics([newRecipe[2]]);
+                    generateElementHeuristics([resultIc]);
                 }
                 addRecipe(...newRecipe);
             });

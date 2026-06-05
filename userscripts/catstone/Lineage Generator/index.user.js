@@ -116,15 +116,13 @@
                 if (!response || !response.instance) return;
                 addElement(response.instance.text, response.instance.id);
 
-                const newRecipe = [icCaseId(arguments[0].itemId), icCaseId(arguments[1].itemId), response.instance.id];
-                const newHeurForR = (o.elementHeur[newRecipe[0]] ?? Infinity) + (o.elementHeur[newRecipe[1]] ?? Infinity) + 1;
-                const resultIc = icCaseId(response.instance.id);
-                if ((o.elementHeur[resultIc] ?? Infinity) > newHeurForR) {
-                    o.elementHeur[resultIc] = newHeurForR;
-                    // Now, propagate this change:
-                    generateElementHeuristics([resultIc]);
-                }
-                addRecipe(...newRecipe);
+                const icF = icCaseId(arguments[0].itemId);
+                const icS = icCaseId(arguments[1].itemId);
+                const icR = icCaseId(response.instance.id);
+                const newHeurForR = (o.elementHeur[icF] ?? Infinity) + (o.elementHeur[icS] ?? Infinity) + 1;
+                o.elementHeur[icR] = newHeurForR;
+                generateElementHeuristics([icR]);
+                addRecipe(...[icF, icS, response.instance.id]);
             });
             return response;
         }

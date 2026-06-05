@@ -4,7 +4,7 @@
 // @match         https://neal.fun/infinite-craft/*
 // @grant         GM_setValue
 // @grant         GM_getValue
-// @version       2.2
+// @version       2.3
 // @author        Catstone
 // @license       MIT
 // @description   Generates pretty damn good lineages ingame!
@@ -116,7 +116,7 @@
                 if (!response || !response.instance) return;
                 addElement(response.instance.text, response.instance.id);
 
-                const newRecipe = [icCaseId(arguments[0].itemId), icCaseId(arguments[1].itemId), icCaseId(response.instance.id)];
+                const newRecipe = [icCaseId(arguments[0].itemId), icCaseId(arguments[1].itemId), response.instance.id];
                 const newHeurForR = (o.elementHeur[newRecipe[0]] ?? Infinity) + (o.elementHeur[newRecipe[1]] ?? Infinity) + 1;
                 if ((o.elementHeur[newRecipe[2]] ?? Infinity) > newHeurForR) {
                     o.elementHeur[newRecipe[2]] = newHeurForR;
@@ -391,7 +391,9 @@
 
         for (const [f, s, r] of lineage) {
             if (goals.includes(r)) continue;
+            // try to remove `r` from the lineage.
 
+            // 1. mark all elements that depend on `r` as dead.
             let goalRevivalsNeeded = 0;
             const dead = new Set([r]);
             for (const deadElement of dead) {
@@ -401,6 +403,9 @@
                 }
             }
 
+            // 2. keep trying to find a new route for each dead element, until ...
+            // ... all goals are alive again  => it can   remove `r` :)
+            // ... no more elements to revive => it can't remove `r` :(
             const changes = [];
             let changed = true;
 

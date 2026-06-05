@@ -389,14 +389,13 @@
             if (!o.baseElementsId.includes(s)) usedMap.get(s)?.add(r);
         }
 
-        for (let i = lineage.length - 1; i >= 0; i--) {
-            const [f, s, r] = lineage[i];
+        for (const [f, s, r] of lineage) {
             if (goals.includes(r)) continue;
 
-            let goalsNeeded = 0;
+            let goalRevivalsNeeded = 0;
             const dead = new Set([r]);
             for (const deadElement of dead) {
-                if (goals.includes(deadElement)) goalsNeeded++;
+                if (goals.includes(deadElement)) goalRevivalsNeeded++;
                 for (const use of usedMap.get(deadElement)) {
                     dead.add(use);
                 }
@@ -405,7 +404,7 @@
             const changes = [];
             let changed = true;
 
-            while (dead.size > 1 && changed && goalsNeeded) {
+            while (dead.size > 1 && changed && goalRevivalsNeeded) {
                 changed = false;
                 for (const deadElement of dead) {
                     if (deadElement === r) continue;
@@ -422,12 +421,12 @@
                         changes.push([deadElement, replacementRecipe]);
                         dead.delete(deadElement);
                         changed = true;
-                        if (goals.includes(deadElement) && --goalsNeeded === 0) break;
+                        if (goals.includes(deadElement) && --goalRevivalsNeeded === 0) break;
                     }
                 }
             }
 
-            if (goalsNeeded === 0) {
+            if (goalRevivalsNeeded === 0) {
                 for (const d of dead) switchRecipeRU(resultIngMap, usedMap, d);
                 for (const [newR, newIngs] of changes) switchRecipeRU(resultIngMap, usedMap, newR, newIngs);
             }
@@ -438,7 +437,7 @@
 
     function switchRecipeRU(resultIngMap, usedMap, result, newRecipe) {
         const originalRecipe = resultIngMap.get(result);
-        for (const x of originalRecipe) if (!o.baseElementsId.includes(x)) usedMap.get(x)?.delete(result);
+        if (originalRecipe) for (const x of originalRecipe) if (!o.baseElementsId.includes(x)) usedMap.get(x)?.delete(result);
 
         if (!newRecipe) resultIngMap.delete(result);
         else {
@@ -597,7 +596,7 @@
         optBestSeed.textContent = "Add best seed";
         optBestSeed.addEventListener("click", () => {
             alertOnMissingRecipes(defaultPresets[1].required, true);
-            processNewGoalElements(defaultPresets[1].goals);
+            processNewGoalElements(defaultPresets[1].goals, true);
         });
 
         // Option 6: Seed Presets
@@ -640,7 +639,7 @@
                 wrapper.style.padding = "0";
                 wrapper.addEventListener("click", () => {
                     if (p.required) alertOnMissingRecipes(p.required, true);
-                    processNewGoalElements(p.goals);
+                    processNewGoalElements(p.goals, true);
                     dropdownContent.classList.remove("show");
                     renderMainMenu();
                 });
@@ -753,14 +752,15 @@
         drawGoalsAndInitLineage();
 
 
-        function processNewGoalElements(newGoals) {
+        function processNewGoalElements(newGoals, toBottom) {
             let update = false;
             for (const newGoal of newGoals) {
                 const icGoalText = icCaseText(newGoal.trim());
                 const newItemId = o.elementTextToId.get(icGoalText);
                 if (newItemId !== undefined && !goals.includes(newItemId)) {
                     addGoalInput.value = '';
-                    goals.push(newItemId);
+                    if (toBottom) goals.push(newItemId);
+                    else goals.unshift(newItemId);
                     update = true;
                 }
             }
@@ -774,13 +774,14 @@
             optimiseButton.style.borderColor = '';
             initializeLineage();
 
-            goals.forEach((goalId, index) => {
+            for (let i = goals.length - 1; i >= 0; i--) {
+                const goalId = goals[i];
                 const goalItem = idToMostlyNealCase(goalId);
                 const goalElement = unsafeWindow.ICHelper.createItemElement(goalItem);
                 goalElement.classList.add('lineage-goal');
 
                 goalElement.dataset.goalId = goalId; // Store goalId for easy access
-                goalElement.dataset.index = index;   // Store original index
+                goalElement.dataset.index = i;   // Store original index
                 goalElement.addEventListener('remove-goal', (e) => {
                     goals.splice(e.target.dataset.index, 1);
                     drawGoalsAndInitLineage();
@@ -792,7 +793,7 @@
                 goalElement.draggable = true;
                 goalElement.addEventListener('dragstart', (e) => {
                     e.dataTransfer.setData('text/plain', goalId);
-                    e.dataTransfer.setData('sourceIndex', index);
+                    e.dataTransfer.setData('sourceIndex', i);
                     e.target.classList.add('dragging');
                     setTimeout(() => e.target.style.visibility = 'hidden', 0);
                 });
@@ -808,7 +809,7 @@
                     e.preventDefault();
                     const draggedGoalId = e.dataTransfer.getData('text/plain');
                     const sourceIndex = parseInt(e.dataTransfer.getData('sourceIndex'), 10);
-                    const targetIndex = index;
+                    const targetIndex = i;
 
                     if (sourceIndex !== targetIndex) {
                         // Reorder the `goals` array
@@ -819,7 +820,7 @@
                 });
 
                 goalsContainerDiv.append(goalElement);
-            });
+            }
             addGoalInput.placeholder = `Add goal... (${goals.length})`;
         }
 
@@ -855,32 +856,23 @@
 
             bestLineage.lineage.forEach((r, step) => {
                 const recipe = document.createElement("div");
-	              recipe.classList.add("recipe");
-	              const [first, second, result] = r.map(x => unsafeWindow.ICHelper.idMap.get(x));
-	              if (!first || !second || !result) console.warn("Invalid recipe for " + r.map(x => o.elementIdToText[x]), r);
-                else {
-                    const stepNumberSpan = document.createElement("span");
-                    stepNumberSpan.classList.add("recipe-step-number");
-                    stepNumberSpan.textContent = `${step + 1}.`;
+                recipe.classList.add("recipe");
+                const [first, second, result] = r.map(x => ICHelper.getItemFromId(x));
+                if (!first || !second || !result) return console.warn("Invalid recipe for " + r.map(x => o.elementIdToText[x]), r);
+                const stepNumberSpan = document.createElement("span");
+                stepNumberSpan.classList.add("recipe-step-number");
+                stepNumberSpan.textContent = `${step + 1}.`;
 
-                    const firstItemElement = unsafeWindow.ICHelper.createItemElement(first);
-                    const secondItemElement = unsafeWindow.ICHelper.createItemElement(second);
-                    const resultItemElement = unsafeWindow.ICHelper.createItemElement(result);
-                    if (bestLineage.missingElements.includes(icCaseId(first.id))) firstItemElement.classList.add('lineage-missing');
-                    if (bestLineage.missingElements.includes(icCaseId(second.id))) secondItemElement.classList.add('lineage-missing');
-                    if (bestLineage.missingElements.includes(icCaseId(result.id))) resultItemElement.classList.add('lineage-missing');
-                    else if (goals.includes(icCaseId(result.id))) resultItemElement.classList.add('lineage-goal');
+                const firstItemElement = unsafeWindow.ICHelper.createItemElement(first);
+                const secondItemElement = unsafeWindow.ICHelper.createItemElement(second);
+                const resultItemElement = unsafeWindow.ICHelper.createItemElement(result);
+                if (bestLineage.missingElements.includes(icCaseId(first.id))) firstItemElement.classList.add('lineage-missing');
+                if (bestLineage.missingElements.includes(icCaseId(second.id))) secondItemElement.classList.add('lineage-missing');
+                if (bestLineage.missingElements.includes(icCaseId(result.id))) resultItemElement.classList.add('lineage-missing');
+                else if (goals.includes(icCaseId(result.id))) resultItemElement.classList.add('lineage-goal');
 
-	                  recipe.append(
-	                  	  stepNumberSpan,
-	                  	  firstItemElement,
-	                  	  document.createTextNode("+"),
-	                  	  secondItemElement,
-	                  	  document.createTextNode("→"),
-	                  	  resultItemElement
-	                  );
-	                  lineageBodyDiv.append(recipe);
-                }
+                recipe.append(stepNumberSpan, firstItemElement, document.createTextNode("+"), secondItemElement, document.createTextNode("→"), resultItemElement);
+                lineageBodyDiv.append(recipe);
             });
         }
         function getPresets() {
@@ -895,7 +887,7 @@
 
 
     function idToMostlyNealCase(itemId) {
-        let item = unsafeWindow.ICHelper.idMap.get(itemId);
+        let item = unsafeWindow.ICHelper.getItemFromId(itemId);
         if (item) return item;
         // example: it is `End Of Sentence` but the user only has `End of Sentence`...
         const itemLowerText = o.elementIdToText[itemId].toLowerCase();

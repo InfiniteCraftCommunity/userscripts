@@ -120,8 +120,10 @@
                 const icS = icCaseId(arguments[1].itemId);
                 const icR = icCaseId(response.instance.id);
                 const newHeurForR = (o.elementHeur[icF] ?? Infinity) + (o.elementHeur[icS] ?? Infinity) + 1;
-                o.elementHeur[icR] = newHeurForR;
-                generateElementHeuristics([icR]);
+                if ((o.elementHeur[icR] ?? Infinity) > newHeurForR) {
+                    o.elementHeur[icR] = newHeurForR;
+                    generateElementHeuristics([icR]);
+                }
                 addRecipe(...[icF, icS, response.instance.id]);
             });
             return response;

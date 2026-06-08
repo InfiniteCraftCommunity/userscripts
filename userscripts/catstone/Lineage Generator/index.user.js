@@ -341,10 +341,12 @@
             }
             let bestRecipe = findBestRecipeHeur(elementRecipesArr, heurMap);
 
-            if (order === 'right') bestRecipe = [bestRecipe[1], bestRecipe[0]];
-            else if (order === 'min' && heurMap[bestRecipe[0]] > heurMap[bestRecipe[1]]) bestRecipe = [bestRecipe[1], bestRecipe[0]];
-            else if (order === 'max' && heurMap[bestRecipe[0]] < heurMap[bestRecipe[1]]) bestRecipe = [bestRecipe[1], bestRecipe[0]];
-            else if (order === 'rand' && Math.round(Math.random())) bestRecipe = [bestRecipe[1], bestRecipe[0]];
+            if (order === 'right'
+            || order === 'min' && heurMap[bestRecipe[0]] > heurMap[bestRecipe[1]]
+            || order === 'max' && heurMap[bestRecipe[0]] < heurMap[bestRecipe[1]]
+            || order === 'rand' && Math.round(Math.random())) {
+                bestRecipe = [bestRecipe[1], bestRecipe[0]];
+            }
 
             let neededIng;
             for (const ing of bestRecipe) {
@@ -398,17 +400,17 @@
             if (!o.baseElementsId.includes(s)) usedMap.get(s)?.add(r);
         }
 
-        for (const [f, s, r] of lineage) {
+        for (const [,, r] of lineage) {
             if (goals.includes(r)) continue;
             // try to remove `r` from the lineage.
 
             // 1. mark all elements that depend on `r` as dead.
             let goalRevivalsNeeded = 0;
-            const dead = new Set([r]);
-            for (const deadElement of dead) {
-                if (goals.includes(deadElement)) goalRevivalsNeeded++;
-                for (const use of usedMap.get(deadElement)) {
-                    dead.add(use);
+            const dead = new Map([[r, Infinity]]);
+            for (const [d] of dead) {
+                if (goals.includes(d)) goalRevivalsNeeded++;
+                for (const use of usedMap.get(d)) {
+                    dead.set(use, (dead.get(use) || 0) + 1);
                 }
             }
 
@@ -420,7 +422,7 @@
 
             while (dead.size > 1 && changed && goalRevivalsNeeded) {
                 changed = false;
-                for (const deadElement of dead) {
+                for (const [deadElement] of dead) {
                     if (deadElement === r) continue;
                     let replacementRecipe;
                     for (const recipe of o.recipesResIC[deadElement]) {
@@ -433,15 +435,25 @@
                     }
                     if (replacementRecipe) {
                         changes.push([deadElement, replacementRecipe]);
-                        dead.delete(deadElement);
                         changed = true;
-                        if (goals.includes(deadElement) && --goalRevivalsNeeded === 0) break;
+
+                        const reviveQueue = [deadElement];
+                        for (const elem of reviveQueue) {
+                            dead.delete(elem);
+                            if (goals.includes(elem) && !--goalRevivalsNeeded) break;
+                            for (const use of usedMap.get(elem)) {
+                                const count = dead.get(use) - 1;
+                                if (count === 0) reviveQueue.push(use);
+                                else if (count) dead.set(use, count);
+                            }
+                        }
+                        if (!goalRevivalsNeeded) break;
                     }
                 }
             }
 
-            if (goalRevivalsNeeded === 0) {
-                for (const d of dead) switchRecipeRU(resultIngMap, usedMap, d);
+            if (!goalRevivalsNeeded) {
+                for (const [d] of dead) switchRecipeRU(resultIngMap, usedMap, d);
                 for (const [newR, newIngs] of changes) switchRecipeRU(resultIngMap, usedMap, newR, newIngs);
             }
         }
@@ -931,12 +943,15 @@
             const id2 = o.icTextToCanonicalId.get(icCaseText(second));
             const idRes = o.icTextToCanonicalId.get(icCaseText(res));
 
+            if (id1 === undefined || id2 === undefined || idRes === undefined) {
+                missing.add(`${first} + ${second} = ${res}`);
+                continue;
+            }
             // skip recipes like `X + Y = y`, because they aren't stored in this script...
             if (id1 === idRes || id2 === idRes) continue;
 
             const sortedFS = id2 > id1 ? [id1, id2] : [id2, id1];
-            if (id1 === undefined || id2 === undefined || idRes === undefined
-            || canonilizeId(o.recipesIngIC.get(sortedFS.join('='))) !== idRes) {
+            if (canonilizeId(o.recipesIngIC.get(sortedFS.join('='))) !== idRes) {
                 missing.add(`${first} + ${second} = ${res}`);
             }
         }
@@ -969,7 +984,7 @@
             if (delayMs) promises.push((async () => {
                 await sleep(i * delayMs);
                 try {
-                    const [ef, es, er] = [f, s, r].map(x => encodeURIComponent(icCaseText(x)));
+                    const [ef, es, er] = [icCaseText(f), icCaseText(s), r].map(encodeURIComponent);
                     if (!await fetch(`https://neal.fun/api/infinite-craft/check?first=${ef}&second=${es}&result=${er}`)
                         .then(x => x.json()).then(x => x.valid)) err.push(`Invalid recipe: ${f} + ${s} = ${r}`);
                 } catch (error) {

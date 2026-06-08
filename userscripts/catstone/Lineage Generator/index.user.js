@@ -4,7 +4,7 @@
 // @match         https://neal.fun/infinite-craft/*
 // @grant         GM_setValue
 // @grant         GM_getValue
-// @version       2.3
+// @version       2.4
 // @author        Catstone
 // @license       MIT
 // @description   Generates pretty damn good lineages ingame!
@@ -22,22 +22,22 @@
         baseElementsString: ["Water", "Fire", "Wind", "Earth"],
         baseElementsId: null,  // gets updated in `reloadGameData`
 
-        recipesIngIC: new Map(),// "Water=Water" => "Lake"
-        recipesResIC: [],       // "Lake" => ["Water", "Water"]
-        recipesUsesIC: [],      // "Water" => ["Water", "Lake"]
-        elementHeur: [],        // "Lake" => 1
+        recipesIngIC: new Map(),// "Waterid=Waterid" => "Lakeid"
+        recipesResIC: [],       // "Lakeid" => ["Waterid", "Waterid"]
+        recipesUsesIC: [],      // "Waterid" => ["Waterid", "Lakeid"]
+        elementHeur: [],        // "Lakeid" => 1
 
-        nonExistentIcCaseId: 0,
         icCasedLookup: [],
-        elementIdToText: [],    // 1 => "Fire"
-        elementTextToId: new Map(),  // "Fire" => 1
+        elementIdToText: [],           // 1 => "Fire"
+        elementTextToId: new Map(),    // "Fire" => 1
+        icTextToCanonicalId: new Map(),// "Abc" => "ABC_id" (because the person doesn't have "Abc" in their save)
     };
 
     unsafeWindow.lineage = {
         refresh: reloadGameData,
         make: consoleMakeLineage,
         vars: o,
-        icCaseText, icCaseId,
+        icCaseText, canonilizeId,
         verify: verifyLineage, missing: alertOnMissingRecipes,
         toArray: textLineageToArray, toString: textArrayLineageToString,
         idLineageToText, idToMostlyNealCase,
@@ -115,16 +115,16 @@
             setTimeout(() => {
                 if (!response || !response.instance) return;
                 addElement(response.instance.text, response.instance.id);
+                const icF = canonilizeId(arguments[0].id ?? arguments[0].itemId);
+                const icS = canonilizeId(arguments[1].id ?? arguments[1].itemId);
+                addRecipe(icF, icS, response.instance.id);
 
-                const icF = icCaseId(arguments[0].itemId);
-                const icS = icCaseId(arguments[1].itemId);
-                const icR = icCaseId(response.instance.id);
+                const icR = canonilizeId(response.instance.id);
                 const newHeurForR = (o.elementHeur[icF] ?? Infinity) + (o.elementHeur[icS] ?? Infinity) + 1;
                 if ((o.elementHeur[icR] ?? Infinity) > newHeurForR) {
                     o.elementHeur[icR] = newHeurForR;
                     generateElementHeuristics([icR]);
                 }
-                addRecipe(...[icF, icS, response.instance.id]);
             });
             return response;
         }
@@ -148,10 +148,10 @@
         o.recipesResIC = [];
         o.recipesUsesIC = [];
         o.elementHeur = [];
-        o.nonExistentIcCaseId = 0;
         o.icCasedLookup = [];
         o.elementIdToText = [];
         o.elementTextToId = new Map();
+        o.icTextToCanonicalId = new Map();
 
         console.time('Load Data');
         const ICItems = unsafeWindow.IC.getItems();
@@ -159,10 +159,9 @@
             addElement(element.text, element.id);
         }
         o.baseElementsId = o.baseElementsString.map(x => o.elementTextToId.get(x));
-        o.nonExistentIcCaseId = ICItems.length + 20000;
 
         for (const element of ICItems) {
-            for (const [fID, sID] of element?.recipes ?? []) {
+            for (const [fID, sID] of element.recipes ?? []) {
                 addRecipe(fID, sID, element.id, false);
             }
         }
@@ -179,17 +178,22 @@
     function addElement(text, id) {
         o.elementIdToText[id] = text;
         o.elementTextToId.set(text, id);
+        const canonicalText = icCaseText(text);
+        if (!o.icTextToCanonicalId.has(canonicalText)) {
+            o.icTextToCanonicalId.set(canonicalText, id);
+        }
     }
 
     function addRecipe(f, s, r) {
         if (!Number.isInteger(f) || !Number.isInteger(s) || !Number.isInteger(r)) return;
-        const F = icCaseId(f);
-        const S = icCaseId(s);
-        const R = icCaseId(r);
+        const F = canonilizeId(f);
+        const S = canonilizeId(s);
+        const R = canonilizeId(r);
         if (F === R || S === R) return;
 
         const sortedFS = S > F ? [F, S] : [S, F];
         const combString = sortedFS.join('=');
+        if (o.recipesIngIC.get(combString) === r) return;
         o.recipesIngIC.set(combString, r);
 
         pushToArrayArray(o.recipesResIC, R, sortedFS);
@@ -197,10 +201,10 @@
         if (F !== S) pushToArrayArray(o.recipesUsesIC, S, [F, R]);
     }
     function pushToArrayArray(arr, key, value) {
-        let a = arr[key];
-        if (!a) arr[key] = [value];
-        else a.push(value);
-    };
+        let entry = arr[key];
+        if (!entry) arr[key] = [value];
+        else entry.push(value);
+    }
     function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
 
@@ -215,21 +219,18 @@
         }
         return resultText;
     }
-    function icCaseId(inputId) {
+    function canonilizeId(inputId) {
+        if (typeof inputId !== "number") return console.log('called icCaseId with', inputId);
+
         const mapOutput = o.icCasedLookup[inputId];
         if (mapOutput !== undefined) return mapOutput;
 
         const inputText = o.elementIdToText[inputId];
-        const resultText = icCaseText(inputText);
+        const icText = icCaseText(inputText);
+        const canonicalId = o.icTextToCanonicalId.get(icText);
 
-        let resultId = o.elementTextToId.get(resultText);
-        if (resultId === undefined) {
-            // example: it is `End Of Sentence` but the user only has `End of Sentence`...
-            resultId = o.nonExistentIcCaseId++;
-            addElement(resultText, resultId);
-        }
-        o.icCasedLookup[inputId] = resultId;
-        return resultId;
+        o.icCasedLookup[inputId] = canonicalId;
+        return canonicalId;
     }
 
 
@@ -238,18 +239,25 @@
 
 
     async function* generateLineageMultipleMethods(goals) {
+        let bestLineage = null;
+
         async function generateWithSettings(order, recalc) {
             console.time(order);
-            const { lineage, missingElements } = await generateLineage(goals, order, recalc);
+            const result = await generateLineage(goals, order, recalc);
 
             const methodName = (order ? `${icCaseText(order)} Recalc` : 'Simple');
-            const groupName = [`%c${methodName}:`, 'background:green; color:white', `${lineage.length}-step`];
+            const groupName = [`%c${methodName}:`, 'background:green; color:white', `${result.lineage.length}-step`];
             console.groupCollapsed(...groupName);
-            console.log(idLineageToText(lineage, goals));
+            console.log(idLineageToText(result.lineage, goals));
             console.timeEnd(order);
             console.groupEnd();
 
-            return { lineage, methodName, missingElements };
+            let newBest = !bestLineage
+                || result.lineage.length < bestLineage.lineage.length  && result.missingElements.length <= bestLineage.missingElements.length
+                || result.lineage.length === bestLineage.lineage.length && result.missingElements.length < bestLineage.missingElements.length;
+
+            if (newBest) bestLineage = result;
+            return { ...result, newBest, methodName };
         }
 
         yield await generateWithSettings();
@@ -366,7 +374,7 @@
                     // tiny sleep to let the ui update
                     await sleep(0);
 
-                    const nextHeurInQueue = heurMap[elementQueue.at(-1)];
+                    const nextHeurInQueue = heurMap[elementQueue.at(-1)] ?? Infinity;
                     const worst = elementQueue.reduce((best, el) => {
                         const heur = heurMap[el];
                         return heur > best.heur ? { element: el, heur } : best;
@@ -506,7 +514,7 @@
     }
 
     async function helperRenderBody(container, item) {
-        const goalId = icCaseId(o.elementTextToId.get(item.text))
+        const goalId = canonilizeId(o.elementTextToId.get(item.text))
         if (goalId === undefined) {
             container.appendChild(document.createTextNode(`${item.text} is not in your save...`));
             return container;
@@ -553,12 +561,8 @@
         const optCopy = document.createElement("div");
         optCopy.classList.add("lineage-dropdown-item");
         optCopy.textContent = "Copy Goals";
-        optCopy.addEventListener("click", () => {
-            navigator.clipboard.writeText(goals.map(goalId => idToMostlyNealCase(goalId).text).join('\n')).then(() => {
-                optCopy.style.color = 'gold';
-                setTimeout(() => optCopy.style.color = '', 500);
-            }).catch(err => alert('Failed to copy goals.'));
-        });
+        optCopy.addEventListener("click", () => navigator.clipboard.writeText(goals.toReversed().map(goalId => idToMostlyNealCase(goalId).text).join('\n'))
+            .catch(err => alert('Failed to copy goals.')));
 
         // Option 2: Paste Goals
         const optPaste = document.createElement("div");
@@ -592,8 +596,7 @@
         optWorstElement.textContent = "Add worst element";
         optWorstElement.addEventListener("click", () => {
             const maxHeurId = o.elementHeur.reduce((m, n, i) => n > (o.elementHeur[m] ?? -Infinity) ? i : m, -1);
-            const maxHeurItem = idToMostlyNealCase(maxHeurId);
-            if (maxHeurItem) processNewGoalElements([maxHeurItem.text]);
+            if (maxHeurId !== undefined) processNewGoalElements([o.elementIdToText[maxHeurId]]);
         });
 
         // Option 5: Add Best Seed
@@ -728,14 +731,10 @@
             let optimizeTries = 0;
 
             optimiseButton.textContent = `Optimising... (${optimizeTries++}/5)`;
-            for await (const lineage of generator) {
+            for await (const { newBest, ...lineage } of generator) {
                 if (!container.checkVisibility() || goals.join('\n') != goalsSnapshot.join('\n')) return
-
                 optimiseButton.textContent = `Optimising... (${optimizeTries++}/5)`;
-
-                if (lineage.lineage.length < bestLineage.lineage.length && lineage.missingElements.length <= bestLineage.missingElements.length
-                 || lineage.lineage.length === bestLineage.lineage.length && lineage.missingElements.length < bestLineage.missingElements.length
-                ) {
+                if (newBest) {
                     bestLineage = lineage;
                     drawLineage();
                 }
@@ -762,7 +761,7 @@
             let update = false;
             for (const newGoal of newGoals) {
                 const icGoalText = icCaseText(newGoal.trim());
-                const newItemId = o.elementTextToId.get(icGoalText);
+                const newItemId = o.icTextToCanonicalId.get(icGoalText);
                 if (newItemId !== undefined && !goals.includes(newItemId)) {
                     addGoalInput.value = '';
                     if (toBottom) goals.push(newItemId);
@@ -782,8 +781,7 @@
 
             for (let i = goals.length - 1; i >= 0; i--) {
                 const goalId = goals[i];
-                const goalItem = idToMostlyNealCase(goalId);
-                const goalElement = unsafeWindow.ICHelper.createItemElement(goalItem);
+                const goalElement = unsafeWindow.ICHelper.createItemElement(idToMostlyNealCase(goalId));
                 goalElement.classList.add('lineage-goal');
 
                 goalElement.dataset.goalId = goalId; // Store goalId for easy access
@@ -819,8 +817,8 @@
 
                     if (sourceIndex !== targetIndex) {
                         // Reorder the `goals` array
-                        const [movedItem] = goals.splice(sourceIndex, 1); // Remove item from old position
-                        goals.splice(targetIndex, 0, movedItem);      // Insert item at new position
+                        const [movedItem] = goals.splice(sourceIndex, 1);
+                        goals.splice(targetIndex, 0, movedItem);
                         drawGoalsAndInitLineage();
                     }
                 });
@@ -851,8 +849,7 @@
                 const missingContaierDiv = document.createElement("div");
                 missingContaierDiv.classList.add("lineage-missing-container");
                 for (const missingElement of bestLineage.missingElements) {
-                    const missingItem = idToMostlyNealCase(missingElement);
-                    const missingItemElement = unsafeWindow.ICHelper.createItemElement(missingItem);
+                    const missingItemElement = unsafeWindow.ICHelper.createItemElement(idToMostlyNealCase(missingElement));
                     missingItemElement.classList.add('lineage-missing');
                     missingContaierDiv.append(missingItemElement);
                 }
@@ -872,10 +869,10 @@
                 const firstItemElement = unsafeWindow.ICHelper.createItemElement(first);
                 const secondItemElement = unsafeWindow.ICHelper.createItemElement(second);
                 const resultItemElement = unsafeWindow.ICHelper.createItemElement(result);
-                if (bestLineage.missingElements.includes(icCaseId(first.id))) firstItemElement.classList.add('lineage-missing');
-                if (bestLineage.missingElements.includes(icCaseId(second.id))) secondItemElement.classList.add('lineage-missing');
-                if (bestLineage.missingElements.includes(icCaseId(result.id))) resultItemElement.classList.add('lineage-missing');
-                else if (goals.includes(icCaseId(result.id))) resultItemElement.classList.add('lineage-goal');
+                if (bestLineage.missingElements.includes(canonilizeId(first.id))) firstItemElement.classList.add('lineage-missing');
+                if (bestLineage.missingElements.includes(canonilizeId(second.id))) secondItemElement.classList.add('lineage-missing');
+                if (bestLineage.missingElements.includes(canonilizeId(result.id))) resultItemElement.classList.add('lineage-missing');
+                else if (goals.includes(canonilizeId(result.id))) resultItemElement.classList.add('lineage-goal');
 
                 recipe.append(stepNumberSpan, firstItemElement, document.createTextNode("+"), secondItemElement, document.createTextNode("→"), resultItemElement);
                 lineageBodyDiv.append(recipe);
@@ -893,11 +890,10 @@
 
 
     function idToMostlyNealCase(itemId) {
-        let item = unsafeWindow.ICHelper.getItemFromId(itemId);
-        if (item) return item;
-        // example: it is `End Of Sentence` but the user only has `End of Sentence`...
-        const itemLowerText = o.elementIdToText[itemId].toLowerCase();
-        return unsafeWindow.IC.getItems().find(x => x.text.toLowerCase() === itemLowerText);
+        const text = o.elementIdToText[itemId];
+        const icText = icCaseText(text);
+        const id = o.elementTextToId.get(icText) ?? canonilizeId(itemId);
+        return ICHelper.getItemFromId(id);
     }
 
 
@@ -924,19 +920,23 @@
         return lineage.map((recipe, i) => {
             const [first, second] = [o.elementIdToText[recipe[0]], o.elementIdToText[recipe[1]]].sort();
             const result = o.elementIdToText[recipe[2]];
-            return `${first} + ${second} = ${result}` + (goals.includes(icCaseId(recipe[2])) ? `  // ${i + 1}` : '');
+            return `${first} + ${second} = ${result}` + (goals.includes(canonilizeId(recipe[2])) ? `  // ${i + 1}` : '');
         }).join('\n');
     }
 
     function alertOnMissingRecipes(input, alertPopup) {
         let missing = new Set();
         for (const [first, second, res] of textLineageToArray(input)) {
-            const id1 = o.elementTextToId.get(icCaseText(first));
-            const id2 = o.elementTextToId.get(icCaseText(second));
-            const idRes = o.elementTextToId.get(icCaseText(res));
+            const id1 = o.icTextToCanonicalId.get(icCaseText(first));
+            const id2 = o.icTextToCanonicalId.get(icCaseText(second));
+            const idRes = o.icTextToCanonicalId.get(icCaseText(res));
+
+            // skip recipes like `X + Y = y`, because they aren't stored in this script...
+            if (id1 === idRes || id2 === idRes) continue;
 
             const sortedFS = id2 > id1 ? [id1, id2] : [id2, id1];
-            if (icCaseId(o.recipesIngIC.get(sortedFS.join('='))) !== idRes) {
+            if (id1 === undefined || id2 === undefined || idRes === undefined
+            || canonilizeId(o.recipesIngIC.get(sortedFS.join('='))) !== idRes) {
                 missing.add(`${first} + ${second} = ${res}`);
             }
         }
@@ -969,7 +969,8 @@
             if (delayMs) promises.push((async () => {
                 await sleep(i * delayMs);
                 try {
-                    if (!await fetch(`https://neal.fun/api/infinite-craft/check?first=${encodeURIComponent(icCaseText(f))}&second=${encodeURIComponent(icCaseText(s))}&result=${encodeURIComponent(r)}`)
+                    const [ef, es, er] = [f, s, r].map(x => encodeURIComponent(icCaseText(x)));
+                    if (!await fetch(`https://neal.fun/api/infinite-craft/check?first=${ef}&second=${es}&result=${er}`)
                         .then(x => x.json()).then(x => x.valid)) err.push(`Invalid recipe: ${f} + ${s} = ${r}`);
                 } catch (error) {
                     err.push(`Error checking recipe (${f} + ${s} = ${r}): ${error}`);
@@ -981,19 +982,17 @@
     }
 
     async function consoleMakeLineage(...goals) {
-        goals = goals.map(goal => {
-            const goalId = o.elementTextToId.get(icCaseText(goal));
+        goals = goals.toReversed().map(goal => {
+            const goalId = o.icTextToCanonicalId.get(icCaseText(goal));
             if (goalId === undefined) throw new Error(`${goal} is not in your save...`);
             return goalId;
         });
 
-        let bestResult = null;
-        for await (const lineage of generateLineageMultipleMethods(goals)) {
-            if (!bestResult || lineage.lineage.length < bestResult.lineage.length) {
-                bestResult = lineage;
-            }
+        let best = null;
+        for await (const { newBest, ...rest } of generateLineageMultipleMethods(goals)) {
+            if (newBest) best = rest;
         }
-        return bestResult
+        return best;
     }
 
 

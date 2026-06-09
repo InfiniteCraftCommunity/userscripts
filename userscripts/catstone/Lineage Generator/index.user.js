@@ -159,11 +159,39 @@
         for (const element of ICItems) {
             addElement(element.text, element.id);
         }
-        o.baseElementsId = o.baseElementsString.map(x => o.elementTextToId.get(x));
+        o.baseElementsId = o.baseElementsString.map(x => o.icTextToCanonicalId.get(x));
+        const cacheRecipes = [];
 
         for (const element of ICItems) {
-            for (const [fID, sID] of element.recipes ?? []) {
-                addRecipe(fID, sID, element.id, false);
+            const recipes = element.recipes;
+            if (!recipes) continue;
+            const R = canonilizeId(element.id);
+
+            const amazingIng = new Set();
+            for (let i = 0; i < recipes.length; i++) {
+                const F = canonilizeId(recipes[i][0]);
+                const S = canonilizeId(recipes[i][1]);
+                cacheRecipes[i*2] = F;
+                cacheRecipes[i*2 + 1] = S;
+                if (F === R || S === R) continue;
+                if (F === S || o.baseElementsId.includes(S)) amazingIng.add(F);
+                if (F === S || o.baseElementsId.includes(F)) amazingIng.add(S);
+            }
+            const fulfilled = new Set();
+            for (let i = 0; i < recipes.length; i++) {
+                const F = canonilizeId(recipes[i][0]);
+                const S = canonilizeId(recipes[i][1]);
+                if (F === R || S === R) continue;
+                const freeF = F === S || o.baseElementsId.includes(S);
+                const freeS = F === S || o.baseElementsId.includes(F);
+
+                if (amazingIng.has(F) && (!freeF || fulfilled.has(F))
+                 || amazingIng.has(S) && (!freeS || fulfilled.has(S))) continue;
+
+                if (freeF) fulfilled.add(F);
+                if (freeS) fulfilled.add(S);
+
+                addRecipe(F, S, element.id);
             }
         }
         console.timeEnd('Load Data');
@@ -185,10 +213,8 @@
         }
     }
 
-    function addRecipe(f, s, r) {
-        if (!Number.isInteger(f) || !Number.isInteger(s) || !Number.isInteger(r)) return;
-        const F = canonilizeId(f);
-        const S = canonilizeId(s);
+    function addRecipe(F, S, r) {
+        if (!Number.isInteger(F) || !Number.isInteger(S) || !Number.isInteger(r)) return;
         const R = canonilizeId(r);
         if (F === R || S === R) return;
 

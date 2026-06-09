@@ -117,10 +117,12 @@
                 addElement(response.instance.text, response.instance.id);
                 const icF = canonilizeId(arguments[0].itemId);
                 const icS = canonilizeId(arguments[1].itemId);
-                addRecipe(icF, icS, response.instance.id);
+                const icR = canonilizeId(response.instance.id);
+                if (icF === icR || icS === icR) return;
+                if (icF === undefined || icS === undefined || icR === undefined) return console.log("could not add recipe?", icF, icR, icS);
+                addRecipe(icF, icS, icR, response.instance.id);
                 // console.log("added:", o.elementIdToText[icF], o.elementIdToText[icS], o.elementIdToText[response.instance.id]);
 
-                const icR = canonilizeId(response.instance.id);
                 const newHeurForR = (o.elementHeur[icF] ?? Infinity) + (o.elementHeur[icS] ?? Infinity) + 1;
                 if ((o.elementHeur[icR] ?? Infinity) > newHeurForR) {
                     o.elementHeur[icR] = newHeurForR;
@@ -191,7 +193,7 @@
                 if (freeF) fulfilled.add(F);
                 if (freeS) fulfilled.add(S);
 
-                addRecipe(F, S, element.id);
+                addRecipe(F, S, R, element.id);
             }
         }
         console.timeEnd('Load Data');
@@ -213,11 +215,7 @@
         }
     }
 
-    function addRecipe(F, S, r) {
-        if (!Number.isInteger(F) || !Number.isInteger(S) || !Number.isInteger(r)) return;
-        const R = canonilizeId(r);
-        if (F === R || S === R) return;
-
+    function addRecipe(F, S, R, r) {
         const sortedFS = S > F ? [F, S] : [S, F];
         const combString = sortedFS.join('=');
         if (o.recipesIngIC.get(combString) === r) return;
@@ -412,8 +410,7 @@
                 }
             }
         }
-        let initialLineage = removeUnnecessary(lineage, goals);
-        if (recalc) initialLineage = optimizeLineage(initialLineage, goals);
+        const initialLineage = removeUnnecessary(lineage, goals);
         return correctlyCapsAndOrderLineage(initialLineage, goals);
     }
 
@@ -511,9 +508,8 @@
 
 
 
-    function optimizeLineage(lineage, goals) {
+    async function* optimizeLineage(lineage, goals) {
         let bestLineage = removeUnnecessary(lineage, goals);
-        let startTime = performance.now();
         let improved = true;
 
         while (improved) {
@@ -553,10 +549,12 @@
                         // filter out if [f, s, combineWith] don't survive the removal of r!
                         if (!unreachable.has(f) && !unreachable.has(s) && !unreachable.has(combineWith)) {
                             const optimized = removeUnnecessary([...bestLineage, [f, s, addElement]], [...goals, addElement]);
+                            await sleep(0);
                             if (optimized.length < bestLineage.length) {
                                 bestLineage = optimized;
                                 improved = true;
-                                console.log(beforeLength, " -> ", bestLineage.length, `(${((performance.now() - startTime) / 1000).toFixed(3)} s)`);
+                                // console.log(beforeLength, " -> ", bestLineage.length, `(${((performance.now() - startTime) / 1000).toFixed(3)} s)`);
+                                yield bestLineage;
                                 break;
                             }
                         }
@@ -564,7 +562,6 @@
                 }
             }
         }
-        console.log(`finished searching 1-step shortcuts (${((performance.now() - startTime) / 1000).toFixed(3)} s)`)
         return bestLineage;
     }
 
@@ -845,6 +842,7 @@
                 if (newBest) {
                     bestLineage = lineage;
                     drawLineage();
+                    resetShortcutsButton();
                 }
                 updateHeaderStatText();
             }
@@ -855,7 +853,36 @@
             optimiseButton.style.borderColor = '';
         });
 
-        lineageHeaderDiv.append(lineageTitle, optimiseButton, copyLineageButton);
+        const findShortcuts = document.createElement("button");
+        findShortcuts.classList.add("lineage-action-button");
+        findShortcuts.textContent = "Find Shortcuts";
+        findShortcuts.addEventListener('click', async () => {
+            findShortcuts.style.pointerEvents = 'none';
+            findShortcuts.style.borderColor = 'purple';
+            findShortcuts.textContent = "Find Shortcuts...";
+            startTime = performance.now();
+            const startLen = bestLineage.lineage.length;
+            const canonicalLineage = bestLineage.lineage.map(recipe => recipe.map(x => canonilizeId(x)));
+            let goalsSnapshot = [...goals];
+
+            for await (const optimizedRaw of optimizeLineage(canonicalLineage, goals)) {
+                if (!container.checkVisibility() || goals.join('\n') != goalsSnapshot.join('\n')) return
+                const formatted = correctlyCapsAndOrderLineage(optimizedRaw, goals);
+                const newMethodName = bestLineage.methodName + (bestLineage.methodName.endsWith(' - Shortcuts') ? '' : ' - Shortcuts')
+                bestLineage = { ...formatted, methodName: bestLineage.methodName.ends + " - Shortcuts" };
+
+                drawLineage();
+                updateHeaderStatText();
+                findShortcuts.textContent = `Find Shortcuts... (-${startLen - bestLineage.lineage.length})`;
+            }
+
+            findShortcuts.textContent = `Find Shortcuts (-${startLen - bestLineage.lineage.length})`;
+            findShortcuts.style.pointerEvents = 'none';
+            findShortcuts.style.opacity = '0.2';
+            findShortcuts.style.borderColor = '';
+        });
+
+        lineageHeaderDiv.append(lineageTitle, optimiseButton, findShortcuts, copyLineageButton);
 
 
         const lineageBodyDiv = document.createElement("div");
@@ -884,7 +911,8 @@
 
         function drawGoalsAndInitLineage() {
             goalsContainerDiv.innerHTML = '';
-            optimiseButton.style.borderColor = '';
+            resetOptimiseButton();
+            resetShortcutsButton();
             initializeLineage();
 
             for (let i = goals.length - 1; i >= 0; i--) {
@@ -942,9 +970,20 @@
             bestLineage = (await generator.next()).value;
             updateHeaderStatText();
             drawLineage();
+        }
+
+        function resetOptimiseButton() {
             optimiseButton.textContent = 'Optimise';
             optimiseButton.style.opacity = '';
             optimiseButton.style.pointerEvents = '';
+            optimiseButton.style.borderColor = '';
+        }
+        function resetShortcutsButton() {
+            findShortcuts.textContent = 'Find Shortcuts';
+            findShortcuts.style.opacity = '';
+            findShortcuts.style.pointerEvents = '';
+            findShortcuts.style.borderColor = '';
+
         }
 
 

@@ -95,7 +95,7 @@
             const intervalId = setInterval(() => {
                 if (!v_container.isLoading) {
                     clearInterval(intervalId);
-                    console.log("finished", IC.getItems());
+                    console.log("finished", unsafeWindow.IC.getItems());
                     reloadGameData();
                 }
             }, 10)
@@ -245,7 +245,7 @@
         return resultText;
     }
     function canonilizeId(inputId) {
-        if (typeof inputId !== "number") return console.log('called icCaseId with', inputId);
+        if (typeof inputId !== "number") return;
 
         const mapOutput = o.icCasedLookup[inputId];
         if (mapOutput !== undefined) return mapOutput;
@@ -262,27 +262,22 @@
 
 
 
-
+    function isLineageBetter(bestLineage, lineage) {
+        return !bestLineage
+            || lineage.lineage.length < bestLineage.lineage.length  && lineage.missingElements.length <= bestLineage.missingElements.length
+            || lineage.lineage.length === bestLineage.lineage.length && lineage.missingElements.length < bestLineage.missingElements.length;
+    }
     async function* generateLineageMultipleMethods(goals) {
-        let bestLineage = null;
-
         async function generateWithSettings(order, recalc) {
             console.time(order);
             const result = await generateLineage(goals, order, recalc);
-
             const methodName = (order ? `${icCaseText(order)} Recalc` : 'Simple');
             const groupName = [`%c${methodName}:`, 'background:green; color:white', `${result.lineage.length}-step`];
             console.groupCollapsed(...groupName);
             console.log(idLineageToText(result.lineage, goals));
             console.timeEnd(order);
             console.groupEnd();
-
-            let newBest = !bestLineage
-                || result.lineage.length < bestLineage.lineage.length  && result.missingElements.length <= bestLineage.missingElements.length
-                || result.lineage.length === bestLineage.lineage.length && result.missingElements.length < bestLineage.missingElements.length;
-
-            if (newBest) bestLineage = result;
-            return { ...result, newBest, methodName };
+            return { ...result, methodName };
         }
 
         yield await generateWithSettings();
@@ -410,7 +405,10 @@
                 }
             }
         }
-        const initialLineage = removeUnnecessary(lineage, goals);
+        let initialLineage = removeUnnecessary(lineage, goals);
+        // if (recalc) for await (const lineage of optimizeLineage(initialLineage, goals)) {
+        //     initialLineage = lineage;
+        // }
         return correctlyCapsAndOrderLineage(initialLineage, goals);
     }
 
@@ -560,6 +558,7 @@
                         }
                     }
                 }
+                if (improved) break;
             }
         }
         return bestLineage;
@@ -836,10 +835,10 @@
             let optimizeTries = 0;
 
             optimiseButton.textContent = `Optimising... (${optimizeTries++}/5)`;
-            for await (const { newBest, ...lineage } of generator) {
+            for await (const lineage of generator) {
                 if (!container.checkVisibility() || goals.join('\n') != goalsSnapshot.join('\n')) return
                 optimiseButton.textContent = `Optimising... (${optimizeTries++}/5)`;
-                if (newBest) {
+                if (isLineageBetter(bestLineage, lineage)) {
                     bestLineage = lineage;
                     drawLineage();
                     resetShortcutsButton();
@@ -1084,8 +1083,14 @@
             // skip recipes like `X + Y = y`, because they aren't stored in this script...
             if (id1 === idRes || id2 === idRes) continue;
 
-            const sortedFS = id2 > id1 ? [id1, id2] : [id2, id1];
-            if (canonilizeId(o.recipesIngIC.get(sortedFS.join('='))) !== idRes) {
+            function checkRecipe(f, s) {
+                const sortedFS = f > s ? [s, f] : [f, s];
+                return canonilizeId(o.recipesIngIC.get(sortedFS.join('='))) === idRes;
+            }
+
+            if (!checkRecipe(id1, id2)
+            && [id1, ...o.baseElementsId].every(x => !checkRecipe(id1, x))
+            && [id2, ...o.baseElementsId].every(x => !checkRecipe(id2, x))) {
                 missing.add(`${first} + ${second} = ${res}`);
             }
         }
@@ -1138,8 +1143,8 @@
         });
 
         let best = null;
-        for await (const { newBest, ...rest } of generateLineageMultipleMethods(goals)) {
-            if (newBest) best = rest;
+        for await (const lineage of generateLineageMultipleMethods(goals)) {
+            if (isLineageBetter(best, lineage)) best = lineage;
         }
         return best;
     }

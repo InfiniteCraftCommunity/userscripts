@@ -868,8 +868,7 @@
             for await (const optimizedRaw of optimizeLineage(canonicalLineage, goals)) {
                 if (!container.checkVisibility() || goals.join('\n') != goalsSnapshot.join('\n')) return
                 const formatted = correctlyCapsAndOrderLineage(optimizedRaw, goals);
-                const newMethodName = bestLineage.methodName + (bestLineage.methodName.endsWith(' - Shortcuts') ? '' : ' - Shortcuts')
-                bestLineage = { ...formatted, methodName: bestLineage.methodName.ends + " - Shortcuts" };
+                bestLineage = { ...bestLineage, ...formatted };
 
                 drawLineage();
                 updateHeaderStatText();

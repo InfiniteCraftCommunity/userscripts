@@ -406,7 +406,7 @@
             }
         }
         let initialLineage = removeUnnecessary(lineage, goals);
-        // if (recalc) for await (const lineage of optimizeLineage(initialLineage, goals)) {
+        // if (recalc) for await (const lineage of findShortcuts(initialLineage, goals)) {
         //     initialLineage = lineage;
         // }
         return correctlyCapsAndOrderLineage(initialLineage, goals);
@@ -415,72 +415,80 @@
 
 
     function removeUnnecessary(lineage, goals) {
-        const resultIngMap = new Map(lineage.map(recipe => [recipe[2], [recipe[0], recipe[1]]]));
-        for (const base of o.baseElementsId) if (!resultIngMap.has(base)) resultIngMap.set(base);
-        const usedMap = getUsedMap(lineage);
+        const { resultIngMap, usedMap } = getRerouteMaps(lineage);
 
         for (const [,, r] of lineage) {
             if (goals.includes(r)) continue;
             // try to remove `r` from the lineage.
+            const { unreachable, changes, goalRevivalsNeeded } = getUnreachableWithReroutes(r, goals, resultIngMap, usedMap);
+            if (!goalRevivalsNeeded) applyRerouteChanges(changes, resultIngMap, usedMap, unreachable);
+        }
+        return convertResultIngMapToLineage(resultIngMap)
+    }
 
-            // 1. mark all elements that depend on `r` as unreachable.
-            var { unreachable, goalRevivalsNeeded } = getUnreachable(r, goals, usedMap);
 
-            // 2. keep trying to find a new route for each unreachable element, until ...
-            // ... all goals are reachable again => it can remove `r` :)
-            // ... no more elements to reach => it can't remove `r` :(
-            const changes = [];
-            let changed = true;
+    async function* findShortcuts(lineage, goals) {
+        let bestLineage = removeUnnecessary(lineage, goals);
+        let improved = true;
 
-            while (unreachable.size > 1 && changed && goalRevivalsNeeded) {
-                changed = false;
-                for (const [deadElement] of unreachable) {
-                    if (deadElement === r) continue;
-                    let replacementRecipe;
-                    for (const [newF, newS] of o.recipesResIC[deadElement]) {
-                        if (resultIngMap.has(newF) && !unreachable.has(newF) && resultIngMap.has(newS) && !unreachable.has(newS)) {
-                            replacementRecipe = [newF, newS];
-                            break;
+        while (improved) {
+            improved = false;
+            const testedElements = new Set();
+            let { resultIngMap, usedMap } = getRerouteMaps(bestLineage);
+
+            for (const [,, r] of bestLineage) {
+                const { unreachable, changes } = getUnreachableWithReroutes(r, goals, resultIngMap, usedMap);
+                let resultIngMap = new Map(resultIngMap);
+                applyRerouteChanges(changes, resultIngMap);
+                const reroutedLineage = convertResultIngMapToLineage(resultIngMap);
+
+                // try to find a new recipe for r, that adds exactly 1 extra element.
+                for (const [r1, r2] of o.recipesResIC[r] ?? []) {
+                    const hasR1 = resultIngMap.has(r1);
+                    const [addElement, combineWith] = hasR1 ? [r2, r1] : [r1, r2];
+                    if ((r1 === r2 ? hasR1 : hasR1 === resultIngMap.has(r2))  // need exactly 1 ingredient that it doesn't have yet
+                     || testedElements.has(addElement) || unreachable.has(combineWith)) continue;
+
+                    for (const [add1, add2] of o.recipesResIC[addElement] ?? []) {
+                        if (!resultIngMap.has(add1) || !resultIngMap.has(add2)
+                         || unreachable.has(add1) || unreachable.has(add2)) continue;
+
+                        const optimized = removeUnnecessary([...reroutedLineage, [add1, add2, addElement]], [...goals, addElement]);
+                        testedElements.add(addElement);
+
+                        if (optimized.length < bestLineage.length) {
+                            bestLineage = optimized;
+                            improved = true;
+                            // console.log(beforeLength, " -> ", bestLineage.length, `(${((performance.now() - startTime) / 1000).toFixed(3)} s)`);
+                            yield bestLineage;
                         }
+                        break;
                     }
-                    if (replacementRecipe) {
-                        changes.push([deadElement, replacementRecipe]);
-                        changed = true;
-
-                        const reviveQueue = [deadElement];
-                        for (const elem of reviveQueue) {
-                            unreachable.delete(elem);
-                            if (goals.includes(elem) && !--goalRevivalsNeeded) break;
-                            for (const use of usedMap.get(elem)) {
-                                const count = unreachable.get(use) - 1;
-                                if (count === 0) reviveQueue.push(use);
-                                else if (count) unreachable.set(use, count);
-                            }
-                        }
-                        if (!goalRevivalsNeeded) break;
-                    }
+                    if (improved) break;
                 }
-            }
-
-            if (!goalRevivalsNeeded) {
-                for (const [d] of unreachable) switchRecipeRU(resultIngMap, usedMap, d);
-                for (const [newR, newIngs] of changes) switchRecipeRU(resultIngMap, usedMap, newR, newIngs);
+                if (improved) break;
+                await sleep(0);
             }
         }
 
-        return [...resultIngMap.entries()].filter(([, x]) => x !== undefined).map(([result, ings]) => [ings[0], ings[1], result])
+        return bestLineage;
     }
 
-    function getUsedMap(lineage) {
+
+    function convertResultIngMapToLineage(resultIngMap) {
+        return [...resultIngMap.entries()].filter(([, x]) => x !== undefined).map(([result, ings]) => [ings[0], ings[1], result]);
+    }
+    function getRerouteMaps(lineage) {
+        const resultIngMap = new Map(lineage.map(recipe => [recipe[2], [recipe[0], recipe[1]]]));
+        for (const base of o.baseElementsId) if (!resultIngMap.has(base)) resultIngMap.set(base);
         const usedMap = new Map(lineage.map(recipe => [recipe[2], new Set()]));
         for (const [f, s, r] of lineage) {
             if (!o.baseElementsId.includes(f)) usedMap.get(f)?.add(r);
             if (!o.baseElementsId.includes(s)) usedMap.get(s)?.add(r);
         }
-        return usedMap;
+        return { resultIngMap, usedMap };
     }
-
-    function getUnreachable(r, goals, usedMap) {
+    function getUnreachableWithReroutes(r, goals, resultIngMap, usedMap) {
         let goalRevivalsNeeded = 0;
         const unreachable = new Map([[r, Infinity]]);
         for (const [d] of unreachable) {
@@ -489,79 +497,56 @@
                 unreachable.set(use, (unreachable.get(use) || 0) + 1);
             }
         }
-        return { unreachable, goalRevivalsNeeded };
-    }
 
-    function switchRecipeRU(resultIngMap, usedMap, result, newRecipe) {
-        const originalRecipe = resultIngMap.get(result);
-        if (originalRecipe) for (const x of originalRecipe) if (!o.baseElementsId.includes(x)) usedMap.get(x)?.delete(result);
+        const changes = [];
+        let changed = true;
 
-        if (!newRecipe) resultIngMap.delete(result);
-        else {
-            resultIngMap.set(result, newRecipe);
-            for (const x of newRecipe) if (!o.baseElementsId.includes(x)) usedMap.get(x).add(result);
-        }
-    }
-
-
-
-
-    async function* optimizeLineage(lineage, goals) {
-        let bestLineage = removeUnnecessary(lineage, goals);
-        let improved = true;
-
-        while (improved) {
-            improved = false;
-            const beforeLength = bestLineage.length;
-            const resultsAndBase = new Set(o.baseElementsId.concat(bestLineage.map(r => r[2])));
-
-            // 1. Find all 1-step shortcuts: `f + s = addElement`, `addElement + combineWith = r`
-            const shortcutsForR = new Map();
-            for (const [,, r] of bestLineage) {
-                for (const [a, b] of o.recipesResIC[r] ?? []) {
-                    const hasA = resultsAndBase.has(a)
-                    const hasB = resultsAndBase.has(b);
-                    if (a === b ? hasA : hasA === hasB) continue; // need exactly 1 ingredient that we don't have yet
-                    const [addElement, combineWith] = hasA ? [b, a] : [a, b];
-
-                    // addElement should be crafted using elements we already have
-                    for (const [f, s] of o.recipesResIC[addElement] ?? []) {
-                        if (resultsAndBase.has(f) && resultsAndBase.has(s)) {
-                            let entry = shortcutsForR.get(r);
-                            if (!entry) shortcutsForR.set(r, entry = []);
-                            entry.push({ f, s, addElement, combineWith });
-                        }
+        while (unreachable.size > 1 && changed && goalRevivalsNeeded) {
+            changed = false;
+            for (const [deadElement] of unreachable) {
+                if (deadElement === r) continue;
+                let replacementRecipe;
+                for (const [newF, newS] of o.recipesResIC[deadElement]) {
+                    if (resultIngMap.has(newF) && !unreachable.has(newF) && resultIngMap.has(newS) && !unreachable.has(newS)) {
+                        replacementRecipe = [newF, newS];
+                        break;
                     }
                 }
-            }
+                if (replacementRecipe) {
+                    changes.push([deadElement, replacementRecipe]);
+                    changed = true;
 
-            // 2. loop through all shortcuts, filter some, and apply + removeUnnecessary()
-            const usedMap = getUsedMap(bestLineage);
-            for (const [,, r] of bestLineage) {
-                if (goals.includes(r)) continue;
-                const { unreachable } = getUnreachable(r, [], usedMap);
-
-                for (const [d] of unreachable) {
-                    if (improved || d === r) continue;
-                    for (const { f, s, addElement, combineWith } of (shortcutsForR.get(d) ?? [])) {
-                        // filter out if [f, s, combineWith] don't survive the removal of r!
-                        if (!unreachable.has(f) && !unreachable.has(s) && !unreachable.has(combineWith)) {
-                            const optimized = removeUnnecessary([...bestLineage, [f, s, addElement]], [...goals, addElement]);
-                            await sleep(0);
-                            if (optimized.length < bestLineage.length) {
-                                bestLineage = optimized;
-                                improved = true;
-                                // console.log(beforeLength, " -> ", bestLineage.length, `(${((performance.now() - startTime) / 1000).toFixed(3)} s)`);
-                                yield bestLineage;
-                                break;
-                            }
+                    const reviveQueue = [deadElement];
+                    for (const elem of reviveQueue) {
+                        unreachable.delete(elem);
+                        if (goals.includes(elem) && !--goalRevivalsNeeded) break;
+                        for (const use of usedMap.get(elem)) {
+                            const count = unreachable.get(use) - 1;
+                            if (count === 0) reviveQueue.push(use);
+                            else if (count) unreachable.set(use, count);
                         }
                     }
+                    if (!goalRevivalsNeeded) break;
                 }
-                if (improved) break;
             }
         }
-        return bestLineage;
+        return { unreachable, changes, goalRevivalsNeeded };
+    }
+
+    function applyRerouteChanges(changes, resultIngMap, usedMap, unreachable=[]) {
+        for (const [d] of unreachable) switchRecipeRU(d);
+        for (const [newR, newIngs] of changes) switchRecipeRU(newR, newIngs);
+
+        function switchRecipeRU(result, newRecipe) {
+            const originalRecipe = resultIngMap.get(result);
+            if (originalRecipe) for (const x of originalRecipe) if (!o.baseElementsId.includes(x)) usedMap?.get(x)?.delete(result);
+
+            if (!newRecipe) resultIngMap.delete(result);
+            else {
+                resultIngMap.set(result, newRecipe);
+                for (const x of newRecipe) if (!o.baseElementsId.includes(x)) usedMap?.get(x).add(result);
+            }
+        }
     }
 
 
@@ -639,7 +624,7 @@
         addGoalInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 event.preventDefault();
-                processNewGoalElements([addGoalInput.value]);
+                processNewGoalElements([addGoalInput.value], event.ctrlKey);
             }
         });
 
@@ -864,7 +849,7 @@
             const canonicalLineage = bestLineage.lineage.map(recipe => recipe.map(x => canonilizeId(x)));
             let goalsSnapshot = [...goals];
 
-            for await (const optimizedRaw of optimizeLineage(canonicalLineage, goals)) {
+            for await (const optimizedRaw of findShortcuts(canonicalLineage, goals)) {
                 if (!container.checkVisibility() || goals.join('\n') != goalsSnapshot.join('\n')) return
                 const formatted = correctlyCapsAndOrderLineage(optimizedRaw, goals);
                 bestLineage = { ...bestLineage, ...formatted };

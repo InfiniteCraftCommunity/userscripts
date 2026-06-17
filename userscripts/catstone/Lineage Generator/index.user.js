@@ -837,13 +837,13 @@
             optimiseButton.style.borderColor = '';
         });
 
-        const findShortcuts = document.createElement("button");
-        findShortcuts.classList.add("lineage-action-button");
-        findShortcuts.textContent = "Find Shortcuts";
-        findShortcuts.addEventListener('click', async () => {
-            findShortcuts.style.pointerEvents = 'none';
-            findShortcuts.style.borderColor = 'purple';
-            findShortcuts.textContent = "Find Shortcuts...";
+        const shortcutsButton = document.createElement("button");
+        shortcutsButton.classList.add("lineage-action-button");
+        shortcutsButton.textContent = "Find Shortcuts";
+        shortcutsButton.addEventListener('click', async () => {
+            shortcutsButton.style.pointerEvents = 'none';
+            shortcutsButton.style.borderColor = 'purple';
+            shortcutsButton.textContent = "Find Shortcuts...";
             startTime = performance.now();
             const startLen = bestLineage.lineage.length;
             const canonicalLineage = bestLineage.lineage.map(recipe => recipe.map(x => canonilizeId(x)));
@@ -856,16 +856,16 @@
 
                 drawLineage();
                 updateHeaderStatText();
-                findShortcuts.textContent = `Find Shortcuts... (-${startLen - bestLineage.lineage.length})`;
+                shortcutsButton.textContent = `Find Shortcuts... (-${startLen - bestLineage.lineage.length})`;
             }
 
-            findShortcuts.textContent = `Find Shortcuts (-${startLen - bestLineage.lineage.length})`;
-            findShortcuts.style.pointerEvents = 'none';
-            findShortcuts.style.opacity = '0.2';
-            findShortcuts.style.borderColor = '';
+            shortcutsButton.textContent = `Find Shortcuts (-${startLen - bestLineage.lineage.length})`;
+            shortcutsButton.style.pointerEvents = 'none';
+            shortcutsButton.style.opacity = '0.2';
+            shortcutsButton.style.borderColor = '';
         });
 
-        lineageHeaderDiv.append(lineageTitle, optimiseButton, findShortcuts, copyLineageButton);
+        lineageHeaderDiv.append(lineageTitle, optimiseButton, shortcutsButton, copyLineageButton);
 
 
         const lineageBodyDiv = document.createElement("div");
@@ -962,10 +962,10 @@
             optimiseButton.style.borderColor = '';
         }
         function resetShortcutsButton() {
-            findShortcuts.textContent = 'Find Shortcuts';
-            findShortcuts.style.opacity = '';
-            findShortcuts.style.pointerEvents = '';
-            findShortcuts.style.borderColor = '';
+            shortcutsButton.textContent = 'Find Shortcuts';
+            shortcutsButton.style.opacity = '';
+            shortcutsButton.style.pointerEvents = '';
+            shortcutsButton.style.borderColor = '';
 
         }
 

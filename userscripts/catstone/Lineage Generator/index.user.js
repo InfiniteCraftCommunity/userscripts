@@ -438,19 +438,19 @@
 
             for (const [,, r] of bestLineage) {
                 const { unreachable, changes } = getUnreachableWithReroutes(r, goals, resultIngMap, usedMap);
-                let resultIngMap = new Map(resultIngMap);
-                applyRerouteChanges(changes, resultIngMap);
-                const reroutedLineage = convertResultIngMapToLineage(resultIngMap);
+                let simResultIngMap = new Map(resultIngMap);
+                applyRerouteChanges(changes, simResultIngMap);
+                const reroutedLineage = convertResultIngMapToLineage(simResultIngMap);
 
                 // try to find a new recipe for r, that adds exactly 1 extra element.
                 for (const [r1, r2] of o.recipesResIC[r] ?? []) {
-                    const hasR1 = resultIngMap.has(r1);
+                    const hasR1 = simResultIngMap.has(r1);
                     const [addElement, combineWith] = hasR1 ? [r2, r1] : [r1, r2];
-                    if ((r1 === r2 ? hasR1 : hasR1 === resultIngMap.has(r2))  // need exactly 1 ingredient that it doesn't have yet
+                    if ((r1 === r2 ? hasR1 : hasR1 === simResultIngMap.has(r2))  // need exactly 1 ingredient that it doesn't have yet
                      || testedElements.has(addElement) || unreachable.has(combineWith)) continue;
 
                     for (const [add1, add2] of o.recipesResIC[addElement] ?? []) {
-                        if (!resultIngMap.has(add1) || !resultIngMap.has(add2)
+                        if (!simResultIngMap.has(add1) || !simResultIngMap.has(add2)
                          || unreachable.has(add1) || unreachable.has(add2)) continue;
 
                         const optimized = removeUnnecessary([...reroutedLineage, [add1, add2, addElement]], [...goals, addElement]);

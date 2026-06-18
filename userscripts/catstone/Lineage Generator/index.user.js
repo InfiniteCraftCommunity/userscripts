@@ -4,7 +4,7 @@
 // @match         https://neal.fun/infinite-craft/*
 // @grant         GM_setValue
 // @grant         GM_getValue
-// @version       2.2
+// @version       2.4
 // @author        Catstone
 // @license       MIT
 // @description   Generates pretty damn good lineages ingame!
@@ -22,22 +22,22 @@
         baseElementsString: ["Water", "Fire", "Wind", "Earth"],
         baseElementsId: null,  // gets updated in `reloadGameData`
 
-        recipesIngIC: new Map(),// "Water=Water" => "Lake"
-        recipesResIC: [],       // "Lake" => ["Water", "Water"]
-        recipesUsesIC: [],      // "Water" => ["Water", "Lake"]
-        elementHeur: [],        // "Lake" => 1
+        recipesIngIC: new Map(),// "Waterid=Waterid" => "Lakeid"
+        recipesResIC: [],       // "Lakeid" => ["Waterid", "Waterid"]
+        recipesUsesIC: [],      // "Waterid" => ["Waterid", "Lakeid"]
+        elementHeur: [],        // "Lakeid" => 1
 
-        nonExistentIcCaseId: 0,
         icCasedLookup: [],
-        elementIdToText: [],    // 1 => "Fire"
-        elementTextToId: new Map(),  // "Fire" => 1
+        elementIdToText: [],           // 1 => "Fire"
+        elementTextToId: new Map(),    // "Fire" => 1
+        icTextToCanonicalId: new Map(),// "Abc" => "ABC_id" (because the person doesn't have "Abc" in their save)
     };
 
     unsafeWindow.lineage = {
         refresh: reloadGameData,
         make: consoleMakeLineage,
         vars: o,
-        icCaseText, icCaseId,
+        icCaseText, canonilizeId,
         verify: verifyLineage, missing: alertOnMissingRecipes,
         toArray: textLineageToArray, toString: textArrayLineageToString,
         idLineageToText, idToMostlyNealCase,
@@ -95,7 +95,7 @@
             const intervalId = setInterval(() => {
                 if (!v_container.isLoading) {
                     clearInterval(intervalId);
-                    console.log("finished", IC.getItems());
+                    console.log("finished", unsafeWindow.IC.getItems());
                     reloadGameData();
                 }
             }, 10)
@@ -115,15 +115,19 @@
             setTimeout(() => {
                 if (!response || !response.instance) return;
                 addElement(response.instance.text, response.instance.id);
+                const icF = canonilizeId(arguments[0].itemId);
+                const icS = canonilizeId(arguments[1].itemId);
+                const icR = canonilizeId(response.instance.id);
+                if (icF === icR || icS === icR) return;
+                if (icF === undefined || icS === undefined || icR === undefined) return console.log("could not add recipe?", icF, icR, icS);
+                addRecipe(icF, icS, icR, response.instance.id);
+                // console.log("added:", o.elementIdToText[icF], o.elementIdToText[icS], o.elementIdToText[response.instance.id]);
 
-                const newRecipe = [icCaseId(arguments[0].itemId), icCaseId(arguments[1].itemId), icCaseId(response.instance.id)];
-                const newHeurForR = (o.elementHeur[newRecipe[0]] ?? Infinity) + (o.elementHeur[newRecipe[1]] ?? Infinity) + 1;
-                if ((o.elementHeur[newRecipe[2]] ?? Infinity) > newHeurForR) {
-                    o.elementHeur[newRecipe[2]] = newHeurForR;
-                    // Now, propagate this change:
-                    generateElementHeuristics([newRecipe[2]]);
+                const newHeurForR = (o.elementHeur[icF] ?? Infinity) + (o.elementHeur[icS] ?? Infinity) + 1;
+                if ((o.elementHeur[icR] ?? Infinity) > newHeurForR) {
+                    o.elementHeur[icR] = newHeurForR;
+                    generateElementHeuristics([icR]);
                 }
-                addRecipe(...newRecipe);
             });
             return response;
         }
@@ -147,22 +151,49 @@
         o.recipesResIC = [];
         o.recipesUsesIC = [];
         o.elementHeur = [];
-        o.nonExistentIcCaseId = 0;
         o.icCasedLookup = [];
         o.elementIdToText = [];
         o.elementTextToId = new Map();
+        o.icTextToCanonicalId = new Map();
 
         console.time('Load Data');
         const ICItems = unsafeWindow.IC.getItems();
         for (const element of ICItems) {
             addElement(element.text, element.id);
         }
-        o.baseElementsId = o.baseElementsString.map(x => o.elementTextToId.get(x));
-        o.nonExistentIcCaseId = ICItems.length + 20000;
+        o.baseElementsId = o.baseElementsString.map(x => o.icTextToCanonicalId.get(x));
+        const cacheRecipes = [];
 
         for (const element of ICItems) {
-            for (const [fID, sID] of element?.recipes ?? []) {
-                addRecipe(fID, sID, element.id, false);
+            const recipes = element.recipes;
+            if (!recipes) continue;
+            const R = canonilizeId(element.id);
+
+            const amazingIng = new Set();
+            for (let i = 0; i < recipes.length; i++) {
+                const F = canonilizeId(recipes[i][0]);
+                const S = canonilizeId(recipes[i][1]);
+                cacheRecipes[i*2] = F;
+                cacheRecipes[i*2 + 1] = S;
+                if (F === R || S === R) continue;
+                if (F === S || o.baseElementsId.includes(S)) amazingIng.add(F);
+                if (F === S || o.baseElementsId.includes(F)) amazingIng.add(S);
+            }
+            const fulfilled = new Set();
+            for (let i = 0; i < recipes.length; i++) {
+                const F = canonilizeId(recipes[i][0]);
+                const S = canonilizeId(recipes[i][1]);
+                if (F === R || S === R) continue;
+                const freeF = F === S || o.baseElementsId.includes(S);
+                const freeS = F === S || o.baseElementsId.includes(F);
+
+                if (amazingIng.has(F) && (!freeF || fulfilled.has(F))
+                 || amazingIng.has(S) && (!freeS || fulfilled.has(S))) continue;
+
+                if (freeF) fulfilled.add(F);
+                if (freeS) fulfilled.add(S);
+
+                addRecipe(F, S, R, element.id);
             }
         }
         console.timeEnd('Load Data');
@@ -178,17 +209,16 @@
     function addElement(text, id) {
         o.elementIdToText[id] = text;
         o.elementTextToId.set(text, id);
+        const canonicalText = icCaseText(text);
+        if (!o.icTextToCanonicalId.has(canonicalText)) {
+            o.icTextToCanonicalId.set(canonicalText, id);
+        }
     }
 
-    function addRecipe(f, s, r) {
-        if (!Number.isInteger(f) || !Number.isInteger(s) || !Number.isInteger(r)) return;
-        const F = icCaseId(f);
-        const S = icCaseId(s);
-        const R = icCaseId(r);
-        if (F === R || S === R) return;
-
+    function addRecipe(F, S, R, r) {
         const sortedFS = S > F ? [F, S] : [S, F];
         const combString = sortedFS.join('=');
+        if (o.recipesIngIC.get(combString) === r) return;
         o.recipesIngIC.set(combString, r);
 
         pushToArrayArray(o.recipesResIC, R, sortedFS);
@@ -196,10 +226,10 @@
         if (F !== S) pushToArrayArray(o.recipesUsesIC, S, [F, R]);
     }
     function pushToArrayArray(arr, key, value) {
-        let a = arr[key];
-        if (!a) arr[key] = [value];
-        else a.push(value);
-    };
+        let entry = arr[key];
+        if (!entry) arr[key] = [value];
+        else entry.push(value);
+    }
     function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
 
@@ -214,69 +244,62 @@
         }
         return resultText;
     }
-    function icCaseId(inputId) {
+    function canonilizeId(inputId) {
+        if (typeof inputId !== "number") return;
+
         const mapOutput = o.icCasedLookup[inputId];
         if (mapOutput !== undefined) return mapOutput;
 
         const inputText = o.elementIdToText[inputId];
-        const resultText = icCaseText(inputText);
+        const icText = icCaseText(inputText);
+        const canonicalId = o.icTextToCanonicalId.get(icText);
 
-        let resultId = o.elementTextToId.get(resultText);
-        if (resultId === undefined) {
-            // example: it is `End Of Sentence` but the user only has `End of Sentence`...
-            resultId = o.nonExistentIcCaseId++;
-            addElement(resultText, resultId);
-        }
-        o.icCasedLookup[inputId] = resultId;
-        return resultId;
+        o.icCasedLookup[inputId] = canonicalId;
+        return canonicalId;
     }
 
 
 
 
 
-
+    function isLineageBetter(bestLineage, lineage) {
+        return !bestLineage
+            || lineage.lineage.length < bestLineage.lineage.length  && lineage.missingElements.length <= bestLineage.missingElements.length
+            || lineage.lineage.length === bestLineage.lineage.length && lineage.missingElements.length < bestLineage.missingElements.length;
+    }
     async function* generateLineageMultipleMethods(goals) {
-        const lineageGenerators = {
-            'Simple':         async () => await generateLineage(goals),
-            'Normal Recalc':  async () => await generateLineage(goals, 1),
-            'Reverse Recalc': async () => await generateLineage(goals, 2),
-            'Min Recalc':     async () => await generateLineage(goals, 3),
-            'Max Recalc':     async () => await generateLineage(goals, 4),
-            'Random Recalc':  async () => await generateLineage(goals, 5),
-        };
-
-        // Now iterate through the generators and run them
-        for (const [methodName, generateFunc] of Object.entries(lineageGenerators)) {
-            console.time(methodName);
-            const { lineage, missingElements } = await generateFunc();
-
-            const groupName = [`%c${methodName}:`, 'background:green; color:white', `${lineage.length}-step`];
+        async function generateWithSettings(order, recalc) {
+            console.time(order);
+            const result = await generateLineage(goals, order, recalc);
+            const methodName = (order ? `${icCaseText(order)} Recalc` : 'Simple');
+            const groupName = [`%c${methodName}:`, 'background:green; color:white', `${result.lineage.length}-step`];
             console.groupCollapsed(...groupName);
-            console.log(idLineageToText(lineage, goals));
-            console.timeEnd(methodName);
+            console.log(idLineageToText(result.lineage, goals));
+            console.timeEnd(order);
             console.groupEnd();
+            return { ...result, methodName };
+        }
 
-            yield { lineage, methodName, missingElements };
+        yield await generateWithSettings();
+        for (const orderName of ['left', 'right', 'min', 'max', 'rand']) {
+            yield await generateWithSettings(orderName, true);
         }
     }
 
 
-    function generateElementHeuristics(startElements, heurMap=o.elementHeur, end=Infinity) {
-        const pq = new PriorityQueue((a, b) => b[0] > a[0]);
-
+    function generateElementHeuristics(startElements, heurMap=o.elementHeur, pq=new PriorityQueue(), pause=Infinity, end=Infinity) {
         for (const startElement of startElements) {
             const heur = heurMap[startElement];
             if (heur === undefined) throw new Error(`${startElement} does not have a heur.`);
             pq.push([heur, startElement]);
         }
 
-        while (!pq.isEmpty()) {
+        while (pq.peek()?.[0] < pause) {
             const [elementHeur, element] = pq.pop();
+
             if ((heurMap[element] ?? Infinity) < elementHeur) continue;
 
             for (const [other, result] of (o.recipesUsesIC[element] ?? [])) {
-
                 const otherHeur = element === other ? 0 : heurMap[other];
                 if (otherHeur === undefined) continue;
 
@@ -303,7 +326,9 @@
 
             if (fh < sh) [fh, sh] = [sh, fh];
 
-            if (fh < bestMax  ||  (fh === bestMax && sh < bestMin)) {
+            if (fh < bestMax
+            || (fh === bestMax && sh < bestMin)
+            /* || (fh === bestMax && sh === bestMin && Math.random() > 0.5)*/ ) {
                 bestMax = fh;
                 bestMin = sh;
                 bestRecipe = recipe;
@@ -316,11 +341,12 @@
 
 
 
-    async function generateLineage(goals, recalc=false, depth=0) {
+    async function generateLineage(goals, order, recalc=false) {
         const elementQueue = [...goals];
         const crafted = new Set();
         const visitedLastPath = new Map();  // for invalid lineages with infinite loops
         const heurMap = [...o.elementHeur];
+        const pq = new PriorityQueue();
         const lineage = [];
 
         while (elementQueue.length > 0) {
@@ -335,10 +361,12 @@
             }
             let bestRecipe = findBestRecipeHeur(elementRecipesArr, heurMap);
 
-            if (recalc === 2) bestRecipe = [bestRecipe[1], bestRecipe[0]];
-            else if (recalc === 3 && heurMap[bestRecipe[0]] > heurMap[bestRecipe[1]]) bestRecipe = [bestRecipe[1], bestRecipe[0]];
-            else if (recalc === 4 && heurMap[bestRecipe[0]] < heurMap[bestRecipe[1]]) bestRecipe = [bestRecipe[1], bestRecipe[0]];
-            else if (recalc === 5 && Math.round(Math.random())) bestRecipe = [bestRecipe[1], bestRecipe[0]];
+            if (order === 'right'
+            || order === 'min' && heurMap[bestRecipe[0]] > heurMap[bestRecipe[1]]
+            || order === 'max' && heurMap[bestRecipe[0]] < heurMap[bestRecipe[1]]
+            || order === 'rand' && Math.round(Math.random())) {
+                bestRecipe = [bestRecipe[1], bestRecipe[0]];
+            }
 
             let neededIng;
             for (const ing of bestRecipe) {
@@ -365,80 +393,159 @@
                 heurMap[element] = 0;
 
                 if (recalc && elementQueue.length > 0) {
+                    // tiny sleep to let the ui update
+                    await sleep(0);
+
+                    const nextHeurInQueue = heurMap[elementQueue.at(-1)] ?? Infinity;
                     const worst = elementQueue.reduce((best, el) => {
                         const heur = heurMap[el];
                         return heur > best.heur ? { element: el, heur } : best;
                     }, { element: undefined, heur: -Infinity });
-
-                    // tiny sleep to let the ui update
-                    await sleep(0);
-                    generateElementHeuristics([element], heurMap, worst.heur);
+                    generateElementHeuristics([element], heurMap, pq, nextHeurInQueue, worst.heur);
                 }
             }
         }
-        return correctlyCapsAndOrderLineage(removeUnnecessary(lineage, goals), goals);
+        let initialLineage = removeUnnecessary(lineage, goals);
+        // if (recalc) for await (const lineage of findShortcuts(initialLineage, goals)) {
+        //     initialLineage = lineage;
+        // }
+        return correctlyCapsAndOrderLineage(initialLineage, goals);
     }
 
 
 
     function removeUnnecessary(lineage, goals) {
+        const { resultIngMap, usedMap } = getRerouteMaps(lineage);
+
+        for (const [,, r] of lineage) {
+            if (goals.includes(r)) continue;
+            // try to remove `r` from the lineage.
+            const { unreachable, changes, goalRevivalsNeeded } = getUnreachableWithReroutes(r, goals, resultIngMap, usedMap);
+            if (!goalRevivalsNeeded) applyRerouteChanges(changes, resultIngMap, usedMap, unreachable);
+        }
+        return convertResultIngMapToLineage(resultIngMap)
+    }
+
+
+    async function* findShortcuts(lineage, goals) {
+        let bestLineage = removeUnnecessary(lineage, goals);
+        let improved = true;
+
+        while (improved) {
+            improved = false;
+            const testedElements = new Set();
+            let { resultIngMap, usedMap } = getRerouteMaps(bestLineage);
+
+            for (const [,, r] of bestLineage) {
+                const { unreachable, changes } = getUnreachableWithReroutes(r, goals, resultIngMap, usedMap);
+                let simResultIngMap = new Map(resultIngMap);
+                applyRerouteChanges(changes, simResultIngMap);
+                const reroutedLineage = convertResultIngMapToLineage(simResultIngMap);
+
+                // try to find a new recipe for r, that adds exactly 1 extra element.
+                for (const [r1, r2] of o.recipesResIC[r] ?? []) {
+                    const hasR1 = simResultIngMap.has(r1);
+                    const [addElement, combineWith] = hasR1 ? [r2, r1] : [r1, r2];
+                    if ((r1 === r2 ? hasR1 : hasR1 === simResultIngMap.has(r2))  // need exactly 1 ingredient that it doesn't have yet
+                     || testedElements.has(addElement) || unreachable.has(combineWith)) continue;
+
+                    for (const [add1, add2] of o.recipesResIC[addElement] ?? []) {
+                        if (!simResultIngMap.has(add1) || !simResultIngMap.has(add2)
+                         || unreachable.has(add1) || unreachable.has(add2)) continue;
+
+                        const optimized = removeUnnecessary([...reroutedLineage, [add1, add2, addElement]], [...goals, addElement]);
+                        testedElements.add(addElement);
+
+                        if (optimized.length < bestLineage.length) {
+                            bestLineage = optimized;
+                            improved = true;
+                            // console.log(beforeLength, " -> ", bestLineage.length, `(${((performance.now() - startTime) / 1000).toFixed(3)} s)`);
+                            yield bestLineage;
+                        }
+                        break;
+                    }
+                    if (improved) break;
+                }
+                if (improved) break;
+                await sleep(0);
+            }
+        }
+
+        return bestLineage;
+    }
+
+
+    function convertResultIngMapToLineage(resultIngMap) {
+        return [...resultIngMap.entries()].filter(([, x]) => x !== undefined).map(([result, ings]) => [ings[0], ings[1], result]);
+    }
+    function getRerouteMaps(lineage) {
         const resultIngMap = new Map(lineage.map(recipe => [recipe[2], [recipe[0], recipe[1]]]));
+        for (const base of o.baseElementsId) if (!resultIngMap.has(base)) resultIngMap.set(base);
         const usedMap = new Map(lineage.map(recipe => [recipe[2], new Set()]));
         for (const [f, s, r] of lineage) {
             if (!o.baseElementsId.includes(f)) usedMap.get(f)?.add(r);
             if (!o.baseElementsId.includes(s)) usedMap.get(s)?.add(r);
         }
-
-        for (let i = lineage.length - 1; i >= 0; i--) {
-            const [f, s, r] = lineage[i];
-            if (goals.includes(r)) continue;
-            // try to remove recipe step by rerouting other recipes
-
-            const blacklist = getBlacklistRU(r, usedMap);
-            const changes = [];
-
-            let removeable = true;
-            for (const use of usedMap.get(r)) {
-                const replacementRecipe = o.recipesResIC[use].find(([newF, newS]) =>
-                    (o.baseElementsId.includes(newF) || (resultIngMap.has(newF) && !blacklist.has(newF)))
-                 && (o.baseElementsId.includes(newS) || (resultIngMap.has(newS) && !blacklist.has(newS)))
-                );
-                if (replacementRecipe) changes.push([use, replacementRecipe]);
-                else {
-                    removeable = false;
-                    break;
-                }
-            }
-            if (removeable) {
-                // we can remove r!!
-                switchRecipeRU(r, undefined, resultIngMap, usedMap);
-                for (const [changeR, changeIngs] of changes) {
-                    switchRecipeRU(changeR, changeIngs, resultIngMap, usedMap);
-                }
+        return { resultIngMap, usedMap };
+    }
+    function getUnreachableWithReroutes(r, goals, resultIngMap, usedMap) {
+        let goalRevivalsNeeded = 0;
+        const unreachable = new Map([[r, Infinity]]);
+        for (const [d] of unreachable) {
+            if (goals.includes(d)) goalRevivalsNeeded++;
+            for (const use of usedMap.get(d)) {
+                unreachable.set(use, (unreachable.get(use) || 0) + 1);
             }
         }
 
-        return [...resultIngMap.entries()].map(([result, ings]) => [ings[0], ings[1], result]);
-    }
+        const changes = [];
+        let changed = true;
 
+        while (unreachable.size > 1 && changed && goalRevivalsNeeded) {
+            changed = false;
+            for (const [deadElement] of unreachable) {
+                if (deadElement === r) continue;
+                let replacementRecipe;
+                for (const [newF, newS] of o.recipesResIC[deadElement]) {
+                    if (resultIngMap.has(newF) && !unreachable.has(newF) && resultIngMap.has(newS) && !unreachable.has(newS)) {
+                        replacementRecipe = [newF, newS];
+                        break;
+                    }
+                }
+                if (replacementRecipe) {
+                    changes.push([deadElement, replacementRecipe]);
+                    changed = true;
 
-    function getBlacklistRU(element, usedMap) {
-        const blacklist = new Set([element]);
-        for (const blackElement of blacklist) {
-            for (const use of usedMap.get(blackElement)) {
-                blacklist.add(use);
+                    const reviveQueue = [deadElement];
+                    for (const elem of reviveQueue) {
+                        unreachable.delete(elem);
+                        if (goals.includes(elem) && !--goalRevivalsNeeded) break;
+                        for (const use of usedMap.get(elem)) {
+                            const count = unreachable.get(use) - 1;
+                            if (count === 0) reviveQueue.push(use);
+                            else if (count) unreachable.set(use, count);
+                        }
+                    }
+                    if (!goalRevivalsNeeded) break;
+                }
             }
         }
-        return blacklist;
+        return { unreachable, changes, goalRevivalsNeeded };
     }
-    function switchRecipeRU(result, newRecipe, resultIngMap, usedMap) {
-        const originalRecipe = resultIngMap.get(result);
-        for (const x of originalRecipe) if (!o.baseElementsId.includes(x)) usedMap.get(x)?.delete(result);
 
-        if (!newRecipe) resultIngMap.delete(result);
-        else {
-            resultIngMap.set(result, newRecipe);
-            for (const x of newRecipe) if (!o.baseElementsId.includes(x)) usedMap.get(x).add(result);
+    function applyRerouteChanges(changes, resultIngMap, usedMap, unreachable=[]) {
+        for (const [d] of unreachable) switchRecipeRU(d);
+        for (const [newR, newIngs] of changes) switchRecipeRU(newR, newIngs);
+
+        function switchRecipeRU(result, newRecipe) {
+            const originalRecipe = resultIngMap.get(result);
+            if (originalRecipe) for (const x of originalRecipe) if (!o.baseElementsId.includes(x)) usedMap?.get(x)?.delete(result);
+
+            if (!newRecipe) resultIngMap.delete(result);
+            else {
+                resultIngMap.set(result, newRecipe);
+                for (const x of newRecipe) if (!o.baseElementsId.includes(x)) usedMap?.get(x).add(result);
+            }
         }
     }
 
@@ -496,15 +603,16 @@
     }
 
     async function helperRenderBody(container, item) {
-        const goalId = icCaseId(o.elementTextToId.get(item.text))
+        const goalId = canonilizeId(o.elementTextToId.get(item.text))
         if (goalId === undefined) {
             container.appendChild(document.createTextNode(`${item.text} is not in your save...`));
             return container;
         }
 
         let goals = [goalId];
-        let startTime, generator, lineage, methodName, missingElements;
-
+        let bestLineage;
+        let startTime;
+        let generator;
 
         const goalsContainerContainerDiv = document.createElement("div");
         goalsContainerContainerDiv.classList.add("lineage-goals-container-container");
@@ -516,7 +624,7 @@
         addGoalInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 event.preventDefault();
-                processNewGoalElements([addGoalInput.value]);
+                processNewGoalElements([addGoalInput.value], event.ctrlKey);
             }
         });
 
@@ -542,12 +650,8 @@
         const optCopy = document.createElement("div");
         optCopy.classList.add("lineage-dropdown-item");
         optCopy.textContent = "Copy Goals";
-        optCopy.addEventListener("click", () => {
-            navigator.clipboard.writeText(goals.map(goalId => idToMostlyNealCase(goalId).text).join('\n')).then(() => {
-                optCopy.style.color = 'gold';
-                setTimeout(() => optCopy.style.color = '', 500);
-            }).catch(err => alert('Failed to copy goals.'));
-        });
+        optCopy.addEventListener("click", () => navigator.clipboard.writeText(goals.toReversed().map(goalId => idToMostlyNealCase(goalId).text).join('\n'))
+            .catch(err => alert('Failed to copy goals.')));
 
         // Option 2: Paste Goals
         const optPaste = document.createElement("div");
@@ -581,8 +685,7 @@
         optWorstElement.textContent = "Add worst element";
         optWorstElement.addEventListener("click", () => {
             const maxHeurId = o.elementHeur.reduce((m, n, i) => n > (o.elementHeur[m] ?? -Infinity) ? i : m, -1);
-            const maxHeurItem = idToMostlyNealCase(maxHeurId);
-            if (maxHeurItem) processNewGoalElements([maxHeurItem.text]);
+            if (maxHeurId !== undefined) processNewGoalElements([o.elementIdToText[maxHeurId]]);
         });
 
         // Option 5: Add Best Seed
@@ -591,7 +694,7 @@
         optBestSeed.textContent = "Add best seed";
         optBestSeed.addEventListener("click", () => {
             alertOnMissingRecipes(defaultPresets[1].required, true);
-            processNewGoalElements(defaultPresets[1].goals);
+            processNewGoalElements(defaultPresets[1].goals, true);
         });
 
         // Option 6: Seed Presets
@@ -634,7 +737,7 @@
                 wrapper.style.padding = "0";
                 wrapper.addEventListener("click", () => {
                     if (p.required) alertOnMissingRecipes(p.required, true);
-                    processNewGoalElements(p.goals);
+                    processNewGoalElements(p.goals, true);
                     dropdownContent.classList.remove("show");
                     renderMainMenu();
                 });
@@ -695,7 +798,7 @@
         copyLineageButton.textContent = "Copy";
         let copyResetTimeout;
         copyLineageButton.addEventListener('click', () => {
-            navigator.clipboard.writeText(idLineageToText(lineage, goals)).then(() => {
+            navigator.clipboard.writeText(idLineageToText(bestLineage.lineage, goals)).then(() => {
                 copyLineageButton.style.borderColor = 'lime';
                 clearTimeout(copyResetTimeout);
                 copyResetTimeout = setTimeout(() => {  // revert to original
@@ -713,29 +816,56 @@
             optimiseButton.style.borderColor = 'cyan';
 
             startTime = performance.now();
-            let methodIndex = 0;
-            optimiseButton.textContent = `Optimising... (${methodIndex++}/5)`;
             let goalsSnapshot = [...goals];
+            let optimizeTries = 0;
 
-            for await (const { lineage: newLineage, methodName: newMethodName, missingElements: newMissingElements } of generator) {
+            optimiseButton.textContent = `Optimising... (${optimizeTries++}/5)`;
+            for await (const lineage of generator) {
                 if (!container.checkVisibility() || goals.join('\n') != goalsSnapshot.join('\n')) return
-
-                if (newLineage.length < lineage.length || (newLineage.length === lineage.length && newMissingElements.length < missingElements.length)) {
-                    lineage = newLineage;
-                    methodName = newMethodName;
-                    missingElements = newMissingElements;
+                optimiseButton.textContent = `Optimising... (${optimizeTries++}/5)`;
+                if (isLineageBetter(bestLineage, lineage)) {
+                    bestLineage = lineage;
                     drawLineage();
+                    resetShortcutsButton();
                 }
-                optimiseButton.textContent = `Optimising... (${methodIndex++}/5)`;
                 updateHeaderStatText();
             }
+
             optimiseButton.textContent = 'Optimised';
             optimiseButton.style.opacity = '0.2';
             optimiseButton.style.transition = '';
             optimiseButton.style.borderColor = '';
         });
 
-        lineageHeaderDiv.append(lineageTitle, optimiseButton, copyLineageButton);
+        const shortcutsButton = document.createElement("button");
+        shortcutsButton.classList.add("lineage-action-button");
+        shortcutsButton.textContent = "Find Shortcuts";
+        shortcutsButton.addEventListener('click', async () => {
+            shortcutsButton.style.pointerEvents = 'none';
+            shortcutsButton.style.borderColor = 'purple';
+            shortcutsButton.textContent = "Find Shortcuts...";
+            startTime = performance.now();
+            const startLen = bestLineage.lineage.length;
+            const canonicalLineage = bestLineage.lineage.map(recipe => recipe.map(x => canonilizeId(x)));
+            let goalsSnapshot = [...goals];
+
+            for await (const optimizedRaw of findShortcuts(canonicalLineage, goals)) {
+                if (!container.checkVisibility() || goals.join('\n') != goalsSnapshot.join('\n')) return
+                const formatted = correctlyCapsAndOrderLineage(optimizedRaw, goals);
+                bestLineage = { ...bestLineage, ...formatted };
+
+                drawLineage();
+                updateHeaderStatText();
+                shortcutsButton.textContent = `Find Shortcuts... (-${startLen - bestLineage.lineage.length})`;
+            }
+
+            shortcutsButton.textContent = `Find Shortcuts (-${startLen - bestLineage.lineage.length})`;
+            shortcutsButton.style.pointerEvents = 'none';
+            shortcutsButton.style.opacity = '0.2';
+            shortcutsButton.style.borderColor = '';
+        });
+
+        lineageHeaderDiv.append(lineageTitle, optimiseButton, shortcutsButton, copyLineageButton);
 
 
         const lineageBodyDiv = document.createElement("div");
@@ -745,14 +875,15 @@
         drawGoalsAndInitLineage();
 
 
-        function processNewGoalElements(newGoals) {
+        function processNewGoalElements(newGoals, toBottom) {
             let update = false;
             for (const newGoal of newGoals) {
                 const icGoalText = icCaseText(newGoal.trim());
-                const newItemId = o.elementTextToId.get(icGoalText);
+                const newItemId = o.icTextToCanonicalId.get(icGoalText);
                 if (newItemId !== undefined && !goals.includes(newItemId)) {
                     addGoalInput.value = '';
-                    goals.push(newItemId);
+                    if (toBottom) goals.push(newItemId);
+                    else goals.unshift(newItemId);
                     update = true;
                 }
             }
@@ -763,16 +894,17 @@
 
         function drawGoalsAndInitLineage() {
             goalsContainerDiv.innerHTML = '';
-            optimiseButton.style.borderColor = '';
+            resetOptimiseButton();
+            resetShortcutsButton();
             initializeLineage();
 
-            goals.forEach((goalId, index) => {
-                const goalItem = idToMostlyNealCase(goalId);
-                const goalElement = unsafeWindow.ICHelper.createItemElement(goalItem);
+            for (let i = goals.length - 1; i >= 0; i--) {
+                const goalId = goals[i];
+                const goalElement = unsafeWindow.ICHelper.createItemElement(idToMostlyNealCase(goalId));
                 goalElement.classList.add('lineage-goal');
 
                 goalElement.dataset.goalId = goalId; // Store goalId for easy access
-                goalElement.dataset.index = index;   // Store original index
+                goalElement.dataset.index = i;   // Store original index
                 goalElement.addEventListener('remove-goal', (e) => {
                     goals.splice(e.target.dataset.index, 1);
                     drawGoalsAndInitLineage();
@@ -784,7 +916,7 @@
                 goalElement.draggable = true;
                 goalElement.addEventListener('dragstart', (e) => {
                     e.dataTransfer.setData('text/plain', goalId);
-                    e.dataTransfer.setData('sourceIndex', index);
+                    e.dataTransfer.setData('sourceIndex', i);
                     e.target.classList.add('dragging');
                     setTimeout(() => e.target.style.visibility = 'hidden', 0);
                 });
@@ -800,47 +932,54 @@
                     e.preventDefault();
                     const draggedGoalId = e.dataTransfer.getData('text/plain');
                     const sourceIndex = parseInt(e.dataTransfer.getData('sourceIndex'), 10);
-                    const targetIndex = index;
+                    const targetIndex = i;
 
                     if (sourceIndex !== targetIndex) {
                         // Reorder the `goals` array
-                        const [movedItem] = goals.splice(sourceIndex, 1); // Remove item from old position
-                        goals.splice(targetIndex, 0, movedItem);      // Insert item at new position
+                        const [movedItem] = goals.splice(sourceIndex, 1);
+                        goals.splice(targetIndex, 0, movedItem);
                         drawGoalsAndInitLineage();
                     }
                 });
 
                 goalsContainerDiv.append(goalElement);
-            });
+            }
             addGoalInput.placeholder = `Add goal... (${goals.length})`;
         }
 
         async function initializeLineage() {
             startTime = performance.now();
             generator = generateLineageMultipleMethods(goals);
-            const result = (await generator.next()).value;
-            lineage = result.lineage;
-            methodName = result.methodName;
-            missingElements = result.missingElements;
+            bestLineage = (await generator.next()).value;
             updateHeaderStatText();
             drawLineage();
+        }
+
+        function resetOptimiseButton() {
             optimiseButton.textContent = 'Optimise';
             optimiseButton.style.opacity = '';
             optimiseButton.style.pointerEvents = '';
+            optimiseButton.style.borderColor = '';
+        }
+        function resetShortcutsButton() {
+            shortcutsButton.textContent = 'Find Shortcuts';
+            shortcutsButton.style.opacity = '';
+            shortcutsButton.style.pointerEvents = '';
+            shortcutsButton.style.borderColor = '';
+
         }
 
 
         function drawLineage() {
             lineageBodyDiv.innerHTML = '';
 
-            if (missingElements.length > 0) {
+            if (bestLineage.missingElements.length > 0) {
                 const missingContainerContainerDiv = document.createElement("div");
                 missingContainerContainerDiv.classList.add("lineage-missing-container-container");
                 const missingContaierDiv = document.createElement("div");
                 missingContaierDiv.classList.add("lineage-missing-container");
-                for (const missingElement of missingElements) {
-                    const missingItem = idToMostlyNealCase(missingElement);
-                    const missingItemElement = unsafeWindow.ICHelper.createItemElement(missingItem);
+                for (const missingElement of bestLineage.missingElements) {
+                    const missingItemElement = unsafeWindow.ICHelper.createItemElement(idToMostlyNealCase(missingElement));
                     missingItemElement.classList.add('lineage-missing');
                     missingContaierDiv.append(missingItemElement);
                 }
@@ -848,41 +987,32 @@
                 lineageBodyDiv.append(missingContainerContainerDiv);
             }
 
-            lineage.forEach((r, step) => {
+            bestLineage.lineage.forEach((r, step) => {
                 const recipe = document.createElement("div");
-	              recipe.classList.add("recipe");
-	              const [first, second, result] = r.map(x => unsafeWindow.ICHelper.idMap.get(x));
-	              if (!first || !second || !result) console.warn("Invalid recipe for " + r.map(x => o.elementIdToText[x]), r);
-                else {
-                    const stepNumberSpan = document.createElement("span");
-                    stepNumberSpan.classList.add("recipe-step-number");
-                    stepNumberSpan.textContent = `${step + 1}.`;
+                recipe.classList.add("recipe");
+                const [first, second, result] = r.map(x => ICHelper.getItemFromId(x));
+                if (!first || !second || !result) return console.warn("Invalid recipe for " + r.map(x => o.elementIdToText[x]), r);
+                const stepNumberSpan = document.createElement("span");
+                stepNumberSpan.classList.add("recipe-step-number");
+                stepNumberSpan.textContent = `${step + 1}.`;
 
-                    const firstItemElement = unsafeWindow.ICHelper.createItemElement(first);
-                    const secondItemElement = unsafeWindow.ICHelper.createItemElement(second);
-                    const resultItemElement = unsafeWindow.ICHelper.createItemElement(result);
-                    if (missingElements.includes(icCaseId(first.id))) firstItemElement.classList.add('lineage-missing');
-                    if (missingElements.includes(icCaseId(second.id))) secondItemElement.classList.add('lineage-missing');
-                    if (missingElements.includes(icCaseId(result.id))) resultItemElement.classList.add('lineage-missing');
-                    else if (goals.includes(icCaseId(result.id))) resultItemElement.classList.add('lineage-goal');
+                const firstItemElement = unsafeWindow.ICHelper.createItemElement(first);
+                const secondItemElement = unsafeWindow.ICHelper.createItemElement(second);
+                const resultItemElement = unsafeWindow.ICHelper.createItemElement(result);
+                if (bestLineage.missingElements.includes(canonilizeId(first.id))) firstItemElement.classList.add('lineage-missing');
+                if (bestLineage.missingElements.includes(canonilizeId(second.id))) secondItemElement.classList.add('lineage-missing');
+                if (bestLineage.missingElements.includes(canonilizeId(result.id))) resultItemElement.classList.add('lineage-missing');
+                else if (goals.includes(canonilizeId(result.id))) resultItemElement.classList.add('lineage-goal');
 
-	                  recipe.append(
-	                  	  stepNumberSpan,
-	                  	  firstItemElement,
-	                  	  document.createTextNode("+"),
-	                  	  secondItemElement,
-	                  	  document.createTextNode("→"),
-	                  	  resultItemElement
-	                  );
-	                  lineageBodyDiv.append(recipe);
-                }
+                recipe.append(stepNumberSpan, firstItemElement, document.createTextNode("+"), secondItemElement, document.createTextNode("→"), resultItemElement);
+                lineageBodyDiv.append(recipe);
             });
         }
         function getPresets() {
             return JSON.parse(GM_getValue("lineage_seed_presets", JSON.stringify(defaultPresets)));
         }
         function updateHeaderStatText() {
-            lineageTitle.textContent = `${methodName} - ${lineage.length} Steps (${((performance.now() - startTime) / 1000).toFixed(3)} s)`;
+            lineageTitle.textContent = `${bestLineage.methodName} - ${bestLineage.lineage.length} Steps (${((performance.now() - startTime) / 1000).toFixed(3)} s)`;
         }
 	    return container;
     }
@@ -890,11 +1020,10 @@
 
 
     function idToMostlyNealCase(itemId) {
-        let item = unsafeWindow.ICHelper.idMap.get(itemId);
-        if (item) return item;
-        // example: it is `End Of Sentence` but the user only has `End of Sentence`...
-        const itemLowerText = o.elementIdToText[itemId].toLowerCase();
-        return unsafeWindow.IC.getItems().find(x => x.text.toLowerCase() === itemLowerText);
+        const text = o.elementIdToText[itemId];
+        const icText = icCaseText(text);
+        const id = o.elementTextToId.get(icText) ?? canonilizeId(itemId);
+        return ICHelper.getItemFromId(id);
     }
 
 
@@ -921,19 +1050,32 @@
         return lineage.map((recipe, i) => {
             const [first, second] = [o.elementIdToText[recipe[0]], o.elementIdToText[recipe[1]]].sort();
             const result = o.elementIdToText[recipe[2]];
-            return `${first} + ${second} = ${result}` + (goals.includes(icCaseId(recipe[2])) ? `  // ${i + 1}` : '');
+            return `${first} + ${second} = ${result}` + (goals.includes(canonilizeId(recipe[2])) ? `  // ${i + 1}` : '');
         }).join('\n');
     }
 
     function alertOnMissingRecipes(input, alertPopup) {
         let missing = new Set();
         for (const [first, second, res] of textLineageToArray(input)) {
-            const id1 = o.elementTextToId.get(icCaseText(first));
-            const id2 = o.elementTextToId.get(icCaseText(second));
-            const idRes = o.elementTextToId.get(icCaseText(res));
+            const id1 = o.icTextToCanonicalId.get(icCaseText(first));
+            const id2 = o.icTextToCanonicalId.get(icCaseText(second));
+            const idRes = o.icTextToCanonicalId.get(icCaseText(res));
 
-            const sortedFS = id2 > id1 ? [id1, id2] : [id2, id1];
-            if (icCaseId(o.recipesIngIC.get(sortedFS.join('='))) !== idRes) {
+            if (id1 === undefined || id2 === undefined || idRes === undefined) {
+                missing.add(`${first} + ${second} = ${res}`);
+                continue;
+            }
+            // skip recipes like `X + Y = y`, because they aren't stored in this script...
+            if (id1 === idRes || id2 === idRes) continue;
+
+            function checkRecipe(f, s) {
+                const sortedFS = f > s ? [s, f] : [f, s];
+                return canonilizeId(o.recipesIngIC.get(sortedFS.join('='))) === idRes;
+            }
+
+            if (!checkRecipe(id1, id2)
+            && [id1, ...o.baseElementsId].every(x => !checkRecipe(id1, x))
+            && [id2, ...o.baseElementsId].every(x => !checkRecipe(id2, x))) {
                 missing.add(`${first} + ${second} = ${res}`);
             }
         }
@@ -966,7 +1108,8 @@
             if (delayMs) promises.push((async () => {
                 await sleep(i * delayMs);
                 try {
-                    if (!await fetch(`https://neal.fun/api/infinite-craft/check?first=${encodeURIComponent(icCaseText(f))}&second=${encodeURIComponent(icCaseText(s))}&result=${encodeURIComponent(r)}`)
+                    const [ef, es, er] = [icCaseText(f), icCaseText(s), r].map(encodeURIComponent);
+                    if (!await fetch(`https://neal.fun/api/infinite-craft/check?first=${ef}&second=${es}&result=${er}`)
                         .then(x => x.json()).then(x => x.valid)) err.push(`Invalid recipe: ${f} + ${s} = ${r}`);
                 } catch (error) {
                     err.push(`Error checking recipe (${f} + ${s} = ${r}): ${error}`);
@@ -978,19 +1121,17 @@
     }
 
     async function consoleMakeLineage(...goals) {
-        goals = goals.map(goal => {
-            const goalId = o.elementTextToId.get(icCaseText(goal));
+        goals = goals.toReversed().map(goal => {
+            const goalId = o.icTextToCanonicalId.get(icCaseText(goal));
             if (goalId === undefined) throw new Error(`${goal} is not in your save...`);
             return goalId;
         });
 
-        let bestResult = null;
+        let best = null;
         for await (const lineage of generateLineageMultipleMethods(goals)) {
-            if (!bestResult || lineage.lineage.length < bestResult.lineage.length) {
-                bestResult = lineage;
-            }
+            if (isLineageBetter(best, lineage)) best = lineage;
         }
-        return bestResult
+        return best;
     }
 
 
@@ -1000,14 +1141,14 @@
 
 
 
-// Priority Queue - https://stackoverflow.com/a/42919752   
+// Priority Queue - https://stackoverflow.com/a/42919752
 const pqTop = 0;
 const pqParent = i => ((i + 1) >>> 1) - 1;
 const pqLeft = i => (i << 1) + 1;
 const pqRight = i => (i + 1) << 1;
 
 class PriorityQueue {
-  constructor(comparator = (a, b) => a > b) { this._heap = []; this._comparator = comparator; }
+  constructor(comparator = (a, b) => b[0] > a[0]) { this._heap = []; this._comparator = comparator; }
   size() { return this._heap.length; }
   isEmpty() { return this.size() == 0; }
   peek() { return this._heap[pqTop]; }

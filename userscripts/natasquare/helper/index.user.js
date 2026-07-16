@@ -5,7 +5,7 @@
 // @grant		GM.addStyle
 // @grant		unsafeWindow
 // @run-at		document-start
-// @version		1.2.0
+// @version		1.3.0
 // @author		Natasquare
 // @description	Adds various QoL features to Infinite Craft - a port of Mikarific's Infinite Craft Helper.
 // @updateURL	https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/natasquare/helper/index.user.js
@@ -23,7 +23,7 @@ const settings = {
 	searchRelevancy: true,		// will override other sorting modes if searching
 
 	// recipes
-	recipeLookup: true,			// if you can't wait until neal actually implements it
+	recipeLookup: true,			// faster and more featureful recipe modal
 	recipeLogging: true,		// log the raw result of recipes in console
 
 	// misc
@@ -32,11 +32,14 @@ const settings = {
 	removeDeps: false,			// removes some reactivity of vue for performance (MAY BREAK THINGS)
 	oldMouseControls: true,		// middle click to duplicate, ctrl + left click to pan
 	disableParticles: true,		// honestly they don't affect performance as much now
-	variation: true				// allows you to obtain an element in multiple casings, yay
+	variation: true,			// allows you to obtain an element in multiple casings, yay
+	lighterDarkTheme: true		// preference
 }
 
 const closeIconSrc = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJhIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MDAgNjAwIj48cGF0aCBkPSJNMzAwLjAwMDAyLDM0OS44MzIzM0w2MC4xMDc4Miw1ODkuNzIzMzJjLTYuNTQ2ODksNi41NDc2OS0xNC43NzY0Myw5Ljg5NzE4LTI0LjY4ODYsMTAuMDQ4NTEtOS45MTEzOCwuMTUyMS0xOC4yOTIyNC0zLjE5NzQtMjUuMTQyNTYtMTAuMDQ4NTFDMy40MjU1Nyw1ODIuODcyOTgsLjAwMDAyLDU3NC41Njc4LDAsNTY0LjgwNzc0Yy4wMDAwMi05Ljc2MDA3LDMuNDI1NTctMTguMDY1MjYsMTAuMjc2NjYtMjQuOTE1NTZsMjM5Ljg5MTAxLTIzOS44OTIyTDEwLjI3NjY4LDYwLjEwNzc4QzMuNzI4OTksNTMuNTYwOTIsLjM3OTUsNDUuMzMxMzYsLjIyODE3LDM1LjQxOTIyLC4wNzYwNywyNS41MDc4OCwzLjQyNTU3LDE3LjEyNywxMC4yNzY2OCwxMC4yNzY2NiwxNy4xMjcwMiwzLjQyNTUzLDI1LjQzMjIsMCwzNS4xOTIyNiwwczE4LjA2NTI2LDMuNDI1NTMsMjQuOTE1NTYsMTAuMjc2NjZsMjM5Ljg5MjIsMjM5Ljg5MDk3TDUzOS44OTIyMiwxMC4yNzY1OWM2LjU0Njg2LTYuNTQ3NzIsMTQuNzc2NDMtOS44OTcyLDI0LjY4ODU2LTEwLjA0ODUxLDkuOTExMzQtLjE1MjE3LDE4LjI5MjIyLDMuMTk3MzgsMjUuMTQyNTYsMTAuMDQ4NTEsNi44NTExMyw2Ljg1MDI3LDEwLjI3NjY2LDE1LjE1NTUyLDEwLjI3NjY2LDI0LjkxNTU2cy0zLjQyNTUzLDE4LjA2NTIyLTEwLjI3NjY2LDI0LjkxNTU2bC0yMzkuODkwOTcsMjM5Ljg5MjI3LDIzOS44OTEwNSwyMzkuODkyMmM2LjU0NzcyLDYuNTQ2ODksOS44OTcyLDE0Ljc3NjQzLDEwLjA0ODUxLDI0LjY4ODYsLjE1MjE3LDkuOTExMzgtMy4xOTczOCwxOC4yOTIyNC0xMC4wNDg1MSwyNS4xNDI1Ni02Ljg1MDI3LDYuODUxMS0xNS4xNTU1MiwxMC4yNzY2NC0yNC45MTU1NiwxMC4yNzY2Ni05Ljc2MDA0LS4wMDAwMi0xOC4wNjUyMi0zLjQyNTU3LTI0LjkxNTU2LTEwLjI3NjY2bC0yMzkuODkyMjctMjM5Ljg5MTAxWiIvPjwvc3ZnPg==",
-	randomIcon = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJhIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MDAgNjAwIj48cGF0aCBkPSJNNjAuNTc2NTcsNjAwYy0xNy4yNTkzOCwwLTMxLjY3MDMyLTUuNzgxMjUtNDMuMjMyODItMTcuMzQzNzVTMCw1NTYuNjgyODEsMCw1MzkuNDIzNDN2LTEwOC4xNzM0M2MwLTUuMzM2MjQsMS43OTA5NC05Ljc5NTMxLDUuMzcyODItMTMuMzc3MiwzLjU4MTI2LTMuNTgxODksOC4wNDAzLTUuMzcyOCwxMy4zNzcxOC01LjM3MjgsNS4zMzYyNSwwLDkuNzk1MywxLjc5MDkxLDEzLjM3NzE4LDUuMzcyOCwzLjU4MTg3LDMuNTgxODYsNS4zNzI4Miw4LjA0MDkzLDUuMzcyODIsMTMuMzc3MnYxMDguMTczNDVjMCw1Ljc2ODc0LDIuNDAzNzYsMTEuMDU3MTgsNy4yMTEyNSwxNS44NjUzMiw0LjgwODEyLDQuODA3NDgsMTAuMDk2NTYsNy4yMTEyNCwxNS44NjUzMiw3LjIxMTI0aDEwOC4xNzM0M2M1LjMzNjI0LDAsOS43OTUzMSwxLjc5MDk0LDEzLjM3NzIsNS4zNzI4MiwzLjU4MTg5LDMuNTgxODksNS4zNzI4LDguMDQwOTMsNS4zNzI4LDEzLjM3NzE4LDAsNS4zMzY4OC0xLjc5MDkxLDkuNzk1OTMtNS4zNzI4LDEzLjM3NzE4LTMuNTgxODksMy41ODE4Ny04LjA0MDk2LDUuMzcyODItMTMuMzc3Miw1LjM3MjgySDYwLjU3NjU3Wm00NzguODQ2ODgsMGgtMTA4LjE3MzQ1Yy01LjMzNjI3LDAtOS43OTUyOC0xLjc5MDk0LTEzLjM3NzE3LTUuMzcyODItMy41ODE4OS0zLjU4MTI2LTUuMzcyODMtOC4wNDAzLTUuMzcyODMtMTMuMzc3MTgsMC01LjMzNjI1LDEuNzkwOTQtOS43OTUzLDUuMzcyODMtMTMuMzc3MTgsMy41ODE4OS0zLjU4MTg3LDguMDQwOTYtNS4zNzI4MiwxMy4zNzcxNy01LjM3MjgyaDEwOC4xNzM0NWM1Ljc2ODc0LDAsMTEuMDU3MjItMi40MDM3NiwxNS44NjUyOS03LjIxMTI1LDQuODA3NTUtNC44MDgxMiw3LjIxMTI3LTEwLjA5NjU2LDcuMjExMjctMTUuODY1MzJ2LTEwOC4xNzM0M2MwLTUuMzM2MjQsMS43OTA5NC05Ljc5NTMxLDUuMzcyODMtMTMuMzc3MiwzLjU4MTg5LTMuNTgxODksOC4wNDA5Ni01LjM3MjgsMTMuMzc3MTctNS4zNzI4LDUuMzM2ODksMCw5Ljc5NTkxLDEuNzkwOTEsMTMuMzc3MTcsNS4zNzI4LDMuNTgxODksMy41ODE4OSw1LjM3MjgzLDguMDQwOTYsNS4zNzI4MywxMy4zNzcydjEwOC4xNzM0NWMwLDE3LjI1OTM2LTUuNzgxMjcsMzEuNjcwMzEtMTcuMzQzNzUsNDMuMjMyOC0xMS41NjI0OCwxMS41NjI1LTI1Ljk3MzQ1LDE3LjM0Mzc1LTQzLjIzMjgsMTcuMzQzNzVaTTAsNjAuNTc2NTVDMCw0My4zMTcyLDUuNzgxMjUsMjguOTA2MjMsMTcuMzQzNzUsMTcuMzQzNzUsMjguOTA2MjUsNS43ODEyNyw0My4zMTcxOSwwLDYwLjU3NjU3LDBoMTA4LjE3MzQzYzUuMzM2MjQsMCw5Ljc5NTMxLDEuNzkwOTQsMTMuMzc3Miw1LjM3MjgzLDMuNTgxODksMy41ODEyNiw1LjM3MjgsOC4wNDAyOCw1LjM3MjgsMTMuMzc3MTcsMCw1LjMzNjMyLTEuNzkwOTEsOS43OTUyOC01LjM3MjgsMTMuMzc3MTctMy41ODE4NiwzLjU4MTgzLTguMDQwOTMsNS4zNzI4My0xMy4zNzcyLDUuMzcyODNINjAuNTc2NTdjLTUuNzY4NzUsMC0xMS4wNTcxOCwyLjQwMzcyLTE1Ljg2NTMyLDcuMjExMjctNC44MDc0OSw0LjgwODA2LTcuMjExMjUsMTAuMDk2NTUtNy4yMTEyNSwxNS44NjUyOXYxMDguMTczNDVjMCw1LjMzNjI3LTEuNzkwOTQsOS43OTUyOC01LjM3MjgyLDEzLjM3NzE3LTMuNTgxODksMy41ODE4My04LjA0MDkzLDUuMzcyNzctMTMuMzc3MTgsNS4zNzI4My01LjMzNjg4LDAtOS43OTU5My0xLjc5MDk0LTEzLjM3NzE4LTUuMzcyODMtMy41ODE4Ny0zLjU4MTg5LTUuMzcyODItOC4wNDA5LTUuMzcyODItMTMuMzc3MTdWNjAuNTc2NTVabTYwMCwwdjEwOC4xNzM0NWMwLDUuMzM2MjctMS43OTA5NCw5Ljc5NTI4LTUuMzcyODMsMTMuMzc3MTctMy41ODEyNiwzLjU4MTg5LTguMDQwMjgsNS4zNzI4My0xMy4zNzcxNyw1LjM3MjgzLTUuMzM2MzIsMC05Ljc5NTI4LTEuNzkwOTQtMTMuMzc3MTctNS4zNzI4My0zLjU4MTgzLTMuNTgxODktNS4zNzI4My04LjA0MDk2LTUuMzcyODMtMTMuMzc3MTdWNjAuNTc2NTVjMC01Ljc2ODc0LTIuNDAzNzItMTEuMDU3MjItNy4yMTEyNy0xNS44NjUyOS00LjgwODA2LTQuODA3NTUtMTAuMDk2NTUtNy4yMTEyNy0xNS44NjUyOS03LjIxMTI3aC0xMDguMTczNDVjLTUuMzM2MjcsMC05Ljc5NTI4LTEuNzkwOTQtMTMuMzc3MTctNS4zNzI4My0zLjU4MTgzLTMuNTgxODktNS4zNzI3Ny04LjA0MDk2LTUuMzcyODMtMTMuMzc3MTcsMC01LjMzNjg5LDEuNzkwOTQtOS43OTU5MSw1LjM3MjgzLTEzLjM3NzE3LDMuNTgxODktMy41ODE4OSw4LjA0MDktNS4zNzI4MywxMy4zNzcxNy01LjM3MjgzaDEwOC4xNzM0NWMxNy4yNTkzNSwwLDMxLjY3MDMyLDUuNzgxMjcsNDMuMjMyOCwxNy4zNDM3NXMxNy4zNDM3NSwyNS45NzM0NSwxNy4zNDM3NSw0My4yMzI4Wk0zMDEuNDQxODcsNDk1LjQzMzEzYzguMzE3NTEsMCwxNS4zMjUwMS0yLjg0ODc1LDIxLjAyMjUxLTguNTQ2MjUsNS42OTY5LTUuNjk2ODcsOC41NDUzMy0xMi43MDQwNiw4LjU0NTMzLTIxLjAyMTU3cy0yLjg0ODQzLTE1LjMyNDctOC41NDUzLTIxLjAyMTU3Yy01LjY5NzUzLTUuNjk2ODctMTIuNzA1LTguNTQ1My0yMS4wMjI1MS04LjU0NTMtOC4zMTY5MSwwLTE1LjMyNDA3LDIuODQ4NDMtMjEuMDIxNTcsOC41NDUzLTUuNjk2OSw1LjY5Njg3LTguNTQ1MzMsMTIuNzA0MDYtOC41NDUzMywyMS4wMjE1N3MyLjg0ODQzLDE1LjMyNDcsOC41NDUzLDIxLjAyMTU3YzUuNjk3NDcsNS42OTc1LDEyLjcwNDY5LDguNTQ2MjUsMjEuMDIxNTcsOC41NDYyNVptMC0zNTUuOTYyMTVjMTkuMTM0OTgsMCwzNS42Mzc1LDYuMDgxODUsNDkuNTA3NTEsMTguMjQ1NiwxMy44NzAwMSwxMi4xNjMxMiwyMC44MDUwMiwyNy40OTk2OSwyMC44MDUwMiw0Ni4wMDk3MSwwLDEzLjQxMzE2LTMuOTMwMywyNS42MjQ2OS0xMS43OTA5NiwzNi42MzQ3MS03Ljg2MDAzLDExLjAwOTM5LTE2Ljg2MjE4LDIwLjk2MTIzLTI3LjAwNjU3LDI5Ljg1NTYzLTE2LjI1MDAxLDE0Ljg1NTYtMjguMzUzNDUsMjguNjg5NjgtMzYuMzEwMyw0MS41MDIyLTcuOTU2ODgsMTIuODEyNDktMTIuNTYwMjksMjYuODM5MDYtMTMuODEwMyw0Mi4wNzk3LS42MjQ5OSw0LjkwMzc0LC44MTc0OCw5LjA3NDM5LDQuMzI3NSwxMi41MTE4OCwzLjUwOTM5LDMuNDM3NTIsNy43ODgxMSw1LjE1NjI1LDEyLjgzNjI0LDUuMTU2MjUsNC45MDM3NiwwLDkuMTQ2NTgtMS42ODI4LDEyLjcyODQzLTUuMDQ4NDUsMy41ODE4OS0zLjM2NTAyLDUuNzU3NTItNy41NzE1NSw2LjUyNjg4LTEyLjYxOTY5LDEuNzMwNjMtMTAuNjI1MDEsNS40ODA2My0yMC4xMjAzMiwxMS4yNS0yOC40ODU5NSw1Ljc2ODc0LTguMzY1NjMsMTQuODMxMi0xOC43MjYyNSwyNy4xODc1LTMxLjA4MTg3LDE4Ljk4OTk4LTE4Ljk5MDYxLDMyLjA3ODctMzQuOTY0MDgsMzkuMjY2MjItNDcuOTIwMzMsNy4xODc1Mi0xMi45NTY4OSwxMC43ODEyNS0yNy4zNjgxNCwxMC43ODEyNS00My4yMzM3OCwwLTI4Ljk0MTg4LTkuNzgzNzMtNTIuNTk1NjctMjkuMzUxMjMtNzAuOTYxMjctMTkuNTY2ODgtMTguMzY1NjUtNDQuNzM1MDEtMjcuNTQ4NDUtNzUuNTA0MzctMjcuNTQ4NDUtMjEuMjk4MTEsMC00MC43ODEyNSw0LjgxOTY4LTU4LjQ0OTM4LDE0LjQ1OTA0LTE3LjY2ODc2LDkuNjM5MzYtMzEuODE1NjEsMjMuNjQxODMtNDIuNDQwNjEsNDIuMDA3NDgtMi4zMDc1LDQuMTM1MDQtMi41ODM3Niw4LjU0NjI4LS44Mjg3NSwxMy4yMzM3OHM1LjAxMjIsNy44NzI1MSw5Ljc3MTU3LDkuNTU1MDJjNC4yNzg3NSwxLjY4MjUxLDguODM0MDcsMS44MDI4NSwxMy42NjU5MywuMzYwOTUsNC44MzE4Ny0xLjQ0MjQ3LDguNzg2MjMtNC4xNTkwNywxMS44NjMxMi04LjE0OTY4LDguMzE3NTEtMTAuNjczMTYsMTcuODQ4NzUtMTkuNDM1MDQsMjguNTkzNzUtMjYuMjg1NjUsMTAuNzQ0OTctNi44NTEyMywyMi44NzIxNi0xMC4yNzY4NSwzNi4zODE1Ny0xMC4yNzY4NVoiLz48L3N2Zz4=";
+	randomIcon = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJhIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MDAgNjAwIj48cGF0aCBkPSJNNjAuNTc2NTcsNjAwYy0xNy4yNTkzOCwwLTMxLjY3MDMyLTUuNzgxMjUtNDMuMjMyODItMTcuMzQzNzVTMCw1NTYuNjgyODEsMCw1MzkuNDIzNDN2LTEwOC4xNzM0M2MwLTUuMzM2MjQsMS43OTA5NC05Ljc5NTMxLDUuMzcyODItMTMuMzc3MiwzLjU4MTI2LTMuNTgxODksOC4wNDAzLTUuMzcyOCwxMy4zNzcxOC01LjM3MjgsNS4zMzYyNSwwLDkuNzk1MywxLjc5MDkxLDEzLjM3NzE4LDUuMzcyOCwzLjU4MTg3LDMuNTgxODYsNS4zNzI4Miw4LjA0MDkzLDUuMzcyODIsMTMuMzc3MnYxMDguMTczNDVjMCw1Ljc2ODc0LDIuNDAzNzYsMTEuMDU3MTgsNy4yMTEyNSwxNS44NjUzMiw0LjgwODEyLDQuODA3NDgsMTAuMDk2NTYsNy4yMTEyNCwxNS44NjUzMiw3LjIxMTI0aDEwOC4xNzM0M2M1LjMzNjI0LDAsOS43OTUzMSwxLjc5MDk0LDEzLjM3NzIsNS4zNzI4MiwzLjU4MTg5LDMuNTgxODksNS4zNzI4LDguMDQwOTMsNS4zNzI4LDEzLjM3NzE4LDAsNS4zMzY4OC0xLjc5MDkxLDkuNzk1OTMtNS4zNzI4LDEzLjM3NzE4LTMuNTgxODksMy41ODE4Ny04LjA0MDk2LDUuMzcyODItMTMuMzc3Miw1LjM3MjgySDYwLjU3NjU3Wm00NzguODQ2ODgsMGgtMTA4LjE3MzQ1Yy01LjMzNjI3LDAtOS43OTUyOC0xLjc5MDk0LTEzLjM3NzE3LTUuMzcyODItMy41ODE4OS0zLjU4MTI2LTUuMzcyODMtOC4wNDAzLTUuMzcyODMtMTMuMzc3MTgsMC01LjMzNjI1LDEuNzkwOTQtOS43OTUzLDUuMzcyODMtMTMuMzc3MTgsMy41ODE4OS0zLjU4MTg3LDguMDQwOTYtNS4zNzI4MiwxMy4zNzcxNy01LjM3MjgyaDEwOC4xNzM0NWM1Ljc2ODc0LDAsMTEuMDU3MjItMi40MDM3NiwxNS44NjUyOS03LjIxMTI1LDQuODA3NTUtNC44MDgxMiw3LjIxMTI3LTEwLjA5NjU2LDcuMjExMjctMTUuODY1MzJ2LTEwOC4xNzM0M2MwLTUuMzM2MjQsMS43OTA5NC05Ljc5NTMxLDUuMzcyODMtMTMuMzc3MiwzLjU4MTg5LTMuNTgxODksOC4wNDA5Ni01LjM3MjgsMTMuMzc3MTctNS4zNzI4LDUuMzM2ODksMCw5Ljc5NTkxLDEuNzkwOTEsMTMuMzc3MTcsNS4zNzI4LDMuNTgxODksMy41ODE4OSw1LjM3MjgzLDguMDQwOTYsNS4zNzI4MywxMy4zNzcydjEwOC4xNzM0NWMwLDE3LjI1OTM2LTUuNzgxMjcsMzEuNjcwMzEtMTcuMzQzNzUsNDMuMjMyOC0xMS41NjI0OCwxMS41NjI1LTI1Ljk3MzQ1LDE3LjM0Mzc1LTQzLjIzMjgsMTcuMzQzNzVaTTAsNjAuNTc2NTVDMCw0My4zMTcyLDUuNzgxMjUsMjguOTA2MjMsMTcuMzQzNzUsMTcuMzQzNzUsMjguOTA2MjUsNS43ODEyNyw0My4zMTcxOSwwLDYwLjU3NjU3LDBoMTA4LjE3MzQzYzUuMzM2MjQsMCw5Ljc5NTMxLDEuNzkwOTQsMTMuMzc3Miw1LjM3MjgzLDMuNTgxODksMy41ODEyNiw1LjM3MjgsOC4wNDAyOCw1LjM3MjgsMTMuMzc3MTcsMCw1LjMzNjMyLTEuNzkwOTEsOS43OTUyOC01LjM3MjgsMTMuMzc3MTctMy41ODE4NiwzLjU4MTgzLTguMDQwOTMsNS4zNzI4My0xMy4zNzcyLDUuMzcyODNINjAuNTc2NTdjLTUuNzY4NzUsMC0xMS4wNTcxOCwyLjQwMzcyLTE1Ljg2NTMyLDcuMjExMjctNC44MDc0OSw0LjgwODA2LTcuMjExMjUsMTAuMDk2NTUtNy4yMTEyNSwxNS44NjUyOXYxMDguMTczNDVjMCw1LjMzNjI3LTEuNzkwOTQsOS43OTUyOC01LjM3MjgyLDEzLjM3NzE3LTMuNTgxODksMy41ODE4My04LjA0MDkzLDUuMzcyNzctMTMuMzc3MTgsNS4zNzI4My01LjMzNjg4LDAtOS43OTU5My0xLjc5MDk0LTEzLjM3NzE4LTUuMzcyODMtMy41ODE4Ny0zLjU4MTg5LTUuMzcyODItOC4wNDA5LTUuMzcyODItMTMuMzc3MTdWNjAuNTc2NTVabTYwMCwwdjEwOC4xNzM0NWMwLDUuMzM2MjctMS43OTA5NCw5Ljc5NTI4LTUuMzcyODMsMTMuMzc3MTctMy41ODEyNiwzLjU4MTg5LTguMDQwMjgsNS4zNzI4My0xMy4zNzcxNyw1LjM3MjgzLTUuMzM2MzIsMC05Ljc5NTI4LTEuNzkwOTQtMTMuMzc3MTctNS4zNzI4My0zLjU4MTgzLTMuNTgxODktNS4zNzI4My04LjA0MDk2LTUuMzcyODMtMTMuMzc3MTdWNjAuNTc2NTVjMC01Ljc2ODc0LTIuNDAzNzItMTEuMDU3MjItNy4yMTEyNy0xNS44NjUyOS00LjgwODA2LTQuODA3NTUtMTAuMDk2NTUtNy4yMTEyNy0xNS44NjUyOS03LjIxMTI3aC0xMDguMTczNDVjLTUuMzM2MjcsMC05Ljc5NTI4LTEuNzkwOTQtMTMuMzc3MTctNS4zNzI4My0zLjU4MTgzLTMuNTgxODktNS4zNzI3Ny04LjA0MDk2LTUuMzcyODMtMTMuMzc3MTcsMC01LjMzNjg5LDEuNzkwOTQtOS43OTU5MSw1LjM3MjgzLTEzLjM3NzE3LDMuNTgxODktMy41ODE4OSw4LjA0MDktNS4zNzI4MywxMy4zNzcxNy01LjM3MjgzaDEwOC4xNzM0NWMxNy4yNTkzNSwwLDMxLjY3MDMyLDUuNzgxMjcsNDMuMjMyOCwxNy4zNDM3NXMxNy4zNDM3NSwyNS45NzM0NSwxNy4zNDM3NSw0My4yMzI4Wk0zMDEuNDQxODcsNDk1LjQzMzEzYzguMzE3NTEsMCwxNS4zMjUwMS0yLjg0ODc1LDIxLjAyMjUxLTguNTQ2MjUsNS42OTY5LTUuNjk2ODcsOC41NDUzMy0xMi43MDQwNiw4LjU0NTMzLTIxLjAyMTU3cy0yLjg0ODQzLTE1LjMyNDctOC41NDUzLTIxLjAyMTU3Yy01LjY5NzUzLTUuNjk2ODctMTIuNzA1LTguNTQ1My0yMS4wMjI1MS04LjU0NTMtOC4zMTY5MSwwLTE1LjMyNDA3LDIuODQ4NDMtMjEuMDIxNTcsOC41NDUzLTUuNjk2OSw1LjY5Njg3LTguNTQ1MzMsMTIuNzA0MDYtOC41NDUzMywyMS4wMjE1N3MyLjg0ODQzLDE1LjMyNDcsOC41NDUzLDIxLjAyMTU3YzUuNjk3NDcsNS42OTc1LDEyLjcwNDY5LDguNTQ2MjUsMjEuMDIxNTcsOC41NDYyNVptMC0zNTUuOTYyMTVjMTkuMTM0OTgsMCwzNS42Mzc1LDYuMDgxODUsNDkuNTA3NTEsMTguMjQ1NiwxMy44NzAwMSwxMi4xNjMxMiwyMC44MDUwMiwyNy40OTk2OSwyMC44MDUwMiw0Ni4wMDk3MSwwLDEzLjQxMzE2LTMuOTMwMywyNS42MjQ2OS0xMS43OTA5NiwzNi42MzQ3MS03Ljg2MDAzLDExLjAwOTM5LTE2Ljg2MjE4LDIwLjk2MTIzLTI3LjAwNjU3LDI5Ljg1NTYzLTE2LjI1MDAxLDE0Ljg1NTYtMjguMzUzNDUsMjguNjg5NjgtMzYuMzEwMyw0MS41MDIyLTcuOTU2ODgsMTIuODEyNDktMTIuNTYwMjksMjYuODM5MDYtMTMuODEwMyw0Mi4wNzk3LS42MjQ5OSw0LjkwMzc0LC44MTc0OCw5LjA3NDM5LDQuMzI3NSwxMi41MTE4OCwzLjUwOTM5LDMuNDM3NTIsNy43ODgxMSw1LjE1NjI1LDEyLjgzNjI0LDUuMTU2MjUsNC45MDM3NiwwLDkuMTQ2NTgtMS42ODI4LDEyLjcyODQzLTUuMDQ4NDUsMy41ODE4OS0zLjM2NTAyLDUuNzU3NTItNy41NzE1NSw2LjUyNjg4LTEyLjYxOTY5LDEuNzMwNjMtMTAuNjI1MDEsNS40ODA2My0yMC4xMjAzMiwxMS4yNS0yOC40ODU5NSw1Ljc2ODc0LTguMzY1NjMsMTQuODMxMi0xOC43MjYyNSwyNy4xODc1LTMxLjA4MTg3LDE4Ljk4OTk4LTE4Ljk5MDYxLDMyLjA3ODctMzQuOTY0MDgsMzkuMjY2MjItNDcuOTIwMzMsNy4xODc1Mi0xMi45NTY4OSwxMC43ODEyNS0yNy4zNjgxNCwxMC43ODEyNS00My4yMzM3OCwwLTI4Ljk0MTg4LTkuNzgzNzMtNTIuNTk1NjctMjkuMzUxMjMtNzAuOTYxMjctMTkuNTY2ODgtMTguMzY1NjUtNDQuNzM1MDEtMjcuNTQ4NDUtNzUuNTA0MzctMjcuNTQ4NDUtMjEuMjk4MTEsMC00MC43ODEyNSw0LjgxOTY4LTU4LjQ0OTM4LDE0LjQ1OTA0LTE3LjY2ODc2LDkuNjM5MzYtMzEuODE1NjEsMjMuNjQxODMtNDIuNDQwNjEsNDIuMDA3NDgtMi4zMDc1LDQuMTM1MDQtMi41ODM3Niw4LjU0NjI4LS44Mjg3NSwxMy4yMzM3OHM1LjAxMjIsNy44NzI1MSw5Ljc3MTU3LDkuNTU1MDJjNC4yNzg3NSwxLjY4MjUxLDguODM0MDcsMS44MDI4NSwxMy42NjU5MywuMzYwOTUsNC44MzE4Ny0xLjQ0MjQ3LDguNzg2MjMtNC4xNTkwNywxMS44NjMxMi04LjE0OTY4LDguMzE3NTEtMTAuNjczMTYsMTcuODQ4NzUtMTkuNDM1MDQsMjguNTkzNzUtMjYuMjg1NjUsMTAuNzQ0OTctNi44NTEyMywyMi44NzIxNi0xMC4yNzY4NSwzNi4zODE1Ny0xMC4yNzY4NVoiLz48L3N2Zz4=",
+	pinIcon = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgZmlsbD0iIzAwMCIgdmlld0JveD0iMCAwIDI1NiAyNTYiPjxwYXRoIGQ9Ik0yMzMuOTEsODIuNzksMTczLjIyLDIyLjFhMTQsMTQsMCwwLDAtMTkuODEsMEw5OC45Myw3Ni43N2MtOS41Mi0zLjI1LTM0LTguMzQtNTkuNzEsMTIuNDFBMTQsMTQsMCwwLDAsMzguMSwxMTBsNDkuNzEsNDkuNzEtNDQuMDUsNDRhNiw2LDAsMSwwLDguNDgsOC40OGw0NC4wNS00NC4wNUwxNDYsMjE3Ljg5YTE0LDE0LDAsMCwwLDkuOSw0LjExcS40OSwwLDEsMGExNCwxNCwwLDAsMCwxMC4xOS01LjU0YzE5LjcyLTI2LjIxLDE3LjE1LTQ3LjIzLDEyLjQ2LTU5LjNsNTQuMzctNTQuNTVBMTQsMTQsMCwwLDAsMjMzLjkxLDgyLjc5Wk0yMjUuNDIsOTQuMWgwbC01Ny4yNyw1Ny40NmE2LDYsMCwwLDAtMS4xMSw2LjkyYzkuOTQsMTkuODgtMS43MSw0MC4zMi05LjU0LDUwLjcyYTIsMiwwLDAsMS0zLC4yTDQ2LjU4LDEwMS41MWEyLDIsMCwwLDEsLjE4LTNjMTIuNS0xMC4wOSwyNC41LTEyLjc2LDMzLjctMTIuNzZhNDIuMTMsNDIuMTMsMCwwLDEsMTcuMjUsMy40MUE2LDYsMCwwLDAsMTA0LjY0LDg4TDE2MS45LDMwLjU5YTIsMiwwLDAsMSwyLjgzLDBsNjAuNjksNjAuNjhBMiwyLDAsMCwxLDIyNS40Miw5NC4xWiI+PC9wYXRoPjwvc3ZnPgo=",
+	pinSlashIcon = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgZmlsbD0iIzAwMCIgdmlld0JveD0iMCAwIDI1NiAyNTYiPjxwYXRoIGQ9Ik01Mi40NCwzNkE2LDYsMCwwLDAsNDMuNTYsNDRMNzEuMjcsNzQuNTFDNjEuNzgsNzYsNTAuNiw4MCwzOS4yMiw4OS4xOEExNCwxNCwwLDAsMCwzOC4xLDExMGw0OS43MSw0OS43MS00NC4wNSw0NGE2LDYsMCwxLDAsOC40OCw4LjQ4bDQ0LjA1LTQ0LjA1TDE0NiwyMTcuODlhMTQsMTQsMCwwLDAsOS45LDQuMTFxLjQ5LDAsMSwwYTE0LDE0LDAsMCwwLDEwLjE5LTUuNTQsODUuNTEsODUuNTEsMCwwLDAsMTIuNDQtMjIuODRsMjQsMjYuNDVhNiw2LDAsMSwwLDguODctOC4wOFpNMTU3LjQ5LDIwOS4yMWEyLDIsMCwwLDEtMywuMkw0Ni41OCwxMDEuNTFhMiwyLDAsMCwxLC4xOC0zYzEzLjE4LTEwLjY0LDI1Ljg0LTEyLjksMzQuNzktMTIuN0wxNzAsMTgzLjExQzE2Ny44MywxOTMuNzQsMTYyLjExLDIwMy4wNywxNTcuNDksMjA5LjIxWm03Ni40Mi0xMDYuNjItNDQuNjUsNDQuNzhhNiw2LDAsMSwxLTguNS04LjQ3bDQ0LjY1LTQ0Ljc5YTIsMiwwLDAsMCwwLTIuODRMMTY0LjczLDMwLjU5YTIsMiwwLDAsMC0yLjgzLDBMMTIwLjY4LDcxLjk0YTYsNiwwLDAsMS04LjUtOC40N2w0MS4yMy00MS4zNmExNCwxNCwwLDAsMSwxOS44MSwwbDYwLjY5LDYwLjY5QTE0LDE0LDAsMCwxLDIzMy45MSwxMDIuNTlaIj48L3BhdGg+PC9zdmc+Cg==";
 
 const css = `
 /* put search bar on top */
@@ -125,11 +128,11 @@ const css = `
 }
 
 .sort-dropdown-option:hover {
-	background: rgba(0, 0, 0, 0.06) !important;
+	background: rgba(0, 0, 0, 0.1) !important;
 }
 
 .dark-mode .sort-dropdown-option:hover {
-	background: rgba(255, 255, 255, 0.05) !important;
+	background: rgba(255, 255, 255, 0.1) !important;
 }
 
 .sidebar-search {
@@ -147,7 +150,8 @@ const css = `
 }
 
 /* less dark dark theme */
-.container.dark-mode {
+.dark-mode, .container.dark-mode {
+${settings.lighterDarkTheme ? `
 	--border-color: #525252 !important;
 	--item-bg: #18181b !important;
 	--instance-bg: linear-gradient(180deg, #22252b, #18181b 80%) !important;
@@ -158,6 +162,18 @@ const css = `
 	--background-color: #18181b !important;
 	--discoveries-bg-active: #423a24 !important;
 	--text-color: #fff !important;
+` : `
+	--border-color: #d1d1d1;
+	--item-bg: #000;
+	--instance-bg: linear-gradient(180deg,#22252b,#000 80%);
+	--instance-bg-hover: linear-gradient(180deg,#516772,#131313 80%);
+	--instance-border: #dcdcdc;
+	--instance-border-hover: #c7e0ff;
+	--sidebar-bg: #000;
+	--background-color: #000;
+	--discoveries-bg-active: #423a24;
+	--text-color: #fff;
+`}
 }
 
 .dark-mode {
@@ -192,6 +208,10 @@ const css = `
 .dark-mode .save .save-action-icon,
 .dark-mode .save .save-icon {
 	filter: invert(1) !important;
+}
+
+.achievements-btn {
+	background: var(--background-color) !important;
 }
 
 /* recipe modal stuff */
@@ -280,12 +300,14 @@ const css = `
 .recipe-modal-footer {
 	color: var(--border-color);
 	position: sticky;
+	display: flex;
 	bottom: 0;
 	z-index: 1;
 	background-color: var(--background-color);
 	padding: 20px 24px;
 	padding-top: 12px;
 	align-items: center;
+	white-space: pre;
 }
 
 .recipe-modal-footer .recipe-modal-footer-tab {
@@ -303,6 +325,18 @@ const css = `
 .recipe-modal-footer .recipe-modal-footer-tab.active {
 	color: var(--text-color);
 	text-decoration-line: none;
+}
+
+.recipe-modal-footer .recipe-modal-action-button {
+	border: none;
+	background: none;
+	margin-left: auto;
+	padding: 1px 3px;
+	border-radius: 5px;
+	cursor: pointer;
+}
+.recipe-modal-footer .recipe-modal-action-button:hover {
+	background-color: color-mix(in oklab, var(--background-color), var(--text-color) 15%);
 }
 
 .item {
@@ -416,26 +450,74 @@ const css = `
 	overflow: auto;
 	padding: 0 !important;
 }
-.sidebar-inner .items > div {
-	position: absolute;
+.sidebar-inner .items .sidebar-section-title {
+	padding: 13.5px 9px 4.5px 9px;
+}
+.sidebar-inner .items .items-inner, .sidebar-inner .items .items-inner + div {
 	width: 100%;
 	height: 100%;
-	top: 0px;
-	left: 0px;
 	padding: 9px;
 }
-.sidebar-inner .items > .bottom-spacer,
-.sidebar-inner .items > .instruction {
+.sidebar-inner .items .bottom-spacer,
+.sidebar-inner .items .instruction {
 	display: none;
 }
 
 .random {
 	width: 22px;
-	cursor: pointer;
 }
 .random:hover {
 	transform: scale(1.05);
-}`
+}
+
+.tool-wrapper {
+	cursor:pointer;
+	position:relative
+}
+.tool-wrapper:after {
+	background: rgba(0,0,0,.75);
+	border-radius: 4px;
+	bottom: calc(100% + 8px);
+	color: #fff;
+	content: attr(data-tooltip);
+	font-size: 12px;
+	left: 50%;
+	opacity: 0;
+	padding: 4px 8px;
+	pointer-events: none;
+	position: absolute;
+	transform: translateX(-50%);
+	transition: opacity .15s;
+	white-space: nowrap;
+	z-index: 100
+}
+.tool-wrapper:hover:after {
+	opacity: 1
+}
+
+${settings.searchDebounceDelay > 0 ? `
+.sidebar-inner .items .sidebar-section-title {
+	display: none;
+}
+` : ``}
+
+.item-context-menu {
+	background: var(--background-color) !important;
+	border-color: var(--border-color) !important;
+}
+.item-context-menu .item-context-menu-option:hover {
+	background: rgba(0, 0, 0, 0.1) !important;
+}
+.item-context-menu.dark-mode .item-context-menu-option:hover {
+	background: rgba(255, 255, 255, 0.1) !important;
+}
+
+${settings.recipeLookup ? `
+.item-context-overlay {
+	display: none;
+}
+` : ``}
+`
 
 const exported = {};
 exported.settings = settings;
@@ -541,7 +623,9 @@ let lastRefresh = -1;
 function refreshIdMapping() {
 	// throttling, helps when multiple failing getItem/getId calls happen
 	if (Date.now() - lastRefresh < 200) return;
-	for (const item of unsafeWindow.IC.getItems()) {
+	const items = unsafeWindow.IC.getItems()
+	for (let i = items.length; i--;) {
+		const item = items[i];
 		idMap.set(item.id, item);
 		idReverseMap.set(item.text, item.id);
 	}
@@ -684,6 +768,32 @@ recipeModalTabs.set("usages", {
 	renderFooter: renderUsageFooter
 });
 
+const contextMenuOptions = new Map();
+exported.contextMenuOptions = contextMenuOptions;
+
+function renderPinOption(item) {
+	const pinned = exported.isPinned(item);
+
+	const option = document.createElement("div");
+	option.classList.add("item-context-menu-option");
+	const icon = document.createElement("img");
+	icon.src = pinned ? pinSlashIcon : pinIcon;
+	icon.classList.add("item-context-menu-icon");
+	icon.appendChild(document.createTextNode("p"));
+	option.append(icon, document.createTextNode(pinned ? "Unpin" : "Pin"));
+
+	return option;
+}
+
+contextMenuOptions.set("pin", {
+	condition: () => settings.elementPinning,
+	renderOption: renderPinOption,
+	callback(item) {
+		if (exported.isPinned(item)) exported.unpinElements(item);
+		else exported.pinElements(item);
+	}
+});
+
 function initRecipeLookup({ v_container, v_sidebar }) {
 	window.addEventListener("ic-load", function() {
 		for (const item of v_container.items) {
@@ -703,7 +813,7 @@ function initRecipeLookup({ v_container, v_sidebar }) {
 	const closeButton = document.createElement("button");
 	closeButton.classList.add("recipe-modal-close-button");
 	const closeIcon = document.createElement("img");
-	closeIcon.src = closeIconSrc
+	closeIcon.src = closeIconSrc;
 	closeButton.appendChild(closeIcon);
 	const modalHeader = document.createElement("div");
 	modalHeader.classList.add("recipe-modal-header");
@@ -713,12 +823,18 @@ function initRecipeLookup({ v_container, v_sidebar }) {
 	const modalFooter = document.createElement("div");
 	modalFooter.classList.add("recipe-modal-footer");
 	modal.append(modalHeader, modalBody, modalFooter);
+	const actionButton = document.createElement("button");
+	actionButton.classList.add("recipe-modal-action-button");
+	actionButton.appendChild(document.createTextNode("⋮"));
+
 	v_container.$el.appendChild(modal);
 
 	["wheel", "scroll"].forEach((x) => modal.addEventListener(x, (e) => e.stopImmediatePropagation(), true));
 
 	let renderCache = {},
-		currentItemId = null;
+		currentItemId = null,
+		v_wrapper = null,
+		wrapperElement = null;
 
 	function openRecipeModal(itemId, reload = true, tabId) {
 		if (isNaN(itemId)) throw new Error("itemId must be a number");
@@ -808,11 +924,50 @@ function initRecipeLookup({ v_container, v_sidebar }) {
 			modalFooter.appendChild(tabFooter);
 		}
 
+		const instancedActionButton = actionButton.cloneNode(true);
+		instancedActionButton.addEventListener("click", function() {
+			if (!v_wrapper) {
+				const itemIdString = itemId.toString();
+				wrapperElement = [...document.querySelectorAll(".sidebar-inner .items .item-wrapper")]
+					.find((e) => e.childNodes[0]?.getAttribute("data-item-id") === itemIdString);
+				v_wrapper = wrapperElement?.__vue__;
+				if (!v_wrapper)
+					return console.error("could not find wrapper element for", itemIdString, "(item might not be in loaded or in view?)");
+
+				const oldEmit = v_wrapper.$emit;
+				v_wrapper.$emit = function(event) {
+					v_wrapper.$emit = oldEmit;
+					const r = oldEmit.apply(this, arguments);
+					closeRecipeModal();
+					return r;
+				}
+			}
+
+			v_wrapper.showContextMenu({ currentTarget: instancedActionButton });
+			const menuEl = v_wrapper._menuEl;
+			menuEl.remove();
+			modal.appendChild(menuEl);
+
+			for (const [optionId, option] of contextMenuOptions) {
+				if (typeof option.condition !== "function" && !option.condition(item)) continue;
+				const optionEl = option.renderOption(item);
+				optionEl.addEventListener("click", function() {
+					option.callback(item);
+					v_wrapper.removeMenu();
+				});
+				menuEl.appendChild(optionEl);
+			}
+		});
+		modalFooter.appendChild(instancedActionButton);
+
 		modal.showModal();
 	}
 	exported.openRecipeModal = openRecipeModal;
 
 	function closeRecipeModal() {
+		if (v_wrapper?._menuEl) v_wrapper.removeMenu();
+		v_wrapper = null;
+		wrapperElement = null;
 		currentItemId = null;
 		renderCache = {};
 		modal.close();
@@ -824,10 +979,11 @@ function initRecipeLookup({ v_container, v_sidebar }) {
 	[v_sidebar.$el, modal].forEach((x) => x.addEventListener("contextmenu", function(e) {
 		const item = traverseUntil(e.target, ".item");
 		if (item) {
+			e.stopImmediatePropagation()
 			e.preventDefault();
 			openRecipeModal(item.getAttribute("data-item-id"));
 		}
-	}));
+	}, true));
 
 	let hidden = false;
 	modal.addEventListener("mousedown", function(e) {
@@ -859,6 +1015,46 @@ function initRecipeLookup({ v_container, v_sidebar }) {
 		const tabId = tabFooter.getAttribute("data-tab-id");
 		if (!recipeModalTabs.has(tabId)) return;
 		openRecipeModal(currentItemId, false, tabId);
+	});
+}
+
+function initContextMenuIfRecipeLookupDisabled({ v_container, v_sidebar }) {
+	v_sidebar.$el.addEventListener("contextmenu", function(e) {
+		const wrapperElement = traverseUntil(e.target, ".item-wrapper");
+		if (!wrapperElement) return;
+
+		e.stopImmediatePropagation()
+		e.preventDefault();
+
+		let v_wrapper = wrapperElement.__vue__;
+
+		if (!v_wrapper) {
+			const itemIdString = wrapperElement.childNodes[0]?.getAttribute("data-item-id");
+			if (itemIdString === undefined)
+				return console.error("could not find wrapper element (invalid wrapper element?)");;
+
+			const realWrapperElement = [...document.querySelectorAll(".sidebar-inner .items .item-wrapper")]
+				.find((e) => e.childNodes[0]?.getAttribute("data-item-id") === itemIdString);
+
+			v_wrapper = realWrapperElement?.__vue__;
+			if (!v_wrapper)
+				return console.error("could not find wrapper element for", itemIdString, "(item might not be in loaded or in view?)");
+		}
+
+		v_wrapper.showContextMenu({ currentTarget: wrapperElement });
+
+		const menuEl = v_wrapper._menuEl,
+			  item = v_wrapper.element;
+
+		for (const [optionId, option] of contextMenuOptions) {
+			if (typeof option.condition !==	 "function" && !option.condition(item)) continue;
+			const optionEl = option.renderOption(item);
+			optionEl.addEventListener("click", function() {
+				option.callback(item);
+				v_wrapper.removeMenu();
+			});
+			menuEl.appendChild(optionEl);
+		}
 	});
 }
 
@@ -923,6 +1119,7 @@ function initPinnedContainer({ v_container, v_sidebar }) {
 	pinnedContainerContainer.appendChild(resizeHandle);
 
 	const pinnedIds = new Set();
+	exported.pinnedElementIds = pinnedIds;
 
 	function pinElements(elements, updateStorage = true) {
 		if (!Array.isArray(elements)) elements = [elements];
@@ -970,6 +1167,11 @@ function initPinnedContainer({ v_container, v_sidebar }) {
 	}
 	exported.unpinElements = unpinElements;
 
+	function isPinned(element) {
+		return pinnedIds.has(element?.id);
+	}
+	exported.isPinned = isPinned;
+
 	// note: does not update storage
 	function resetPinnedElements() {
 		pinnedIds.clear();
@@ -997,7 +1199,7 @@ function initPinnedContainer({ v_container, v_sidebar }) {
 			e.preventDefault();
 			e.stopImmediatePropagation();
 			unpinElements({
-				id: item.getAttribute("data-item-id"),
+				id: Number(item.getAttribute("data-item-id")),
 				text: item.getAttribute("data-item-text"),
 				emoji: item.getAttribute("data-item-emoji"),
 				discovery: item.getAttribute("data-item-discovery") !== null
@@ -1012,7 +1214,7 @@ function initPinnedContainer({ v_container, v_sidebar }) {
 			e.preventDefault();
 			e.stopImmediatePropagation();
 			pinElements({
-				id: item.getAttribute("data-item-id"),
+				id: Number(item.getAttribute("data-item-id")),
 				text: item.getAttribute("data-item-text"),
 				emoji: item.getAttribute("data-item-emoji"),
 				discovery: item.getAttribute("data-item-discovery") !== null
@@ -1128,10 +1330,14 @@ function getRandomCirclePos(center, radius) {
 
 function initRandomButton({ v_container, v_sidebar }) {
 	const sideControls = v_container.$el.querySelector(".side-controls"),
+		toolWrapper = document.createElement("div"),
 		randomButton = document.createElement("img");
+	toolWrapper.classList.add("tool-wrapper");
+	toolWrapper.setAttribute("data-tooltip", "Random Element");
 	randomButton.classList.add("random", "tool-icon");
 	randomButton.src = randomIcon;
-	sideControls.appendChild(randomButton);
+	toolWrapper.appendChild(randomButton);
+	sideControls.appendChild(toolWrapper);
 
 	function chooseRandomElement() {
 		let _f;
@@ -1218,6 +1424,7 @@ function init() {
 	if (settings.searchRelevancy) initSearchRelevancy(v);
 
 	if (settings.recipeLookup) initRecipeLookup(v);
+	else initContextMenuIfRecipeLookupDisabled(v);
 	initCraftEvents(v);
 
 	if (settings.removeDeps) {

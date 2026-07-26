@@ -1,0 +1,2 @@
+# IB Filter Recipes | [Install](https://raw.githubusercontent.com/InfiniteCraftCommunity/userscripts/master/userscripts/Eisernachweise/IBFilterRecipes/index.user.js)
+Filter recipes in the InfiniBrowser recipes section
